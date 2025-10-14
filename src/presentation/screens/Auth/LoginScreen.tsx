@@ -3,6 +3,7 @@
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
+import { router } from "expo-router";
 export const LoginScreen = () => {
 	const { handleLogin } = useAuth();
 
@@ -17,6 +18,13 @@ export const LoginScreen = () => {
 			>
 				<ButtonText>Login Screen</ButtonText>
 			</Button>
+
+			<Button 
+      variant="link" 
+      onPress={() => router.navigate('/register')}
+    >
+      <ButtonText>¿No tienes cuenta? Regístrate</ButtonText>
+    </Button>
 		</Box>
 	);
 };
