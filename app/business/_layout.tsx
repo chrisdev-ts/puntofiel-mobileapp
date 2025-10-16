@@ -7,32 +7,19 @@ export default function RootLayout() {
 		<GluestackUIProvider>
 			<Stack>
 				<Stack.Screen
-					name="index"
-					options={{
-						headerShown: false,
-						title: "Bienvenida",
-					}}
-				/>
-				<Stack.Screen
-					name="login"
+					name="scan"
 					options={{
 						headerShown: true,
-						title: "Iniciar sesión",
+						title: "Escanear código",
 						headerBackTitle: "Volver",
 					}}
 				/>
 				<Stack.Screen
-					name="register"
+					name="register-purchase"
 					options={{
 						headerShown: true,
-						title: "Crear cuenta",
+						title: "Registrar compra",
 						headerBackTitle: "Volver",
-					}}
-				/>
-				<Stack.Screen
-					name="business"
-					options={{
-						headerShown: false, // Ocultar el header del grupo para evitar duplicación
 					}}
 				/>
 			</Stack>
