@@ -1,5 +1,4 @@
-//import { LoginScreen } from "@/src";
-import { RegisterScreen } from "@/src/presentation/screens/Auth/Register/RegisterScreen";
+import { RegisterScreen } from "@/src/presentation/screens/Auth/RegisterScreen";
 
 export default function HomeScreen() {
 	return <RegisterScreen />;
