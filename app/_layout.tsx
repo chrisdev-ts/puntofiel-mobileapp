@@ -29,6 +29,12 @@ export default function RootLayout() {
 						headerBackTitle: "Volver",
 					}}
 				/>
+				<Stack.Screen
+					name="business"
+					options={{
+						headerShown: false, // Ocultar el header del grupo para evitar duplicación
+					}}
+				/>
 			</Stack>
 		</GluestackUIProvider>
 	);
