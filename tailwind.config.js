@@ -175,9 +175,9 @@ module.exports = {
 				},
 			},
 			fontFamily: {
-				heading: undefined,
-				body: undefined,
-				mono: undefined,
+				heading: roboto,
+				body: roboto,
+				mono: code,
 				jakarta: ["var(--font-plus-jakarta-sans)"],
 				roboto: ["var(--font-roboto)"],
 				code: ["var(--font-source-code-pro)"],

@@ -1,7 +1,7 @@
 # PuntoFiel
 
 <p align="center">
-  <img src="assets/images/icon.png" alt="PuntoFiel Logo" width="150"/>
+  <img src="assets/logos/logo-variante-horizontal-ligth.png" alt="PuntoFiel Logo" width="150"/>
 </p>
 
 <p align="center">

@@ -81,10 +81,9 @@ Simple y directo:
     - **Usa la plantilla predeterminada:** Al crear el PR, completa la plantilla que aparece automáticamente (ubicada en `.github/PULL_REQUEST_TEMPLATE.md`). No borres ninguna sección de la plantilla.
     - **Título del PR:** Claro, sigue convención del commit principal (ej. `feat: add contact form`).
     - **Descripción:**
-      - **Qué:** Resumen de cambios.
-      - **Por qué:** Justificación.
-      - **Cómo probar:** Pasos para el revisor.
-      - **Notas:** Cualquier extra (ej. "breaking changes").
+      - **Contexto y proposito:** Breve resumen de los cambios y referencia a la actividad en Taiga (si aplica)
+      - **Checklist del autor:** Verificación rápida antes de publicar la PR.
+      
 
 ---
 
