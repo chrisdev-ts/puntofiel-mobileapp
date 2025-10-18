@@ -141,8 +141,8 @@ importers:
         specifier: ^3.4.17
         version: 3.4.18(yaml@2.8.1)
       zod:
-        specifier: ^4.1.12
-        version: 4.1.12
+        specifier: ^3.25.76
+        version: 3.25.76
       zustand:
         specifier: ^5.0.8
         version: 5.0.8(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0))
@@ -1331,6 +1331,13 @@ packages:
     resolution: {integrity: sha512-AAYpRLGvxGD5hIGl9sVHyoUufr66zoH82PuxYcKiPSMdCBI3jwZFWh6CuHjV1leRKVIRk2py1rSvIVabG8eqcw==}
     peerDependencies:
       nativewind: '*'
+      react: '>=16'
+      react-native: '*'
+
+  '@legendapp/motion@2.5.3':
+    resolution: {integrity: sha512-IcNiStiK3qG5LaIPLC8fVV0BHIrkf7EY5HfOv3xbuMH0z4D945yaaEDafP5bboHf/uj9XRjTQHVTtZgwpMNlHw==}
+    peerDependencies:
+      nativewind: '>=4.0.0'
       react: '>=16'
       react-native: '*'
 
@@ -5598,9 +5605,6 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.1.12:
-    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
-
   zustand@5.0.8:
     resolution: {integrity: sha512-gyPKpIaxY9XcO2vSMrLbiER7QMAMGOQZVRdJ6Zi782jkbzZygq5GI9nG8g+sMgitRtndwaBSl7uiqC49o1SSiw==}
     engines: {node: '>=12.20.0'}
@@ -6646,10 +6650,10 @@ snapshots:
     dependencies:
       '@gluestack-style/react': 1.0.57
 
-  '@gluestack-style/legend-motion-animation-driver@1.0.3(@gluestack-style/react@1.0.57)(@legendapp/motion@2.4.0(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))':
+  '@gluestack-style/legend-motion-animation-driver@1.0.3(@gluestack-style/react@1.0.57)(@legendapp/motion@2.5.3(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))':
     dependencies:
       '@gluestack-style/react': 1.0.57
-      '@legendapp/motion': 2.4.0(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@legendapp/motion': 2.5.3(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
 
   '@gluestack-style/react@1.0.57':
     dependencies:
@@ -6989,7 +6993,7 @@ snapshots:
     dependencies:
       '@expo/html-elements': 0.13.7(react-native-web@0.21.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@gluestack-style/animation-resolver': 1.0.4(@gluestack-style/react@1.0.57)
-      '@gluestack-style/legend-motion-animation-driver': 1.0.3(@gluestack-style/react@1.0.57)(@legendapp/motion@2.4.0(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))
+      '@gluestack-style/legend-motion-animation-driver': 1.0.3(@gluestack-style/react@1.0.57)(@legendapp/motion@2.5.3(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))
       '@gluestack-style/react': 1.0.57
       '@gluestack-ui/accordion': 1.0.14(react-dom@19.1.0(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@gluestack-ui/actionsheet': 0.2.53(react-dom@19.1.0(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -7021,7 +7025,7 @@ snapshots:
       '@gluestack-ui/textarea': 0.1.25(react-dom@19.1.0(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@gluestack-ui/toast': 1.0.9(react-dom@19.1.0(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@gluestack-ui/tooltip': 0.1.44(react-dom@19.1.0(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
-      '@legendapp/motion': 2.4.0(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@legendapp/motion': 2.5.3(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@types/react-native': 0.73.0(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0)
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
@@ -7402,6 +7406,13 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@legendapp/motion@2.4.0(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@legendapp/tools': 2.0.1(react@19.1.0)
+      nativewind: 4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1))
+      react: 19.1.0
+      react-native: 0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0)
+
+  '@legendapp/motion@2.5.3(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@legendapp/tools': 2.0.1(react@19.1.0)
       nativewind: 4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.14.0(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.4(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1))
@@ -12733,8 +12744,6 @@ snapshots:
       zod: 3.25.76
 
   zod@3.25.76: {}
-
-  zod@4.1.12: {}
 
   zustand@5.0.8(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0)):
     optionalDependencies:

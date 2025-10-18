@@ -56,7 +56,7 @@
 		"react-stately": "^3.39.0",
 		"tailwind-variants": "^0.1.20",
 		"tailwindcss": "^3.4.17",
-		"zod": "^4.1.12",
+		"zod": "^3.25.76",
 		"zustand": "^5.0.8"
 	},
 	"devDependencies": {
