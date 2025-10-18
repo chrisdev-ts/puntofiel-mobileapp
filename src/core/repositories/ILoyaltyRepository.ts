@@ -1,13 +1,13 @@
-export interface ProcessPurchaseResult {
+export interface ProcessLoyaltyResult {
 	success: boolean;
 	message: string;
 	newPointsBalance?: number;
 }
 
 export interface ILoyaltyRepository {
-	processPurchase(
+	processLoyalty(
 		customerId: string,
 		businessId: string,
-		purchaseAmount: number,
-	): Promise<ProcessPurchaseResult>;
+		amount: number,
+	): Promise<ProcessLoyaltyResult>;
 }

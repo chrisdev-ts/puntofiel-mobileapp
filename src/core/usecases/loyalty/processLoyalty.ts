@@ -1,26 +1,26 @@
 import type {
 	ILoyaltyRepository,
-	ProcessPurchaseResult,
+	ProcessLoyaltyResult,
 } from "../../repositories/ILoyaltyRepository";
 
-export class ProcessPurchaseUseCase {
+export class ProcessLoyaltyUseCase {
 	constructor(private readonly loyaltyRepository: ILoyaltyRepository) {}
 
 	async execute(
 		customerId: string,
 		businessId: string,
-		purchaseAmount: number,
-	): Promise<ProcessPurchaseResult> {
-		if (purchaseAmount <= 0) {
+		amount: number,
+	): Promise<ProcessLoyaltyResult> {
+		if (amount <= 0) {
 			return {
 				success: false,
-				message: "El monto de la compra debe ser mayor a cero.",
+				message: "El monto debe ser mayor a cero.",
 			};
 		}
-		return this.loyaltyRepository.processPurchase(
+		return this.loyaltyRepository.processLoyalty(
 			customerId,
 			businessId,
-			purchaseAmount,
+			amount,
 		);
 	}
 }
