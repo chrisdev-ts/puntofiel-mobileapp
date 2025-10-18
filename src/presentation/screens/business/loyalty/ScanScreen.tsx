@@ -1,3 +1,6 @@
+import { Box } from "@/components/ui/box";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
 import {
 	type BarcodeScanningResult,
 	CameraView,
@@ -5,9 +8,6 @@ import {
 } from "expo-camera";
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
-import { Text } from "@/components/ui/text";
 
 export function ScanScreen() {
 	const [permission, requestPermission] = useCameraPermissions();
@@ -33,13 +33,13 @@ export function ScanScreen() {
 			setScanned(false);
 			return;
 		}
-		navigateToRegisterPurchase(customerId);
+		navigateToRegisterLoyalty(customerId);
 	};
 
-	// Función auxiliar para navegar a la pantalla de registro
-	const navigateToRegisterPurchase = (customerId: string) => {
+	// Función auxiliar para navegar a la pantalla de registro de puntos
+	const navigateToRegisterLoyalty = (customerId: string) => {
 		const href = {
-			pathname: "/business/register-purchase",
+			pathname: "/business/loyalty/register",
 			params: { customerId },
 		} as const;
 		router.push(href as never);

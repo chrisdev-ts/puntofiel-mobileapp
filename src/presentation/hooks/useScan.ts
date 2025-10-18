@@ -1,57 +1,56 @@
-// Hook para manejar la lógica de escaneo y el estado de la UI.
-// Aquí conectarás con el use case y el repositorio.
-// Manejará estados de loading, success y error.
+// Hook para manejar la lógica de procesamiento de puntos de lealtad usando TanStack Query.
+// Conecta la UI con el caso de uso del core siguiendo el patrón recomendado.
 
-import { useState } from "react";
-import { ProcessPurchaseUseCase } from "@/src/core/usecases/loyalty/processPurchase";
+import type { ProcessLoyaltyResult } from "@/src/core/repositories/ILoyaltyRepository";
+import { ProcessLoyaltyUseCase } from "@/src/core/usecases/loyalty/processLoyalty";
 import { SupabaseLoyaltyRepository } from "@/src/infrastructure/repositories/SupabaseLoyaltyRepository";
+import { useMutation } from "@tanstack/react-query";
 
+// Instancia del repositorio y caso de uso (Dependency Injection)
 const loyaltyRepository = new SupabaseLoyaltyRepository();
-const processPurchaseUseCase = new ProcessPurchaseUseCase(loyaltyRepository);
+const processLoyaltyUseCase = new ProcessLoyaltyUseCase(loyaltyRepository);
+
+interface ProcessLoyaltyParams {
+	customerId: string;
+	businessId: string;
+	amount: number;
+}
 
 export function useScan() {
-	const [loading, setLoading] = useState(false);
-	const [success, setSuccess] = useState<null | {
-		message: string;
-		newPointsBalance?: number;
-	}>(null);
-	const [error, setError] = useState<string | null>(null);
-
-	const process = async (
-		customerId: string,
-		businessId: string,
-		purchaseAmount: number,
-	) => {
-		setLoading(true);
-		setSuccess(null);
-		setError(null);
-		try {
-			const result = await processPurchaseUseCase.execute(
+	// useMutation de TanStack Query maneja automáticamente loading, error y success
+	const mutation = useMutation<
+		ProcessLoyaltyResult,
+		Error,
+		ProcessLoyaltyParams
+	>({
+		mutationFn: async ({
+			customerId,
+			businessId,
+			amount,
+		}: ProcessLoyaltyParams) => {
+			const result = await processLoyaltyUseCase.execute(
 				customerId,
 				businessId,
-				purchaseAmount,
+				amount,
 			);
-			if (result.success) {
-				setSuccess({
-					message: result.message,
-					newPointsBalance: result.newPointsBalance,
-				});
-			} else {
-				setError(result.message);
+
+			// Si el resultado no fue exitoso, lanzamos un error para que TanStack Query lo maneje
+			if (!result.success) {
+				throw new Error(result.message);
 			}
-		} catch (e: unknown) {
-			const errorMessage = e instanceof Error ? e.message : "Error desconocido";
-			setError(errorMessage);
-		} finally {
-			setLoading(false);
-		}
-	};
 
-	const reset = () => {
-		setSuccess(null);
-		setError(null);
-		setLoading(false);
-	};
+			return result;
+		},
+	});
 
-	return { loading, success, error, process, reset };
+	return {
+		// Estados proporcionados por TanStack Query
+		loading: mutation.isPending,
+		success: mutation.isSuccess ? mutation.data : null,
+		error: mutation.error?.message || null,
+		// Función para procesar el registro de puntos
+		process: mutation.mutate,
+		// Función para resetear el estado
+		reset: mutation.reset,
+	};
 }
