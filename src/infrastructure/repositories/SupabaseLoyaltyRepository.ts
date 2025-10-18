@@ -1,19 +1,19 @@
 import type {
 	ILoyaltyRepository,
-	ProcessPurchaseResult,
+	ProcessLoyaltyResult,
 } from "@/src/core/repositories/ILoyaltyRepository";
 import { supabase } from "../services/supabase";
 
 export class SupabaseLoyaltyRepository implements ILoyaltyRepository {
-	async processPurchase(
+	async processLoyalty(
 		customerId: string,
 		businessId: string,
-		purchaseAmount: number,
-	): Promise<ProcessPurchaseResult> {
-		const { data, error } = await supabase.rpc("process_purchase", {
+		amount: number,
+	): Promise<ProcessLoyaltyResult> {
+		const { data, error } = await supabase.rpc("process_loyalty", {
 			p_customer_id: customerId,
 			p_business_id: businessId,
-			p_purchase_amount: purchaseAmount,
+			p_amount: amount,
 		});
 
 		if (error) {
