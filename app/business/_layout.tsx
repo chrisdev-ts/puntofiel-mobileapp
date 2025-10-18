@@ -7,19 +7,9 @@ export default function RootLayout() {
 		<GluestackUIProvider>
 			<Stack>
 				<Stack.Screen
-					name="scan"
+					name="loyalty"
 					options={{
-						headerShown: true,
-						title: "Escanear código",
-						headerBackTitle: "Volver",
-					}}
-				/>
-				<Stack.Screen
-					name="register-purchase"
-					options={{
-						headerShown: true,
-						title: "Registrar compra",
-						headerBackTitle: "Volver",
+						headerShown: false,
 					}}
 				/>
 			</Stack>
