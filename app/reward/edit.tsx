@@ -1,7 +1,7 @@
 import EditRewardScreen from '@/src/presentation/screens/reward/EditRewardScreen';
 import { Stack } from 'expo-router';
 
-export default function EditRewardRoute() {
+export default function EditRewardPage() {
     return (
         <>
             <Stack.Screen

@@ -1,6 +1,5 @@
-import RewardFormScreen from './RewardFormScreen';
+import RewardForm from '@/src/presentation/components/reward/RewardForm';
 
 export default function CreateRewardScreen() {
-    return <RewardFormScreen mode="create" />;
+    return <RewardForm mode="create" />;
 }
-

@@ -1,6 +1,4 @@
 
-// ========================================
-// app/reward/create.tsx
 import CreateRewardScreen from '@/src/presentation/screens/reward/CreateRewardScreen';
 import { Stack } from 'expo-router';
 

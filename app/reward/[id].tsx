@@ -1,5 +1,4 @@
-// ========================================
-// app/reward/[id].tsx
+
 import RewardDetailScreen from '@/src/presentation/screens/reward/RewardDetailScreen';
 import { Stack, useLocalSearchParams } from 'expo-router';
 
