@@ -29,7 +29,15 @@
 			"output": "static",
 			"favicon": "./assets/logos/logo-white.png"
 		},
-		"plugins": ["expo-router"],
+		"plugins": [
+			"expo-router", 
+			[
+				"expo-image-picker", {
+					"photosPermission": "La app necesita acceso a tu galería para seleccionar la foto de la recompensa.",
+					"cameraPermission": "La app necesita acceso a tu cámara para tomar la foto de la recompensa."
+				}
+			]
+		],
 		"experiments": {
 			"typedRoutes": true
 		}
