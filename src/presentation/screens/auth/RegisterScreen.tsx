@@ -19,7 +19,7 @@ import { Input, InputField } from "@/components/ui/input";
 import { Link, LinkText } from "@/components/ui/link";
 import { Text } from "@/components/ui/text";
 
-export function RegisterScreen() {
+export default function RegisterScreen() {
 	const [name, setName] = useState("");
 	const [number, setNumber] = useState("");
 	const [password, setPassword] = useState("");
@@ -116,7 +116,7 @@ export function RegisterScreen() {
 				<FormControl>
 					<HStack>
 						<Text size="lg">¿Ya tiene una cuenta?&nbsp;</Text>
-						<Link onPress={() => router.push("/login")}>
+						<Link onPress={() => router.push("/(public)/login")}>
 							<HStack>
 								<LinkText size="lg">Inicie sesión</LinkText>
 							</HStack>

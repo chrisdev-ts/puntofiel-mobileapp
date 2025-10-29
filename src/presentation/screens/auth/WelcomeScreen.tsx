@@ -5,7 +5,7 @@ import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 
-export function WelcomeScreen() {
+export default function WelcomeScreen() {
 	return (
 		<Box className="flex-1 items-center justify-center bg-white px-8">
 			<VStack className="items-center gap-8 w-full">
@@ -26,7 +26,7 @@ export function WelcomeScreen() {
 					<Button
 						variant="solid"
 						action="primary"
-						onPress={() => router.push("/login")}
+						onPress={() => router.push("/(public)/login")}
 					>
 						<ButtonText>Iniciar sesión</ButtonText>
 					</Button>
@@ -34,7 +34,7 @@ export function WelcomeScreen() {
 					<Button
 						variant="outline"
 						action="primary"
-						onPress={() => router.push("/register")}
+						onPress={() => router.push("/(public)/register")}
 					>
 						<ButtonText>Crear cuenta</ButtonText>
 					</Button>
