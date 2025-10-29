@@ -1,10 +1,10 @@
 // Hook para manejar la lógica de procesamiento de puntos de lealtad usando TanStack Query.
 // Conecta la UI con el caso de uso del core siguiendo el patrón recomendado.
 
+import { useMutation } from "@tanstack/react-query";
 import type { ProcessLoyaltyResult } from "@/src/core/repositories/ILoyaltyRepository";
 import { ProcessLoyaltyUseCase } from "@/src/core/usecases/loyalty/processLoyalty";
 import { SupabaseLoyaltyRepository } from "@/src/infrastructure/repositories/SupabaseLoyaltyRepository";
-import { useMutation } from "@tanstack/react-query";
 
 // Instancia del repositorio y caso de uso (Dependency Injection)
 const loyaltyRepository = new SupabaseLoyaltyRepository();

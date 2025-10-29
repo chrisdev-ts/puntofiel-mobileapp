@@ -1,4 +1,4 @@
 export { useAuth } from "./hooks/useAuth";
-export { LoginScreen } from "./screens/Auth/LoginScreen";
-export { RegisterScreen } from "./screens/Auth/RegisterScreen";
-export { WelcomeScreen } from "./screens/Auth/WelcomeScreen";
+export { LoginScreen } from "./screens/auth/LoginScreen";
+export { RegisterScreen } from "./screens/auth/RegisterScreen";
+export { WelcomeScreen } from "./screens/auth/WelcomeScreen";
