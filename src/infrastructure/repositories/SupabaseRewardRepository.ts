@@ -1,297 +1,293 @@
 import type {
-    CreateRewardDTO,
-    Reward,
-    UpdateRewardDTO,
-} from '@/src/core/entities/Reward';
-import type { IRewardRepository } from '@/src/core/repositories/IRewardRepository';
-import { supabase } from '@/src/infrastructure/services/supabase';
+	CreateRewardDTO,
+	Reward,
+	UpdateRewardDTO,
+} from "@/src/core/entities/Reward";
+import type { IRewardRepository } from "@/src/core/repositories/IRewardRepository";
+import { supabase } from "@/src/infrastructure/services/supabase";
 
 export class SupabaseRewardRepository implements IRewardRepository {
-    /**
-     * Sube una imagen a Supabase Storage y retorna la URL pública
-     */
-    async uploadRewardImage(
-        imageUri: string,
-        rewardId: string
-    ): Promise<string> {
-        try {
-            console.log('Subiendo imagen:', imageUri);
+	/**
+	 * Sube una imagen a Supabase Storage y retorna la URL pública
+	 */
+	async uploadRewardImage(imageUri: string, rewardId: string): Promise<string> {
+		try {
+			console.log("Subiendo imagen:", imageUri);
 
-            // Leer el archivo como blob
-            const response = await fetch(imageUri);
-            const blob = await response.blob();
+			// Leer el archivo como blob
+			const response = await fetch(imageUri);
+			const blob = await response.blob();
 
-            // Convertir blob a ArrayBuffer usando FileReader (compatible con RN)
-            const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    if (reader.result instanceof ArrayBuffer) {
-                        resolve(reader.result);
-                    } else {
-                        reject(new Error('Error al convertir blob a ArrayBuffer'));
-                    }
-                };
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(blob);
-            });
+			// Convertir blob a ArrayBuffer usando FileReader (compatible con RN)
+			const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onloadend = () => {
+					if (reader.result instanceof ArrayBuffer) {
+						resolve(reader.result);
+					} else {
+						reject(new Error("Error al convertir blob a ArrayBuffer"));
+					}
+				};
+				reader.onerror = reject;
+				reader.readAsArrayBuffer(blob);
+			});
 
-            // Nombre único para la imagen
-            const fileName = `${rewardId}-${Date.now()}.jpg`;
-            const filePath = fileName;
+			// Nombre único para la imagen
+			const fileName = `${rewardId}-${Date.now()}.jpg`;
+			const filePath = fileName;
 
-            console.log('Subiendo a:', filePath);
+			console.log("Subiendo a:", filePath);
 
-            // Subir a Storage
-            const { data, error } = await supabase.storage
-                .from('rewards')
-                .upload(filePath, arrayBuffer, {
-                    contentType: 'image/jpeg',
-                    upsert: true,
-                });
+			// Subir a Storage
+			const { data, error } = await supabase.storage
+				.from("rewards")
+				.upload(filePath, arrayBuffer, {
+					contentType: "image/jpeg",
+					upsert: true,
+				});
 
-            if (error) {
-                console.error('Error subiendo imagen:', error);
-                throw new Error(`Error al subir la imagen: ${error.message}`);
-            }
+			if (error) {
+				console.error("Error subiendo imagen:", error);
+				throw new Error(`Error al subir la imagen: ${error.message}`);
+			}
 
-            // Obtener URL pública
-            const { data: publicUrlData } = supabase.storage
-                .from('rewards')
-                .getPublicUrl(data.path);
+			// Obtener URL pública
+			const { data: publicUrlData } = supabase.storage
+				.from("rewards")
+				.getPublicUrl(data.path);
 
-            console.log('URL pública:', publicUrlData.publicUrl);
+			console.log("URL pública:", publicUrlData.publicUrl);
 
-            return publicUrlData.publicUrl;
-        } catch (error) {
-            console.error('Error en uploadRewardImage:', error);
-            throw error;
-        }
-    }
+			return publicUrlData.publicUrl;
+		} catch (error) {
+			console.error("Error en uploadRewardImage:", error);
+			throw error;
+		}
+	}
 
-    /**
-     * Elimina una imagen del Storage
-     */
-    async deleteRewardImage(imageUrl: string): Promise<void> {
-        try {
-            const urlParts = imageUrl.split('/rewards/');
-            if (urlParts.length < 2) return;
+	/**
+	 * Elimina una imagen del Storage
+	 */
+	async deleteRewardImage(imageUrl: string): Promise<void> {
+		try {
+			const urlParts = imageUrl.split("/rewards/");
+			if (urlParts.length < 2) return;
 
-            const filePath = urlParts[1];
+			const filePath = urlParts[1];
 
-            const { error } = await supabase.storage
-                .from('rewards')
-                .remove([filePath]);
+			const { error } = await supabase.storage
+				.from("rewards")
+				.remove([filePath]);
 
-            if (error) {
-                console.error('Error eliminando imagen:', error);
-            }
-        } catch (error) {
-            console.error('Error en deleteRewardImage:', error);
-        }
-    }
+			if (error) {
+				console.error("Error eliminando imagen:", error);
+			}
+		} catch (error) {
+			console.error("Error en deleteRewardImage:", error);
+		}
+	}
 
-    async getRewardsByBusiness(businessId: string): Promise<Reward[]> {
+	async getRewardsByBusiness(businessId: string): Promise<Reward[]> {
+		const { data, error } = await supabase
+			.from("rewards")
+			.select("*")
+			.eq("business_id", businessId)
+			.eq("is_active", true)
+			.order("created_at", { ascending: false });
 
-        const { data, error } = await supabase
-            .from('rewards')
-            .select('*')
-            .eq('business_id', businessId)
-            .eq('is_active', true)
-            .order('created_at', { ascending: false });
+		if (error) {
+			console.error("Error obteniendo recompensas:", error);
+			throw new Error(`Error al obtener recompensas: ${error.message}`);
+		}
 
-        if (error) {
-            console.error('Error obteniendo recompensas:', error);
-            throw new Error(`Error al obtener recompensas: ${error.message}`);
-        }
+		console.log("Recompensas encontradas:", data?.length || 0);
 
-        console.log('Recompensas encontradas:', data?.length || 0);
+		return (
+			data?.map((row) => ({
+				id: row.id,
+				businessId: row.business_id,
+				name: row.name,
+				description: row.description || undefined,
+				pointsRequired: row.points_required,
+				imageUrl: row.image_url || undefined,
+				isActive: row.is_active,
+				createdAt: new Date(row.created_at),
+				updatedAt: new Date(row.updated_at),
+			})) || []
+		);
+	}
 
-        return (
-            data?.map((row) => ({
-                id: row.id,
-                businessId: row.business_id,
-                name: row.name,
-                description: row.description || undefined,
-                pointsRequired: row.points_required,
-                imageUrl: row.image_url || undefined,
-                isActive: row.is_active,
-                createdAt: new Date(row.created_at),
-                updatedAt: new Date(row.updated_at),
-            })) || []
-        );
-    }
+	async getRewardById(rewardId: string): Promise<Reward | null> {
+		const { data, error } = await supabase
+			.from("rewards")
+			.select("*")
+			.eq("id", rewardId)
+			.single();
 
-    async getRewardById(rewardId: string): Promise<Reward | null> {
+		if (error) {
+			console.error("Error obteniendo recompensa:", error);
+			return null;
+		}
 
-        const { data, error } = await supabase
-            .from('rewards')
-            .select('*')
-            .eq('id', rewardId)
-            .single();
+		if (!data) return null;
 
-        if (error) {
-            console.error('Error obteniendo recompensa:', error);
-            return null;
-        }
+		return {
+			id: data.id,
+			businessId: data.business_id,
+			name: data.name,
+			description: data.description || undefined,
+			pointsRequired: data.points_required,
+			imageUrl: data.image_url || undefined,
+			isActive: data.is_active,
+			createdAt: new Date(data.created_at),
+			updatedAt: new Date(data.updated_at),
+		};
+	}
 
-        if (!data) return null;
+	async createReward(dto: CreateRewardDTO, imageUri?: string): Promise<Reward> {
+		try {
+			console.log("Creando recompensa:", dto);
 
-        return {
-            id: data.id,
-            businessId: data.business_id,
-            name: data.name,
-            description: data.description || undefined,
-            pointsRequired: data.points_required,
-            imageUrl: data.image_url || undefined,
-            isActive: data.is_active,
-            createdAt: new Date(data.created_at),
-            updatedAt: new Date(data.updated_at),
-        };
-    }
+			// 1. Crear registro en BD
+			const { data, error } = await supabase
+				.from("rewards")
+				.insert({
+					business_id: dto.businessId,
+					name: dto.name,
+					description: dto.description,
+					points_required: dto.pointsRequired,
+					is_active: true,
+				})
+				.select()
+				.single();
 
-    async createReward(dto: CreateRewardDTO, imageUri?: string): Promise<Reward> {
-        try {
-            console.log('Creando recompensa:', dto);
+			if (error) {
+				console.error("Error creando recompensa:", error);
+				throw new Error(`Error al crear recompensa: ${error.message}`);
+			}
 
-            // 1. Crear registro en BD
-            const { data, error } = await supabase
-                .from('rewards')
-                .insert({
-                    business_id: dto.businessId,
-                    name: dto.name,
-                    description: dto.description,
-                    points_required: dto.pointsRequired,
-                    is_active: true,
-                })
-                .select()
-                .single();
+			const rewardId = data.id;
+			console.log("Recompensa creada con ID:", rewardId);
 
-            if (error) {
-                console.error('Error creando recompensa:', error);
-                throw new Error(`Error al crear recompensa: ${error.message}`);
-            }
+			// 2. Si hay imagen, subirla
+			let imageUrl: string | undefined;
+			if (imageUri) {
+				try {
+					console.log("Subiendo imagen...");
+					imageUrl = await this.uploadRewardImage(imageUri, rewardId);
 
-            const rewardId = data.id;
-            console.log('Recompensa creada con ID:', rewardId);
+					// Actualizar con la URL
+					const { error: updateError } = await supabase
+						.from("rewards")
+						.update({ image_url: imageUrl })
+						.eq("id", rewardId);
 
-            // 2. Si hay imagen, subirla
-            let imageUrl: string | undefined;
-            if (imageUri) {
-                try {
-                    console.log('Subiendo imagen...');
-                    imageUrl = await this.uploadRewardImage(imageUri, rewardId);
+					if (updateError) {
+						console.error("Error actualizando image_url:", updateError);
+					} else {
+						console.log("Imagen vinculada");
+					}
+				} catch (uploadError) {
+					console.error("Error subiendo imagen:", uploadError);
+				}
+			}
 
-                    // Actualizar con la URL
-                    const { error: updateError } = await supabase
-                        .from('rewards')
-                        .update({ image_url: imageUrl })
-                        .eq('id', rewardId);
+			return {
+				id: rewardId,
+				businessId: data.business_id,
+				name: data.name,
+				description: data.description || undefined,
+				pointsRequired: data.points_required,
+				imageUrl: imageUrl,
+				isActive: data.is_active,
+				createdAt: new Date(data.created_at),
+				updatedAt: new Date(data.updated_at),
+			};
+		} catch (error) {
+			console.error("Error en createReward:", error);
+			throw error;
+		}
+	}
 
-                    if (updateError) {
-                        console.error('Error actualizando image_url:', updateError);
-                    } else {
-                        console.log('Imagen vinculada');
-                    }
-                } catch (uploadError) {
-                    console.error('Error subiendo imagen:', uploadError);
-                }
-            }
+	async updateReward(
+		rewardId: string,
+		dto: UpdateRewardDTO,
+		imageUri?: string,
+	): Promise<Reward> {
+		try {
+			console.log("Actualizando recompensa:", rewardId);
 
-            return {
-                id: rewardId,
-                businessId: data.business_id,
-                name: data.name,
-                description: data.description || undefined,
-                pointsRequired: data.points_required,
-                imageUrl: imageUrl,
-                isActive: data.is_active,
-                createdAt: new Date(data.created_at),
-                updatedAt: new Date(data.updated_at),
-            };
-        } catch (error) {
-            console.error('Error en createReward:', error);
-            throw error;
-        }
-    }
+			// 1. Si hay nueva imagen, subirla
+			let newImageUrl: string | undefined;
+			if (imageUri) {
+				try {
+					newImageUrl = await this.uploadRewardImage(imageUri, rewardId);
+				} catch (uploadError) {
+					console.error("Error subiendo imagen:", uploadError);
+				}
+			}
 
-    async updateReward(
-        rewardId: string,
-        dto: UpdateRewardDTO,
-        imageUri?: string
-    ): Promise<Reward> {
-        try {
-            console.log('Actualizando recompensa:', rewardId);
+			// 2. Preparar actualización
+			const updateData: Record<string, unknown> = {};
+			if (dto.name !== undefined) updateData.name = dto.name;
+			if (dto.description !== undefined)
+				updateData.description = dto.description;
+			if (dto.pointsRequired !== undefined)
+				updateData.points_required = dto.pointsRequired;
+			if (newImageUrl !== undefined) updateData.image_url = newImageUrl;
 
-            // 1. Si hay nueva imagen, subirla
-            let newImageUrl: string | undefined;
-            if (imageUri) {
-                try {
-                    newImageUrl = await this.uploadRewardImage(imageUri, rewardId);
-                } catch (uploadError) {
-                    console.error('Error subiendo imagen:', uploadError);
-                }
-            }
+			// 3. Actualizar en BD
+			const { data, error } = await supabase
+				.from("rewards")
+				.update(updateData)
+				.eq("id", rewardId)
+				.select()
+				.single();
 
-            // 2. Preparar actualización
-            const updateData: Record<string, unknown> = {};
-            if (dto.name !== undefined) updateData.name = dto.name;
-            if (dto.description !== undefined) updateData.description = dto.description;
-            if (dto.pointsRequired !== undefined)
-                updateData.points_required = dto.pointsRequired;
-            if (newImageUrl !== undefined) updateData.image_url = newImageUrl;
+			if (error) {
+				console.error("Error actualizando:", error);
+				throw new Error(`Error al actualizar: ${error.message}`);
+			}
 
-            // 3. Actualizar en BD
-            const { data, error } = await supabase
-                .from('rewards')
-                .update(updateData)
-                .eq('id', rewardId)
-                .select()
-                .single();
+			console.log("Recompensa actualizada");
 
-            if (error) {
-                console.error('Error actualizando:', error);
-                throw new Error(`Error al actualizar: ${error.message}`);
-            }
+			return {
+				id: data.id,
+				businessId: data.business_id,
+				name: data.name,
+				description: data.description || undefined,
+				pointsRequired: data.points_required,
+				imageUrl: data.image_url || undefined,
+				isActive: data.is_active,
+				createdAt: new Date(data.created_at),
+				updatedAt: new Date(data.updated_at),
+			};
+		} catch (error) {
+			console.error("Error en updateReward:", error);
+			throw error;
+		}
+	}
 
-            console.log('Recompensa actualizada');
+	async deleteReward(rewardId: string, businessId: string): Promise<void> {
+		try {
+			console.log("Desactivando recompensa:", rewardId);
 
-            return {
-                id: data.id,
-                businessId: data.business_id,
-                name: data.name,
-                description: data.description || undefined,
-                pointsRequired: data.points_required,
-                imageUrl: data.image_url || undefined,
-                isActive: data.is_active,
-                createdAt: new Date(data.created_at),
-                updatedAt: new Date(data.updated_at),
-            };
-        } catch (error) {
-            console.error('Error en updateReward:', error);
-            throw error;
-        }
-    }
+			// Soft delete
+			const { error } = await supabase
+				.from("rewards")
+				.update({ is_active: false })
+				.eq("id", rewardId)
+				.eq("business_id", businessId);
 
-    async deleteReward(rewardId: string, businessId: string): Promise<void> {
-        try {
-            console.log('Desactivando recompensa:', rewardId);
+			if (error) {
+				console.error("Error desactivando:", error);
+				throw new Error(`Error al desactivar: ${error.message}`);
+			}
 
-            // Soft delete
-            const { error } = await supabase
-                .from('rewards')
-                .update({ is_active: false })
-                .eq('id', rewardId)
-                .eq('business_id', businessId);
-
-            if (error) {
-                console.error('Error desactivando:', error);
-                throw new Error(`Error al desactivar: ${error.message}`);
-            }
-
-            console.log('Recompensa desactivada');
-        } catch (error) {
-            console.error('Error en deleteReward:', error);
-            throw error;
-        }
-    }
+			console.log("Recompensa desactivada");
+		} catch (error) {
+			console.error("Error en deleteReward:", error);
+			throw error;
+		}
+	}
 }
