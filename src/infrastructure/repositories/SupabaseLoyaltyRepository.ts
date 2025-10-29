@@ -1,3 +1,4 @@
+import type { CustomerLoyaltyCard } from "@/src/core/entities/Loyalty";
 import type {
 	ILoyaltyRepository,
 	ProcessLoyaltyResult,
@@ -28,5 +29,41 @@ export class SupabaseLoyaltyRepository implements ILoyaltyRepository {
 			message: result.message,
 			newPointsBalance: result.new_points_balance,
 		};
+	}
+
+	async getCardsByCustomer(customerId: string): Promise<CustomerLoyaltyCard[]> {
+		// 1. Llamamos a la función de BD segura (RPC)
+		const { data, error } = await supabase.rpc("get_customer_loyalty_summary", {
+			p_customer_id: customerId,
+		});
+
+		// 2. Manejamos el error
+		if (error) {
+			console.error("Error fetching loyalty summary:", error.message);
+			throw new Error(error.message);
+		}
+
+		// 3. Mapeamos la respuesta de la BBDD a nuestra entidad del 'core'
+		return data.map(
+			(item: {
+				card_id: string;
+				points: number;
+				business_id: string;
+				business_name: string;
+				business_logo_url: string | null;
+				next_reward_points: number | null;
+				next_reward_name: string | null;
+			}) => ({
+				cardId: item.card_id,
+				points: Number(item.points), // 'numeric' de PG viene como string a veces
+				businessId: item.business_id,
+				businessName: item.business_name,
+				businessLogoUrl: item.business_logo_url,
+				nextRewardPoints: item.next_reward_points
+					? Number(item.next_reward_points)
+					: null,
+				nextRewardName: item.next_reward_name,
+			}),
+		);
 	}
 }
