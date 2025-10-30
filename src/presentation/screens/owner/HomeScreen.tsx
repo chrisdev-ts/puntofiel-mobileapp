@@ -1,10 +1,10 @@
+import { useRouter } from "expo-router";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
-import { useRouter } from "expo-router";
 
 export default function DashboardScreen() {
 	const router = useRouter();

@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
 
@@ -13,30 +13,46 @@ import { useAuth } from "@/src/presentation/hooks/useAuth";
 export default function Index() {
 	const { user, isLoading } = useAuth();
 	const router = useRouter();
+	const [isMounted, setIsMounted] = useState(false);
+
+	// Esperar a que el componente esté montado antes de navegar
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
 	useEffect(() => {
-		if (isLoading) return;
+		// No navegar hasta que el componente esté montado y no esté cargando
+		if (!isMounted || isLoading) return;
 
-		if (!user) {
-			// No está autenticado, ir a welcome
-			router.replace("/(public)/welcome");
-		} else {
-			// Redirigir según rol
-			if (user.role === "customer") {
-				router.replace("/(customer)/(tabs)/home");
-			} else if (user.role === "owner") {
-				router.replace("/(owner)/(tabs)/home");
-			} else if (user.role === "employee") {
-				router.replace("/(employee)/(tabs)/scan");
+		// Usar setTimeout para asegurar que la navegación ocurra después del render
+		const timer = setTimeout(() => {
+			if (!user) {
+				// No está autenticado, ir a welcome
+				router.replace("/(public)/welcome");
+			} else {
+				// Redirigir según rol (cuando se implemente la autenticación real)
+				// Por ahora, redirigir a welcome ya que user siempre será null
+				router.replace("/(public)/welcome");
+
+				// TODO: Descomentar cuando se implemente el estado de usuario real
+				// if (user.role === "customer") {
+				// 	router.replace("/(customer)/(tabs)/home");
+				// } else if (user.role === "owner") {
+				// 	router.replace("/(owner)/(tabs)/home");
+				// } else if (user.role === "employee") {
+				// 	router.replace("/(employee)/(tabs)/scan");
+				// }
 			}
-		}
-	}, [user, isLoading, router]);
+		}, 100);
 
-	// Mostrar loading mientras se verifica autenticación
-	if (isLoading) {
+		return () => clearTimeout(timer);
+	}, [user, isLoading, router, isMounted]);
+
+	// Mostrar loading mientras se verifica autenticación o no está montado
+	if (isLoading || !isMounted) {
 		return <FeedbackScreen variant="loading" title="Cargando..." />;
 	}
 
 	// Prevenir flash de contenido mientras redirige
-	return null;
+	return <FeedbackScreen variant="loading" title="Iniciando..." />;
 }
