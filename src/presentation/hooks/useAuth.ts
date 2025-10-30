@@ -1,176 +1,112 @@
-import { useCallback, useEffect, useState } from "react";
-import type { User } from "@/src/core/entities/User";
-import { IS_DEV_MODE, MOCK_USER_ID } from "@/src/infrastructure/config/dev";
-import { supabase } from "@/src/infrastructure/services/supabase";
+import { useMutation } from "@tanstack/react-query";
+import type { CreateUserDTO, LoginUserDTO } from "@/src/core/entities/User";
+import { LoginUserUseCase } from "@/src/core/usecases/auth/loginUser";
+import { RegisterUserUseCase } from "@/src/core/usecases/auth/registerUser";
+import { SupabaseUserRepository } from "@/src/infrastructure/repositories/SupabaseUserRepository";
+
+// Instanciar dependencias siguiendo Inversión de Dependencia
+const userRepository = new SupabaseUserRepository();
+const registerUserUseCase = new RegisterUserUseCase(userRepository);
+const loginUserUseCase = new LoginUserUseCase(userRepository);
 
 /**
- * Hook personalizado que encapsula la lógica de autenticación
- * y proporciona información sobre el usuario actual.
+ * Hook personalizado para gestión de autenticación en PuntoFiel.
  *
- * En modo desarrollo (IS_DEV_MODE), usa el MOCK_USER_ID.
- * En producción, obtiene el usuario de Supabase Auth.
+ * Conecta la capa de presentación con los casos de uso del core,
+ * manteniendo la separación de responsabilidades.
  */
 export const useAuth = () => {
-	const [user, setUser] = useState<User | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
-
-	const loadUser = useCallback(async () => {
-		setIsLoading(true);
-		try {
-			if (IS_DEV_MODE) {
-				// En desarrollo, usar datos mock directamente sin consultar la BD
-				const mockUser: User = {
-					id: MOCK_USER_ID,
-					first_name: "Christian",
-					last_name: "Serrano",
-					second_last_name: "",
-					email: "christian@email.com",
-					role: "customer",
-					created_at: new Date().toISOString(),
-					updated_at: new Date().toISOString(),
-				};
-				setUser(mockUser);
-				setIsLoading(false);
-				return;
-			}
-
-			// En producción, obtener el usuario de Supabase Auth
-			const {
-				data: { user: authUser },
-				error: authError,
-			} = await supabase.auth.getUser();
-
-			if (authError) throw authError;
-			if (!authUser) {
-				setUser(null);
-				setIsLoading(false);
-				return;
-			}
-
-			// Obtener datos completos del usuario desde la tabla profiles
-			const { data, error } = await supabase
-				.from("profiles")
-				.select("*")
-				.eq("id", authUser.id)
-				.single();
-
-			if (error) throw error;
-
-			// Mapear los datos de profiles a la entidad User
-			const userData: User = {
-				id: data.id,
-				first_name: data.first_name,
-				last_name: data.last_name || undefined,
-				second_last_name: data.second_last_name || undefined,
-				email: authUser.email || "",
-				role: data.role,
-				created_at: authUser.created_at,
-				updated_at: data.updated_at,
-			};
-
-			setUser(userData);
-		} catch (error) {
-			console.error("Error loading user:", error);
-			setUser(null);
-		} finally {
-			setIsLoading(false);
-		}
-	}, []);
-
-	useEffect(() => {
-		const loadInitialUser = async () => {
-			await loadUser();
-		};
-
-		loadInitialUser();
-
-		// Escuchar cambios en la autenticación
-		const {
-			data: { subscription },
-		} = supabase.auth.onAuthStateChange(async (_event, session) => {
-			if (session?.user) {
-				await loadUser();
-			} else {
-				setUser(null);
-			}
-		});
-
-		return () => {
-			subscription.unsubscribe();
-		};
-	}, [loadUser]);
-
-	const handleLogin = async (email: string, password: string) => {
-		try {
-			const { error } = await supabase.auth.signInWithPassword({
-				email,
-				password,
+	// Mutación para registrar usuario
+	const registerMutation = useMutation({
+		mutationFn: async (userData: CreateUserDTO) => {
+			console.log("[useAuth] Ejecutando caso de uso de registro...");
+			console.log("[useAuth] Datos a registrar:", {
+				email: userData.email,
+				firstName: userData.firstName,
+				lastName: userData.lastName,
+				role: userData.role,
+				hasSecondLastName: !!userData.secondLastName,
 			});
 
-			if (error) throw error;
+			try {
+				const result = await registerUserUseCase.execute(userData);
+				console.log("[useAuth] Registro exitoso");
+				return result;
+			} catch (error) {
+				console.error("[useAuth] Error en registro:", error);
+				throw error;
+			}
+		},
+	});
 
-			await loadUser();
-			return { success: true };
-		} catch (error) {
-			console.error("Login failed:", error);
-			return { success: false, error };
-		}
-	};
+	// Mutación para iniciar sesión
+	const loginMutation = useMutation({
+		mutationFn: async (credentials: LoginUserDTO) => {
+			console.log("[useAuth] Ejecutando caso de uso de login...");
+			console.log("[useAuth] Email de login:", credentials.email);
 
-	const handleLogout = async () => {
-		try {
-			await supabase.auth.signOut();
-			setUser(null);
-			return { success: true };
-		} catch (error) {
-			console.error("Logout failed:", error);
-			return { success: false, error };
-		}
-	};
-
-	const handleRegister = async (
-		email: string,
-		password: string,
-		firstName: string,
-		lastName?: string,
-		secondLastName?: string,
-		role: User["role"] = "customer",
-	) => {
-		try {
-			// 1. Crear usuario en Supabase Auth
-			const { data: authData, error: authError } = await supabase.auth.signUp({
-				email,
-				password,
-			});
-
-			if (authError) throw authError;
-			if (!authData.user) throw new Error("No se pudo crear el usuario");
-
-			// 2. Crear perfil de usuario en la tabla profiles
-			const { error: profileError } = await supabase.from("profiles").insert({
-				id: authData.user.id,
-				first_name: firstName,
-				last_name: lastName,
-				second_last_name: secondLastName,
-				role,
-			});
-
-			if (profileError) throw profileError;
-
-			await loadUser();
-			return { success: true };
-		} catch (error) {
-			console.error("Registration failed:", error);
-			return { success: false, error };
-		}
-	};
+			try {
+				const result = await loginUserUseCase.execute(credentials);
+				console.log("[useAuth] Login exitoso");
+				return result;
+			} catch (error) {
+				console.error("[useAuth] Error en login:", error);
+				throw error;
+			}
+		},
+	});
 
 	return {
-		user,
-		isLoading,
-		handleLogin,
-		handleLogout,
-		handleRegister,
-		refresh: loadUser,
+		// Estado del usuario actual (temporal - será reemplazado por Zustand store)
+		user: null, // Por ahora null, se implementará el estado global después
+		isLoading: false, // Por ahora false, se implementará la verificación de sesión después
+
+		// Funciones de registro
+		register: (
+			userData: CreateUserDTO,
+			callbacks?: {
+				onSuccess?: (user: any) => void;
+				onError?: (error: Error) => void;
+			},
+		) => {
+			registerMutation.mutate(userData, {
+				onSuccess: (user) => {
+					console.log("[useAuth] Usuario registrado exitosamente:", user.id);
+					callbacks?.onSuccess?.(user);
+				},
+				onError: (error: Error) => {
+					console.error("[useAuth] Error al registrar usuario:", error.message);
+					console.error("[useAuth] Detalles del error:", error);
+					callbacks?.onError?.(error);
+				},
+			});
+		},
+		isRegistering: registerMutation.isPending,
+		registerError: registerMutation.error,
+		registeredUser: registerMutation.data,
+
+		// Funciones de login
+		login: (
+			credentials: LoginUserDTO,
+			callbacks?: {
+				onSuccess?: (user: any) => void;
+				onError?: (error: Error) => void;
+			},
+		) => {
+			loginMutation.mutate(credentials, {
+				onSuccess: (user) => {
+					console.log("[useAuth] Usuario autenticado exitosamente:", user.id);
+					callbacks?.onSuccess?.(user);
+				},
+				onError: (error: Error) => {
+					console.error("[useAuth] Error al iniciar sesión:", error.message);
+					console.error("[useAuth] Detalles del error:", error);
+					callbacks?.onError?.(error);
+				},
+			});
+		},
+		isLoggingIn: loginMutation.isPending,
+		loginError: loginMutation.error,
+		authenticatedUser: loginMutation.data,
 	};
 };

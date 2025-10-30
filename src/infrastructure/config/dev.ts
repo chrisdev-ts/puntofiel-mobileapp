@@ -15,7 +15,7 @@
  */
 
 // Usuario dueño (Amairany) - owner_id del negocio "Café El Portal"
-export const MOCK_USER_ID = "02c05bc0-afeb-439b-8841-049176d8eab6";
+export const MOCK_USER_ID = "b2104bf3-9107-450b-a74f-cc8fd72fbb85";
 
 // Usuario cliente (Christian) - tiene tarjeta de lealtad con transacciones
 // export const MOCK_USER_ID = "3234cb32-b89f-4bd4-932b-6d3b1d72935c";
