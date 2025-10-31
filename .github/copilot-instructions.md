@@ -121,3 +121,51 @@ const { data, error } = await supabase.auth.signUp({ email, password });
 
   * **Nomenclatura:** `PascalCase` para componentes y clases. `camelCase` para funciones y variables.
   * **Comentarios:** Usar español para explicar la lógica de negocio.
+
+### 4.6. Documentación técnica
+
+**Antes de implementar cualquier funcionalidad, revisa la documentación en la carpeta `docs/`:**
+
+  * **`ARCHITECTURE.md`** - Detalles de la arquitectura limpia y estructura de carpetas
+  * **`SUPABASE.md`** - Configuración de Supabase, patrones de uso y funciones RPC
+  * **`FORMS.md`** - Manejo de formularios con React Hook Form y Zod
+  * **`STATE.md`** - Gestión de estado con Zustand y TanStack Query
+  * **`GLUESTACK.md`** - Uso de componentes de gluestack-ui
+  * **`LAYOUT.md`** - Estructura de navegación con Expo Router
+  * **`script-maestro-puntofiel.sql`** - ⚠️ **FUENTE DE VERDAD ABSOLUTA** sobre la base de datos (tablas, funciones RPC, políticas RLS, triggers, índices)
+
+Esta documentación contiene patrones establecidos, ejemplos de código y mejores prácticas específicas del proyecto.
+
+**⚠️ IMPORTANTE - Base de Datos:**
+
+Antes de trabajar con cualquier funcionalidad relacionada con Supabase o la base de datos:
+
+1. **SIEMPRE revisa `docs/script-maestro-puntofiel.sql`** - Es la única fuente de verdad sobre el esquema de la base de datos
+2. **Verifica la fecha de última modificación** en el encabezado del archivo (línea 5: "Ultima modificación")
+3. **Recuerda al usuario verificar la fecha** para asegurarse de que está trabajando con la versión más reciente del script
+4. Si encuentras inconsistencias entre el código y el script SQL, **el script SQL tiene prioridad absoluta**
+
+### 4.7. Estándares de código y estilos
+
+**Al modificar o crear componentes, sigue estas reglas:**
+
+  * **Estilos:** Usar **siempre Tailwind CSS** (NativeWind) para estilos. **NO usar estilos inline ni StyleSheet** a menos que sea estrictamente necesario (ej: transformaciones dinámicas complejas).
+  * **Valores hardcodeados:** Evitar valores hardcodeados (colores, tamaños, espaciados). Usar tokens de Tailwind o constantes centralizadas.
+  * **Refactorización automática:** Si encuentras código con estilos inline, StyleSheet, o valores hardcodeados, **cámbialos a Tailwind automáticamente** sin preguntar, a menos que haya una razón técnica válida documentada en el código.
+
+```typescript
+// ❌ Incorrecto
+<View style={{ backgroundColor: '#3B82F6', padding: 16, marginTop: 20 }}>
+  <Text style={{ color: '#FFFFFF', fontSize: 18 }}>Hola</Text>
+</View>
+
+// ❌ Incorrecto
+const styles = StyleSheet.create({
+  container: { backgroundColor: '#3B82F6', padding: 16 }
+});
+
+// ✅ Correcto
+<View className="bg-blue-500 p-4 mt-5">
+  <Text className="text-white text-lg">Hola</Text>
+</View>
+```

@@ -1,5 +1,25 @@
 # Patrones de acceso a datos
 
+## ⚠️ Configuración inicial requerida
+
+Antes de usar la aplicación, **debes ejecutar el script SQL maestro** en tu base de datos de Supabase:
+
+1. Ve al proyecto en [Supabase Dashboard](https://supabase.com/dashboard/project/ardzmfnmuvgwmdrmpzlh)
+2. Navega a **SQL Editor**
+3. Abre el archivo `docs/script-maestro-puntofiel.sql`
+4. Copia todo el contenido y pégalo en el editor SQL
+5. Ejecuta el script (botón "Run")
+
+Este script crea:
+- ✅ Todas las tablas necesarias (`profiles`, `businesses`, `loyalty_cards`, `rewards`, etc.)
+- ✅ Funciones RPC (`get_customer_loyalty_summary`, `process_loyalty`, etc.)
+- ✅ Políticas de seguridad (RLS)
+- ✅ Triggers y funciones auxiliares
+
+**Sin este script, la aplicación no funcionará correctamente.**
+
+---
+
 ## ¿Dónde va este código?
 
 * **ÚNICAMENTE** dentro de los archivos de implementación en `src/infrastructure/repositories/`.
