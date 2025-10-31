@@ -19,13 +19,13 @@ import { supabase } from "@/src/infrastructure/services/supabase";
  */
 
 export class SupabaseUserRepository implements IUserRepository {
-	findById(id: string): Promise<User | null> {
+	findById(_id: string): Promise<User | null> {
 		throw new Error("Method not implemented.");
 	}
-	findByEmail(email: string): Promise<User | null> {
+	findByEmail(_email: string): Promise<User | null> {
 		throw new Error("Method not implemented.");
 	}
-	create(user: Omit<User, "id">): Promise<User> {
+	create(_user: Omit<User, "id">): Promise<User> {
 		throw new Error("Method not implemented.");
 	}
 	/**
@@ -60,6 +60,8 @@ export class SupabaseUserRepository implements IUserRepository {
 				options: {
 					// Redirección tras confirmar email
 					emailRedirectTo: "puntofiel://auth/callback",
+					// IMPORTANTE: No establecer emailRedirectTo causa auto-confirmación en dev
+					// Si quieres forzar confirmación por email, asegúrate de tenerlo configurado en Supabase
 					data: {
 						// Metadata que se almacena en auth.users
 						first_name: userData.firstName,
@@ -88,9 +90,12 @@ export class SupabaseUserRepository implements IUserRepository {
 				email_confirmed_at: authData.user.email_confirmed_at,
 				created_at: authData.user.created_at,
 				hasSession: !!authData.session,
+				needsEmailConfirmation: !authData.user.email_confirmed_at,
 			});
 
 			// 3. Crear perfil en la tabla profiles
+			// NOTA: Creamos el perfil inmediatamente, incluso si el email no está confirmado
+			// El usuario podrá usar la app solo después de confirmar su email (manejado por RLS)
 			console.log("Creando perfil en tabla profiles...");
 			const { data: profileData, error: profileError } = await supabase
 				.from("profiles")
@@ -106,6 +111,25 @@ export class SupabaseUserRepository implements IUserRepository {
 
 			if (profileError) {
 				console.error("Error al crear perfil:", profileError);
+				console.error("Detalles del error:", {
+					code: profileError.code,
+					message: profileError.message,
+					details: profileError.details,
+					hint: profileError.hint,
+				});
+
+				// Intentar eliminar el usuario de auth si falla la creación del perfil
+				try {
+					console.log("Intentando rollback: eliminando usuario de auth...");
+					await supabase.auth.admin.deleteUser(authData.user.id);
+					console.log("Rollback exitoso");
+				} catch (rollbackError) {
+					console.error("Error en rollback:", rollbackError);
+					console.error(
+						"⚠️ ADVERTENCIA: Usuario creado en auth pero sin perfil. ID:",
+						authData.user.id,
+					);
+				}
 
 				// Manejar errores específicos de la tabla profiles
 				this.handleProfileError(profileError);
@@ -114,8 +138,24 @@ export class SupabaseUserRepository implements IUserRepository {
 			console.log("Perfil creado exitosamente:", profileData.id);
 			console.log("Registro completado para:", userData.email);
 
+			// Si el email necesita confirmación, cerrar la sesión automática
+			if (!authData.user.email_confirmed_at) {
+				console.log(
+					"⚠️ Email necesita confirmación. Cerrando sesión automática...",
+				);
+				// Cerrar la sesión que Supabase crea automáticamente
+				await supabase.auth.signOut();
+				console.log(
+					"Sesión cerrada. Usuario debe confirmar email antes de usar la app.",
+				);
+			}
+
 			// 4. Retornar usuario mapeado
-			return this.mapToUser(profileData, userData.phone);
+			return this.mapToUser(
+				profileData,
+				authData.user.email || "",
+				userData.phone,
+			);
 		} catch (error) {
 			console.error("Error en registro completo:", error);
 
@@ -204,10 +244,11 @@ export class SupabaseUserRepository implements IUserRepository {
 
 		console.log("Perfil obtenido:", profileData.id);
 
-		// 3. Obtener teléfono del metadata de auth
+		// 3. Obtener email y teléfono de auth
+		const email = authData.user.email || "";
 		const phone = authData.user.user_metadata?.phone || "";
 
-		return this.mapToUser(profileData, phone);
+		return this.mapToUser(profileData, email, phone);
 	}
 
 	/**
@@ -234,22 +275,37 @@ export class SupabaseUserRepository implements IUserRepository {
 
 		console.log("Usuario encontrado:", data.id);
 
-		// Para obtener el teléfono necesitaríamos consultar auth.users o guardarlo en profiles
-		// Por simplicidad, retornamos sin teléfono aquí
-		return this.mapToUser(data, "");
+		// Nota: Para getUserById no tenemos acceso a authData,
+		// por lo que email y phone quedarán vacíos a menos que consultemos auth.users
+		// TODO: Considerar guardar email/phone en profiles o usar admin API
+		return this.mapToUser(data, "", "");
 	}
 
 	/**
 	 * Mapea datos de la BD al formato de la entidad User.
 	 */
-	private mapToUser(profileData: any, phone: string = ""): User {
+	private mapToUser(
+		profileData: {
+			id: string;
+			first_name: string;
+			last_name: string;
+			second_last_name: string | null;
+			role: "customer" | "employee" | "owner";
+			created_at?: string;
+			updated_at?: string;
+		},
+		email = "",
+		phone = "",
+	): User {
 		return {
 			id: profileData.id,
+			email: email,
 			firstName: profileData.first_name,
 			lastName: profileData.last_name,
-			secondLastName: profileData.second_last_name,
+			secondLastName: profileData.second_last_name ?? undefined,
 			role: profileData.role,
 			phone: phone,
+			createdAt: new Date(profileData.created_at || Date.now()),
 			updatedAt: new Date(profileData.updated_at || Date.now()),
 		};
 	}
@@ -257,7 +313,10 @@ export class SupabaseUserRepository implements IUserRepository {
 	/**
 	 * Maneja errores específicos de la tabla profiles.
 	 */
-	private handleProfileError(error: any): never {
+	private handleProfileError(error: {
+		code?: string;
+		message?: string;
+	}): never {
 		console.error("Analizando error de perfil:", error);
 
 		// Error de clave duplicada (no debería pasar si verificamos bien el email)
@@ -305,7 +364,11 @@ export class SupabaseUserRepository implements IUserRepository {
 	/**
 	 * Maneja errores de autenticación con mensajes amigables.
 	 */
-	private handleAuthError(error: any): never {
+	private handleAuthError(error: {
+		message?: string;
+		code?: string;
+		status?: number;
+	}): never {
 		console.error("Analizando error de autenticación:", {
 			message: error.message,
 			code: error.code,
@@ -390,27 +453,5 @@ export class SupabaseUserRepository implements IUserRepository {
 		throw new Error(
 			"Ocurrió un error inesperado. Por favor, intenta nuevamente o contacta soporte si el problema persiste.",
 		);
-	}
-
-	/**
-	 * Realiza rollback eliminando usuario de auth si falla la creación del perfil.
-	 */
-	private async rollbackAuthUser(userId: string): Promise<void> {
-		try {
-			console.log("Iniciando rollback para usuario:", userId);
-
-			// Nota: Esta operación requiere privilegios de administrador
-			// En producción necesitarías una función de Edge o manejar esto diferente
-			const { error } = await supabase.auth.admin.deleteUser(userId);
-
-			if (error) {
-				console.error("Error en rollback:", error);
-			} else {
-				console.log("Rollback completado: usuario eliminado de auth");
-			}
-		} catch (rollbackError) {
-			console.error("Error crítico en rollback:", rollbackError);
-			// No lanzar error aquí para no enmascarar el error original
-		}
 	}
 }
