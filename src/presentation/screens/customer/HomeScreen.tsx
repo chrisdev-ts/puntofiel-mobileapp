@@ -51,7 +51,7 @@ export default function HomeScreen() {
 				onPress={() => router.push("/(customer)/business/search")}
 			>
 				<ButtonText>Buscar negocios</ButtonText>
-			</Button>{" "}
+			</Button>
 			{/* Estado vacío */}
 			{cards.length === 0 ? (
 				<FeedbackScreen
