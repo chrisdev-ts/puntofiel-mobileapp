@@ -30,5 +30,22 @@
 				"organizeImports": "on"
 			}
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["components/**"],
+			"linter": {
+				"enabled": false
+			},
+			"formatter": {
+				"enabled": false
+			}
+		},
+		{
+			"includes": ["global.css"],
+			"linter": {
+				"enabled": false
+			}
+		}
+	]
 }
