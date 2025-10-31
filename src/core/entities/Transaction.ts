@@ -5,4 +5,5 @@ export interface Transaction {
 	transactionType: "purchase_earn" | "redeem";
 	purchaseAmount: number;
 	pointsChange: number;
+	invoiceRef?: string;
 }
