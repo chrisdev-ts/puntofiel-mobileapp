@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
+import { AuthLoading } from "@/src/presentation/components/auth";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
 
 /**
@@ -30,18 +30,17 @@ export default function Index() {
 				// No está autenticado, ir a welcome
 				router.replace("/(public)/welcome");
 			} else {
-				// Redirigir según rol (cuando se implemente la autenticación real)
-				// Por ahora, redirigir a welcome ya que user siempre será null
-				router.replace("/(public)/welcome");
-
-				// TODO: Descomentar cuando se implemente el estado de usuario real
-				// if (user.role === "customer") {
-				// 	router.replace("/(customer)/(tabs)/home");
-				// } else if (user.role === "owner") {
-				// 	router.replace("/(owner)/(tabs)/home");
-				// } else if (user.role === "employee") {
-				// 	router.replace("/(employee)/(tabs)/scan");
-				// }
+				// Redirigir según el rol del usuario
+				if (user.role === "customer") {
+					router.replace("/(customer)/(tabs)/home");
+				} else if (user.role === "owner") {
+					router.replace("/(owner)/(tabs)/home");
+				} else if (user.role === "employee") {
+					router.replace("/(employee)/(tabs)/scan");
+				} else {
+					// Rol desconocido, ir a welcome
+					router.replace("/(public)/welcome");
+				}
 			}
 		}, 100);
 
@@ -50,9 +49,9 @@ export default function Index() {
 
 	// Mostrar loading mientras se verifica autenticación o no está montado
 	if (isLoading || !isMounted) {
-		return <FeedbackScreen variant="loading" title="Cargando..." />;
+		return <AuthLoading message="Verificando sesión..." />;
 	}
 
 	// Prevenir flash de contenido mientras redirige
-	return <FeedbackScreen variant="loading" title="Iniciando..." />;
+	return <AuthLoading message="Iniciando..." />;
 }
