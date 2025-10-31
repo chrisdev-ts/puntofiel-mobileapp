@@ -40,7 +40,27 @@ export class SupabaseLoyaltyRepository implements ILoyaltyRepository {
 		// 2. Manejamos el error
 		if (error) {
 			console.error("Error fetching loyalty summary:", error.message);
+			console.error("Detalles del error:", error);
+
+			// Si la función no existe en la BD, retornamos un array vacío en lugar de lanzar error
+			if (
+				error.message.includes("does not match function result type") ||
+				error.message.includes("function") ||
+				error.message.includes("does not exist")
+			) {
+				console.warn(
+					"La función get_customer_loyalty_summary no está configurada en Supabase. " +
+						"Por favor, ejecuta el script SQL en tu base de datos.",
+				);
+				return [];
+			}
+
 			throw new Error(error.message);
+		}
+
+		// Si no hay datos, retornar array vacío
+		if (!data) {
+			return [];
 		}
 
 		// 3. Mapeamos la respuesta de la BBDD a nuestra entidad del 'core'
