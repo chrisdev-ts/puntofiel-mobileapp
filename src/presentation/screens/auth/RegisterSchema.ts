@@ -41,14 +41,13 @@ export const registerSchema = z
 			.toLowerCase()
 			.trim(),
 
-		// Teléfono
+		// Teléfono (opcional)
 		phone: z
 			.string()
-			.min(1, "El número de teléfono es requerido")
-			.regex(/^\d{3}-\d{3}-\d{4}$/, "Formato inválido. Use: XXX-XXX-XXXX")
-			.transform((val) => val.replace(/-/g, "")), // Remover guiones para BD
-
-		// Contraseña
+			.regex(/^\d{3}-\d{3}-\d{4}$/, "Formato inválido. Ej: 555-123-4567")
+			.transform((val) => val.replace(/-/g, "")) // Remover guiones para BD
+			.optional()
+			.or(z.literal("")), // Contraseña
 		password: z
 			.string()
 			.min(1, "La contraseña es requerida")
@@ -56,9 +55,7 @@ export const registerSchema = z
 			.regex(/[A-Z]/, "Debe contener al menos una letra mayúscula")
 			.regex(/[a-z]/, "Debe contener al menos una letra minúscula")
 			.regex(/[0-9]/, "Debe contener al menos un número")
-			.regex(/[^A-Za-z0-9]/, "Debe contener al menos un carácter especial"),
-
-		// Confirmar contraseña
+			.regex(/[^A-Za-z0-9]/, "Debe contener al menos un carácter especial"), // Confirmar contraseña
 		confirmPassword: z.string().min(1, "Confirme su contraseña"),
 
 		// Switch para tipo de usuario
@@ -83,7 +80,7 @@ export type RegisterFormData = z.infer<typeof registerSchema>;
 
 /**
  * Utilidad para formatear número de teléfono automáticamente.
- * Convierte entrada numérica a formato XXX-XXX-XXXX.
+ * Convierte entrada numérica a formato 555-123-4567.
  */
 export const formatPhoneNumber = (value: string): string => {
 	// Remover todo lo que no sea dígito
@@ -99,13 +96,13 @@ export const formatPhoneNumber = (value: string): string => {
 		return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3)}`;
 	}
 
-	// Formato completo XXX-XXX-XXXX
+	// Formato completo 555-123-4567
 	return `${limitedNumbers.slice(0, 3)}-${limitedNumbers.slice(3, 6)}-${limitedNumbers.slice(6)}`;
 };
 
 /**
  * Utilidad para extraer solo los números del teléfono formateado.
- * Convierte XXX-XXX-XXXX a XXXXXXXXXX para almacenar en BD.
+ * Convierte 555-123-4567 a 5551234567 para almacenar en BD.
  */
 export const cleanPhoneNumber = (formattedPhone: string): string => {
 	return formattedPhone.replace(/\D/g, "");

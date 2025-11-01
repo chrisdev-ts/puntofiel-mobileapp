@@ -43,7 +43,7 @@ export class RegisterUserUseCase {
 	 */
 	private validateBusinessRules(userData: CreateUserDTO): void {
 		// Validar que el rol sea válido
-		const validRoles = ["customer", "business_owner"];
+		const validRoles = ["customer", "owner"];
 		if (!validRoles.includes(userData.role)) {
 			throw new Error("Rol de usuario no válido");
 		}

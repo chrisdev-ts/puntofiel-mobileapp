@@ -4,6 +4,16 @@ Todas las pantallas siguen la misma estructura visual. **`AppLayout` es el únic
 
 ---
 
+## ⚠️ IMPORTANTE: `AppLayout` ya incluye `VStack`
+
+**`AppLayout` envuelve automáticamente todos sus `children` en un `VStack` interno** con el espaciado configurado en `contentSpacing` (por defecto `"lg"`).
+
+**Por lo tanto:**
+- ❌ **NO agregues un `VStack` como hijo directo** de `AppLayout` a menos que sea estrictamente necesario para un caso especial (por ejemplo, agrupación con espaciado diferente).
+- ✅ **Pasa los elementos directamente como children** de `AppLayout` y se espaciarán automáticamente.
+
+---
+
 ## `AppLayout` te da:
 
 

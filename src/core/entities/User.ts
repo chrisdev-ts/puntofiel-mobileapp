@@ -1,11 +1,13 @@
 // Define la estructura de un objeto User en nuestro dominio.
 export interface User {
 	id: string;
+	email: string;
 	firstName: string;
 	lastName: string;
 	secondLastName?: string;
-	role: "customer" | "business_owner" | "admin";
+	role: "customer" | "employee" | "owner";
 	phone?: string;
+	createdAt: Date;
 	updatedAt: Date;
 }
 /**
@@ -17,9 +19,9 @@ export interface CreateUserDTO {
 	lastName: string;
 	secondLastName?: string;
 	email: string;
-	phone: string;
+	phone?: string;
 	password: string;
-	role: "customer" | "business_owner";
+	role: "customer" | "owner";
 }
 /**
  * DTO para el inicio de sesión.

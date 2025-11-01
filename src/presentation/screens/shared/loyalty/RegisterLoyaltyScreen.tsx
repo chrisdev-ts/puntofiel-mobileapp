@@ -13,8 +13,7 @@ import {
 import { Heading } from "@/components/ui/heading";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
-import { ErrorOverlay } from "@/src/presentation/components/feedback/ErrorOverlay";
-import { SuccessOverlay } from "@/src/presentation/components/feedback/SuccessOverlay";
+import { FeedbackModal } from "@/src/presentation/components/common";
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
 import { useCustomerProfile } from "@/src/presentation/hooks/useCustomerProfile";
 import { useScan } from "@/src/presentation/hooks/useScan";
@@ -145,16 +144,26 @@ export default function RegisterLoyaltyScreen() {
 			)}
 
 			{/* Feedback visual con overlays */}
-			<SuccessOverlay
+			<FeedbackModal
 				visible={!!success}
+				variant="success"
 				message={success?.message || ""}
-				newPointsBalance={success?.newPointsBalance}
+				additionalInfo={
+					success?.newPointsBalance !== undefined
+						? `Nuevo saldo: ${success.newPointsBalance} puntos`
+						: undefined
+				}
 				onClose={() => {
 					reset();
 					router.back();
 				}}
 			/>
-			<ErrorOverlay visible={!!error} message={error || ""} onClose={reset} />
+			<FeedbackModal
+				visible={!!error}
+				variant="error"
+				message={error || ""}
+				onClose={reset}
+			/>
 		</Box>
 	);
 }

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ScrollView } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Box } from "@/components/ui/box";
 import { VStack } from "@/components/ui/vstack";
@@ -22,6 +22,10 @@ interface AppLayoutProps {
 	backgroundColor?: string;
 	/** Espaciado vertical entre elementos (por defecto 'lg') */
 	contentSpacing?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+	/** Centrar contenido verticalmente (útil para pantallas de auth) */
+	centerContent?: boolean;
+	/** Habilitar KeyboardAvoidingView (útil para formularios) */
+	avoidKeyboard?: boolean;
 }
 
 /**
@@ -64,12 +68,49 @@ export function AppLayout({
 	scrollable = true,
 	backgroundColor = "bg-gray-50",
 	contentSpacing = "lg",
+	centerContent = false,
+	avoidKeyboard = false,
 }: AppLayoutProps) {
 	const insets = useSafeAreaInsets();
 
 	// Calculamos el padding dinámicamente considerando el safe area
-	const headerHeight = showHeader ? 50 + insets.top : 0;
+	const headerHeight = showHeader ? 50 + insets.top : insets.top;
 	const navBarHeight = showNavBar ? 105 : 0;
+
+	// Contenido envuelto en VStack
+	const content = (
+		<Box className="p-4">
+			<VStack space={contentSpacing}>{children}</VStack>
+		</Box>
+	);
+
+	// Wrapper principal con KeyboardAvoidingView
+	const mainContent = scrollable ? (
+		<ScrollView
+			className="flex-1"
+			contentContainerStyle={{
+				flexGrow: 1,
+				paddingTop: headerHeight,
+				paddingBottom: navBarHeight,
+				justifyContent: centerContent ? "center" : "flex-start",
+			}}
+			showsVerticalScrollIndicator={false}
+			keyboardShouldPersistTaps="handled"
+		>
+			{content}
+		</ScrollView>
+	) : (
+		<Box
+			className="flex-1"
+			style={{
+				paddingTop: headerHeight,
+				paddingBottom: navBarHeight,
+				justifyContent: centerContent ? "center" : "flex-start",
+			}}
+		>
+			{content}
+		</Box>
+	);
 
 	return (
 		<Box className={`flex-1 ${backgroundColor}`}>
@@ -83,31 +124,18 @@ export function AppLayout({
 				/>
 			)}
 
-			{/* Contenido Principal */}
-			{scrollable ? (
-				<ScrollView
-					className="flex-1"
-					contentContainerStyle={{
-						flexGrow: 1,
-						paddingTop: headerHeight,
-						paddingBottom: navBarHeight,
-					}}
-					showsVerticalScrollIndicator={false}
+			{/* Contenido Principal con KeyboardAvoidingView */}
+			{avoidKeyboard ? (
+				<KeyboardAvoidingView
+					behavior={Platform.OS === "ios" ? "padding" : "height"}
+					style={{ flex: 1 }}
+					keyboardVerticalOffset={headerHeight}
+					enabled
 				>
-					<Box className="p-4">
-						<VStack space={contentSpacing}>{children}</VStack>
-					</Box>
-				</ScrollView>
+					{mainContent}
+				</KeyboardAvoidingView>
 			) : (
-				<Box
-					className="flex-1 p-4"
-					style={{
-						paddingTop: headerHeight,
-						paddingBottom: navBarHeight,
-					}}
-				>
-					<VStack space={contentSpacing}>{children}</VStack>
-				</Box>
+				mainContent
 			)}
 
 			{/* Barra de navegación inferior (Opcional) */}

@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useRouter, useSegments } from "expo-router";
 import { ArrowLeftIcon, BellIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Pressable } from "react-native";
@@ -47,6 +47,7 @@ export function Header({
 	onBackPress,
 }: HeaderProps) {
 	const router = useRouter();
+	const segments = useSegments();
 	const insets = useSafeAreaInsets();
 
 	const handleBackPress = () => {
@@ -59,8 +60,10 @@ export function Header({
 	};
 
 	const handleNotificationsPress = () => {
-		// TODO: Navegar a la pantalla de notificaciones cuando exista
-		console.log("Abrir notificaciones");
+		// Detectar el rol actual del segmento de la ruta
+		const roleSegment = segments[0]; // (customer), (owner), (employee)
+		// @ts-expect-error - Dynamic route based on user role
+		router.push(`/${roleSegment}/notifications`);
 	};
 
 	return (

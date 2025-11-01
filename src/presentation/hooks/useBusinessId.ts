@@ -1,28 +1,10 @@
 // Hook para obtener el ID del negocio del usuario autenticado usando TanStack Query
 
 import { useQuery } from "@tanstack/react-query";
-import { IS_DEV_MODE, MOCK_USER_ID } from "@/src/infrastructure/config/dev";
 import { supabase } from "@/src/infrastructure/services/supabase";
+import { useAuthStore } from "@/src/presentation/stores/authStore";
 
-async function fetchBusinessId(): Promise<string> {
-	let userId: string;
-
-	if (IS_DEV_MODE) {
-		// MODO DESARROLLO: Usar usuario mock
-		userId = MOCK_USER_ID;
-	} else {
-		// PRODUCCIÓN: Obtener usuario autenticado
-		const {
-			data: { user },
-			error: authError,
-		} = await supabase.auth.getUser();
-
-		if (authError || !user) {
-			throw new Error("No hay usuario autenticado");
-		}
-		userId = user.id;
-	}
-
+async function fetchBusinessId(userId: string): Promise<string> {
 	const { data, error } = await supabase
 		.from("businesses")
 		.select("id")
@@ -39,14 +21,23 @@ async function fetchBusinessId(): Promise<string> {
 		throw new Error("No se encontró el negocio del usuario");
 	}
 
-	//console.log('Negocio encontrado:', data.id);
 	return data.id;
 }
 
 export function useBusinessId() {
+	// Obtener el ID del usuario autenticado desde el store
+	const user = useAuthStore((state) => state.user);
+	const userId = user?.id;
+
 	return useQuery({
-		queryKey: ["businessId"],
-		queryFn: fetchBusinessId,
+		queryKey: ["businessId", userId],
+		queryFn: () => {
+			if (!userId) {
+				throw new Error("No hay usuario autenticado");
+			}
+			return fetchBusinessId(userId);
+		},
+		enabled: !!userId, // Solo ejecutar si hay usuario
 		staleTime: 1000 * 60 * 10, // 10 minutos
 		retry: 1,
 	});
