@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { AppLayout } from "@/src/presentation/components/layout";
+import { router } from "expo-router";
 import React from "react";
 import { ScrollView, View } from "react-native";
 
@@ -118,7 +119,8 @@ const ScreenUserTerms: React.FC = () => {
           {/* Botón */}
           <Button
             action="primary"
-            variant="solid"
+            variant="outline"
+            onPress={() => router.push("/(public)/register")}
             size="lg"
             className="mt-2 w-full bg-[#2F4858]"
           >

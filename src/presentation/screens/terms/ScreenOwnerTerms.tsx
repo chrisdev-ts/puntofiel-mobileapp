@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { AppLayout } from "@/src/presentation/components/layout";
+import { router } from "expo-router";
 import React from "react";
 import { ScrollView, View } from "react-native";
 
@@ -20,7 +21,6 @@ export const ScreenOwnerTerms: React.FC = () => {
                  />
                </View>
        
-
           <Card className="bg-white p-6 rounded-2xl shadow-md mt-2 w-full">
             <Text className="text-xl font-bold text-[#2F4858] mb-4 text-center">
               Términos y Condiciones para Comercios Asociados
@@ -136,7 +136,8 @@ export const ScreenOwnerTerms: React.FC = () => {
 
             <Button
               action="primary"
-              variant="solid"
+              variant="outline"
+              onPress={() => router.push("/(public)/register")}
               size="lg"
               className="mt-2 w-full bg-[#2F4858]"
             >

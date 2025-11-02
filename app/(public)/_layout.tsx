@@ -10,6 +10,8 @@ export default function PublicLayout() {
 			<Stack.Screen name="welcome" />
 			<Stack.Screen name="login" />
 			<Stack.Screen name="register" />
+			<Stack.Screen name="ownerterms" />
+			<Stack.Screen name="userterms" />
 		</Stack>
 	);
 }
