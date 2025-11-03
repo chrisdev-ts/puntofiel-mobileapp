@@ -2,7 +2,7 @@
 -- PUNTOFIEL - SCRIPT COMPLETO DE BASE DE DATOS Y CONFIGURACIÓN (VERSION FINAL)
 -- Descripción: Creación de esquema completo (tablas, funciones, triggers, RLS)
 --              para el sistema de lealtad PuntoFiel, con lógica RPC.
--- Ultima modificación: 30 de octubre de 2025 a las 11:15 PM
+-- Ultima modificación: 02 de noviembre de 2025 a las 11:45 PM
 -- ============================================================================
 
 ---------------------------------------------------------------------------
@@ -26,6 +26,7 @@ DROP FUNCTION IF EXISTS public.process_loyalty(UUID, UUID, NUMERIC) CASCADE;
 DROP FUNCTION IF EXISTS public.get_customer_loyalty_summary(UUID) CASCADE;
 DROP FUNCTION IF EXISTS public.process_purchase(UUID, UUID, NUMERIC) CASCADE;
 DROP TYPE IF EXISTS user_role_enum CASCADE;
+DROP TYPE IF EXISTS business_category_enum CASCADE;
 
 
 ---------------------------------------------------------------------------
@@ -65,16 +66,16 @@ CREATE OR REPLACE FUNCTION public.process_loyalty(
 RETURNS TABLE (
     success BOOLEAN,
     message TEXT,
-    new_points_balance NUMERIC
+    new_points_balance INTEGER
 ) AS $$
 DECLARE
     v_card_id BIGINT;
-    v_points_earned NUMERIC(12, 4);
-    v_new_balance NUMERIC(12, 4);
+    v_points_earned INTEGER;
+    v_new_balance INTEGER;
 BEGIN
     -- 1. Validar que el monto sea mayor a 0
     IF p_amount <= 0 THEN
-        RETURN QUERY SELECT FALSE, 'El monto debe ser mayor a 0'::TEXT, NULL::NUMERIC;
+        RETURN QUERY SELECT FALSE, 'El monto debe ser mayor a 0'::TEXT, NULL::INTEGER;
         RETURN;
     END IF;
 
@@ -83,18 +84,18 @@ BEGIN
         SELECT 1 FROM public.profiles 
         WHERE id = p_customer_id AND role = 'customer'
     ) THEN
-        RETURN QUERY SELECT FALSE, 'Cliente no encontrado o rol inválido'::TEXT, NULL::NUMERIC;
+        RETURN QUERY SELECT FALSE, 'Cliente no encontrado o rol inválido'::TEXT, NULL::INTEGER;
         RETURN;
     END IF;
 
     -- 3. Validar que el negocio existe
     IF NOT EXISTS (SELECT 1 FROM public.businesses WHERE id = p_business_id) THEN
-        RETURN QUERY SELECT FALSE, 'Negocio no encontrado'::TEXT, NULL::NUMERIC;
+        RETURN QUERY SELECT FALSE, 'Negocio no encontrado'::TEXT, NULL::INTEGER;
         RETURN;
     END IF;
 
-    -- 4. Calcular puntos ganados (1% del monto)
-    v_points_earned := p_amount * 0.01;
+    -- 4. Calcular puntos ganados (1% del monto, redondeado al entero más cercano)
+    v_points_earned := ROUND(p_amount * 0.01);
 
     -- 5. Buscar o crear la loyalty_card (wallet) del cliente para este negocio
     SELECT id INTO v_card_id
@@ -138,7 +139,7 @@ BEGIN
 EXCEPTION
     WHEN OTHERS THEN
         -- Manejo de errores genéricos
-        RETURN QUERY SELECT FALSE, 'Error al procesar la transacción: ' || SQLERRM, NULL::NUMERIC;
+        RETURN QUERY SELECT FALSE, 'Error al procesar la transacción: ' || SQLERRM, NULL::INTEGER;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -151,11 +152,11 @@ GRANT EXECUTE ON FUNCTION public.process_loyalty(UUID, UUID, NUMERIC) TO authent
 CREATE OR REPLACE FUNCTION public.get_customer_loyalty_summary(p_customer_id UUID)
 RETURNS TABLE (
     card_id BIGINT,
-    points NUMERIC,
+    points INTEGER,
     business_id UUID,
     business_name TEXT,
     business_logo_url TEXT,
-    next_reward_points NUMERIC,
+    next_reward_points INTEGER,
     next_reward_name TEXT
 )
 AS $$
@@ -202,6 +203,18 @@ GRANT EXECUTE ON FUNCTION public.get_customer_loyalty_summary(UUID) TO authentic
 
 -- Crear el tipo ENUM para roles
 CREATE TYPE user_role_enum AS ENUM ('customer', 'owner', 'employee');
+
+-- Crear el tipo ENUM para categorías de negocios
+CREATE TYPE business_category_enum AS ENUM (
+    'food',         -- Comida general
+    'cafe',         -- Cafetería
+    'restaurant',   -- Restaurante
+    'retail',       -- Tiendas de retail/ropa
+    'services',     -- Servicios
+    'entertainment',-- Entretenimiento
+    'health',       -- Salud y bienestar
+    'other'         -- Otros
+);
 
 -- Crear la tabla "profiles"
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -251,6 +264,7 @@ CREATE TABLE IF NOT EXISTS public.businesses (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     owner_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
+    category business_category_enum NOT NULL DEFAULT 'other',
     location_address TEXT,
     opening_hours TEXT,
     logo_url TEXT
@@ -259,6 +273,10 @@ CREATE TABLE IF NOT EXISTS public.businesses (
 -- Comentarios en la tabla
 COMMENT ON TABLE public.businesses IS 'Negocios registrados en la plataforma PuntoFiel';
 COMMENT ON COLUMN public.businesses.owner_id IS 'Referencia al dueño del negocio (perfil con role owner)';
+COMMENT ON COLUMN public.businesses.category IS 'Categoría del negocio para filtrado y búsqueda';
+
+-- Crear índice para mejorar las búsquedas por categoría
+CREATE INDEX IF NOT EXISTS idx_businesses_category ON public.businesses(category);
 
 -- Aplicar trigger de updated_at
 DROP TRIGGER IF EXISTS on_businesses_updated ON public.businesses;
@@ -326,7 +344,7 @@ CREATE TABLE IF NOT EXISTS public.loyalty_cards (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     customer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     business_id UUID NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
-    points NUMERIC(12, 4) NOT NULL DEFAULT 0 CHECK (points >= 0),
+    points INTEGER NOT NULL DEFAULT 0 CHECK (points >= 0),
     UNIQUE(customer_id, business_id)
 );
 
@@ -582,34 +600,46 @@ DELETE FROM public.profiles;
 
 -- 1. Insertar perfiles de prueba
 -- 🔑 CREDENCIALES DE PRUEBA: (Contraseña para todos: 'password123')
--- Dueño: Amairany Meza Vilorio (owner.ama@cafetal.com)
+-- Dueño 1: Amairany Meza Vilorio (owner.ama@cafetal.com)
+-- Dueño 2: Ismael Flores Luna (owner.ismael@fitness.com)
+-- Dueño 3: Juan de Dios Madrid Ortiz (owner.madrid@tacos.com)
 -- Cliente: Jorge Christian Serrano Puertos (customer.chris@email.com)
 -- Empleado: Erick Ernesto López Valdés (employee.erick@gmail.com)
 INSERT INTO public.profiles (id, first_name, last_name, second_last_name, role)
 VALUES 
     ('02c05bc0-afeb-439b-8841-049176d8eab6', 'Amairany', 'Meza', 'Vilorio', 'owner'),
+    ('22f3022e-8402-4592-a87f-895f8a78b699', 'Ismael', 'Flores', 'Luna', 'owner'),
+    ('63664654-44dc-476a-b79c-ce9680440f74', 'Juan de Dios', 'Madrid', 'Ortiz', 'owner'),
     ('3234cb32-b89f-4bd4-932b-6d3b1d72935c', 'Jorge Christian', 'Serrano', 'Puertos', 'customer'),
     ('66b54f8c-3d8a-4934-8848-f7810e8613a2', 'Erick Ernesto', 'López', 'Valdés', 'employee');
 
 
--- 2. Insertar Negocio, Recompensas, Promociones y Empleados
+-- 2. Insertar Negocios, Recompensas, Promociones y Empleados
 DO $$
 DECLARE
     owner_ama_id UUID := '02c05bc0-afeb-439b-8841-049176d8eab6';
+    owner_maria_id UUID := '22f3022e-8402-4592-a87f-895f8a78b699';
+    owner_carlos_id UUID := '63664654-44dc-476a-b79c-ce9680440f74';
     employee_erick_id UUID := '66b54f8c-3d8a-4934-8848-f7810e8613a2';
     cafe_el_portal_id UUID;
+    gym_fitzone_id UUID;
+    tacos_el_rey_id UUID;
+    pizzeria_napoli_id UUID;
 BEGIN
-    -- 2.1. Crear el negocio
-    INSERT INTO public.businesses (owner_id, name, location_address, opening_hours, logo_url)
+    -- ========================================================================
+    -- NEGOCIO 1: Café El Portal (Cafetería)
+    -- ========================================================================
+    INSERT INTO public.businesses (owner_id, name, category, location_address, opening_hours, logo_url)
     VALUES (
         owner_ama_id,
         'Café El Portal',
+        'cafe',
         'Av. 1 Ote. 215, Centro, 94500 Córdoba, Ver.',
         'Lunes a Sábado: 8:00 AM - 9:00 PM, Domingo: 9:00 AM - 6:00 PM',
         'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop'
     ) RETURNING id INTO cafe_el_portal_id;
 
-    -- 2.2. Insertar recompensas
+    -- Recompensas para Café El Portal
     INSERT INTO public.rewards (
         business_id, 
         name, 
@@ -660,7 +690,7 @@ BEGIN
             true
         );
 
-    -- 2.3. Insertar promociones
+    -- Promociones para Café El Portal
     INSERT INTO public.promotions (
         business_id, 
         title, 
@@ -695,55 +725,313 @@ BEGIN
             true
         );
 
-    -- 2.4. Asignar empleados
+    -- Asignar empleado a Café El Portal
     INSERT INTO public.employees (business_id, profile_id)
+    VALUES (cafe_el_portal_id, employee_erick_id);
+
+    -- ========================================================================
+    -- NEGOCIO 2: GymZone Fitness (Gimnasio - Salud)
+    -- ========================================================================
+    INSERT INTO public.businesses (owner_id, name, category, location_address, opening_hours, logo_url)
     VALUES (
-        cafe_el_portal_id,
-        employee_erick_id
-    );
+        owner_maria_id,
+        'GymZone Fitness',
+        'health',
+        'Calle 5 de Mayo 123, Col. Centro, 94500 Córdoba, Ver.',
+        'Lunes a Viernes: 6:00 AM - 10:00 PM, Sábado: 8:00 AM - 8:00 PM, Domingo: 9:00 AM - 2:00 PM',
+        'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&h=400&fit=crop'
+    ) RETURNING id INTO gym_fitzone_id;
+
+    -- Recompensas para GymZone Fitness
+    INSERT INTO public.rewards (
+        business_id, 
+        name, 
+        description, 
+        points_required, 
+        image_url, 
+        is_active
+    )
+    VALUES
+        (
+            gym_fitzone_id,
+            'Clase Grupal Gratis',
+            'Disfruta de una clase grupal de tu elección: Yoga, Spinning, Zumba o CrossFit.',
+            30,
+            'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            gym_fitzone_id,
+            'Sesión de Masaje Deportivo',
+            'Relájate con una sesión de masaje deportivo de 30 minutos.',
+            50,
+            'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            gym_fitzone_id,
+            'Evaluación Nutricional',
+            'Obtén una evaluación nutricional completa con plan personalizado.',
+            40,
+            'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            gym_fitzone_id,
+            'Proteína Shake Gratis',
+            'Llévate un delicioso shake de proteína post-entrenamiento.',
+            15,
+            'https://images.unsplash.com/photo-1622484211318-f5c870e4a1dc?w=800&h=600&fit=crop',
+            true
+        );
+
+    -- ========================================================================
+    -- NEGOCIO 3: Tacos El Rey (Restaurante)
+    -- ========================================================================
+    INSERT INTO public.businesses (owner_id, name, category, location_address, opening_hours, logo_url)
+    VALUES (
+        owner_carlos_id,
+        'Tacos El Rey',
+        'restaurant',
+        'Av. Insurgentes 456, Col. Bugambilias, 94500 Córdoba, Ver.',
+        'Lunes a Domingo: 11:00 AM - 11:00 PM',
+        'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400&h=400&fit=crop'
+    ) RETURNING id INTO tacos_el_rey_id;
+
+    -- Recompensas para Tacos El Rey
+    INSERT INTO public.rewards (
+        business_id, 
+        name, 
+        description, 
+        points_required, 
+        image_url, 
+        is_active
+    )
+    VALUES
+        (
+            tacos_el_rey_id,
+            'Orden de Tacos Gratis',
+            'Orden de 3 tacos al pastor con todo incluido.',
+            20,
+            'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            tacos_el_rey_id,
+            'Refresco de 1L Gratis',
+            'Refresco de litro para acompañar tus tacos.',
+            8,
+            'https://images.unsplash.com/photo-1581636625402-29b2a704ef13?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            tacos_el_rey_id,
+            'Quesadilla Especial',
+            'Quesadilla de queso Oaxaca con la carne de tu elección.',
+            15,
+            'https://images.unsplash.com/photo-1618040996337-56904b7850b9?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            tacos_el_rey_id,
+            'Orden de Flautas',
+            'Orden de 4 flautas doradas con crema y queso.',
+            18,
+            'https://images.unsplash.com/photo-1599974481985-530d4d87e6d3?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            tacos_el_rey_id,
+            'Combo Familiar',
+            '20 tacos + 2 órdenes de guacamole + 2 refrescos de 1L.',
+            60,
+            'https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=800&h=600&fit=crop',
+            true
+        );
+
+    -- ========================================================================
+    -- NEGOCIO 4: Pizzería Napoli (Restaurante - Italiano)
+    -- ========================================================================
+    INSERT INTO public.businesses (owner_id, name, category, location_address, opening_hours, logo_url)
+    VALUES (
+        owner_ama_id,
+        'Pizzería Napoli',
+        'restaurant',
+        'Calle 3 Sur 789, Col. Centro, 94500 Córdoba, Ver.',
+        'Martes a Domingo: 1:00 PM - 11:00 PM',
+        'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=400&fit=crop'
+    ) RETURNING id INTO pizzeria_napoli_id;
+
+    -- Recompensas para Pizzería Napoli
+    INSERT INTO public.rewards (
+        business_id, 
+        name, 
+        description, 
+        points_required, 
+        image_url, 
+        is_active
+    )
+    VALUES
+        (
+            pizzeria_napoli_id,
+            'Pizza Personal Gratis',
+            'Pizza personal con hasta 3 ingredientes de tu elección.',
+            25,
+            'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            pizzeria_napoli_id,
+            'Pasta del Día',
+            'Pasta del día con salsa a elegir: Alfredo, Boloñesa o Carbonara.',
+            22,
+            'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            pizzeria_napoli_id,
+            'Ensalada César',
+            'Ensalada César con pollo a la parrilla y aderezo especial.',
+            12,
+            'https://images.unsplash.com/photo-1546793665-c74683f339c1?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            pizzeria_napoli_id,
+            'Tiramisú',
+            'Postre clásico italiano preparado con receta tradicional.',
+            18,
+            'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800&h=600&fit=crop',
+            true
+        ),
+        (
+            pizzeria_napoli_id,
+            '2x1 en Pizzas Medianas',
+            'Compra una pizza mediana y llévate otra igual completamente gratis.',
+            45,
+            'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&h=600&fit=crop',
+            true
+        );
         
 END $$;
 
 
--- 3. Simular transacciones para un cliente
+-- 3. Simular transacciones para Christian en múltiples negocios
 DO $$
 DECLARE
     cliente_chris_id UUID := '3234cb32-b89f-4bd4-932b-6d3b1d72935c';
     cafe_portal_id UUID;
-    tarjeta_lealtad_id BIGINT;
+    gym_id UUID;
+    tacos_id UUID;
+    pizzeria_id UUID;
+    tarjeta_cafe BIGINT;
+    tarjeta_gym BIGINT;
+    tarjeta_tacos BIGINT;
+    tarjeta_pizzeria BIGINT;
 BEGIN
-    -- Obtener el ID del negocio 'Café El Portal'
+    -- Obtener IDs de los negocios
     SELECT id INTO cafe_portal_id FROM public.businesses WHERE name = 'Café El Portal';
+    SELECT id INTO gym_id FROM public.businesses WHERE name = 'GymZone Fitness';
+    SELECT id INTO tacos_id FROM public.businesses WHERE name = 'Tacos El Rey';
+    SELECT id INTO pizzeria_id FROM public.businesses WHERE name = 'Pizzería Napoli';
 
-    -- Crear una tarjeta de lealtad para Christian en 'Café El Portal'
+    -- ========================================================================
+    -- TARJETA 1: Café El Portal
+    -- ========================================================================
     INSERT INTO public.loyalty_cards (customer_id, business_id, points)
     VALUES (cliente_chris_id, cafe_portal_id, 0)
-    RETURNING id INTO tarjeta_lealtad_id;
+    RETURNING id INTO tarjeta_cafe;
 
-    -- Transacción 1: Gana 0.50
+    -- Transacción 1: Gana 5 puntos
     INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
-    VALUES (tarjeta_lealtad_id, 'purchase_earn', 50.00, 0.50, 'TICKET-001');
-    UPDATE public.loyalty_cards SET points = points + 0.50 WHERE id = tarjeta_lealtad_id;
+    VALUES (tarjeta_cafe, 'purchase_earn', 500.00, 5, 'CAFE-001');
+    UPDATE public.loyalty_cards SET points = points + 5 WHERE id = tarjeta_cafe;
 
-    -- Transacción 2: Gana 1.50 (Total: 2.00)
+    -- Transacción 2: Gana 3 puntos (Total: 8)
     INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
-    VALUES (tarjeta_lealtad_id, 'purchase_earn', 150.00, 1.50, 'TICKET-002');
-    UPDATE public.loyalty_cards SET points = points + 1.50 WHERE id = tarjeta_lealtad_id;
+    VALUES (tarjeta_cafe, 'purchase_earn', 300.00, 3, 'CAFE-002');
+    UPDATE public.loyalty_cards SET points = points + 3 WHERE id = tarjeta_cafe;
     
-    -- Transacción 3: Gana 8.00 (Total: 10.00)
+    -- Transacción 3: Gana 2 puntos (Total: 10)
     INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
-    VALUES (tarjeta_lealtad_id, 'purchase_earn', 800.00, 8.00, 'TICKET-003');
-    UPDATE public.loyalty_cards SET points = points + 8.00 WHERE id = tarjeta_lealtad_id;
+    VALUES (tarjeta_cafe, 'purchase_earn', 200.00, 2, 'CAFE-003');
+    UPDATE public.loyalty_cards SET points = points + 2 WHERE id = tarjeta_cafe;
 
-    -- Transacción 4: Canjea 10 (Total: 0.00)
+    -- Transacción 4: Canjea Café Americano - 10 puntos (Total: 0)
     INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
-    VALUES (tarjeta_lealtad_id, 'redeem', 0, -10, 'CANJE-001');
-    UPDATE public.loyalty_cards SET points = points - 10 WHERE id = tarjeta_lealtad_id;
+    VALUES (tarjeta_cafe, 'redeem', 0, -10, 'CAFE-CANJE-001');
+    UPDATE public.loyalty_cards SET points = points - 10 WHERE id = tarjeta_cafe;
 
-    -- Transacción 5: Gana 1.20 (Total: 1.20)
+    -- Transacción 5: Gana 12 puntos (Total: 12)
     INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
-    VALUES (tarjeta_lealtad_id, 'purchase_earn', 120.00, 1.20, 'TICKET-004');
-    UPDATE public.loyalty_cards SET points = points + 1.20 WHERE id = tarjeta_lealtad_id;
+    VALUES (tarjeta_cafe, 'purchase_earn', 1200.00, 12, 'CAFE-004');
+    UPDATE public.loyalty_cards SET points = points + 12 WHERE id = tarjeta_cafe;
+
+    -- ========================================================================
+    -- TARJETA 2: GymZone Fitness
+    -- ========================================================================
+    INSERT INTO public.loyalty_cards (customer_id, business_id, points)
+    VALUES (cliente_chris_id, gym_id, 0)
+    RETURNING id INTO tarjeta_gym;
+
+    -- Transacción 1: Mensualidad - Gana 35 puntos
+    INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
+    VALUES (tarjeta_gym, 'purchase_earn', 3500.00, 35, 'GYM-001');
+    UPDATE public.loyalty_cards SET points = points + 35 WHERE id = tarjeta_gym;
+
+    -- Transacción 2: Compra proteína - Gana 8 puntos (Total: 43)
+    INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
+    VALUES (tarjeta_gym, 'purchase_earn', 800.00, 8, 'GYM-002');
+    UPDATE public.loyalty_cards SET points = points + 8 WHERE id = tarjeta_gym;
+
+    -- ========================================================================
+    -- TARJETA 3: Tacos El Rey
+    -- ========================================================================
+    INSERT INTO public.loyalty_cards (customer_id, business_id, points)
+    VALUES (cliente_chris_id, tacos_id, 0)
+    RETURNING id INTO tarjeta_tacos;
+
+    -- Transacción 1: Gana 4 puntos
+    INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
+    VALUES (tarjeta_tacos, 'purchase_earn', 400.00, 4, 'TACOS-001');
+    UPDATE public.loyalty_cards SET points = points + 4 WHERE id = tarjeta_tacos;
+
+    -- Transacción 2: Gana 6 puntos (Total: 10)
+    INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
+    VALUES (tarjeta_tacos, 'purchase_earn', 600.00, 6, 'TACOS-002');
+    UPDATE public.loyalty_cards SET points = points + 6 WHERE id = tarjeta_tacos;
+
+    -- Transacción 3: Gana 15 puntos (Total: 25)
+    INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
+    VALUES (tarjeta_tacos, 'purchase_earn', 1500.00, 15, 'TACOS-003');
+    UPDATE public.loyalty_cards SET points = points + 15 WHERE id = tarjeta_tacos;
+
+    -- ========================================================================
+    -- TARJETA 4: Pizzería Napoli
+    -- ========================================================================
+    INSERT INTO public.loyalty_cards (customer_id, business_id, points)
+    VALUES (cliente_chris_id, pizzeria_id, 0)
+    RETURNING id INTO tarjeta_pizzeria;
+
+    -- Transacción 1: Gana 18 puntos
+    INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
+    VALUES (tarjeta_pizzeria, 'purchase_earn', 1800.00, 18, 'PIZZA-001');
+    UPDATE public.loyalty_cards SET points = points + 18 WHERE id = tarjeta_pizzeria;
+
+    -- Transacción 2: Gana 7 puntos (Total: 25)
+    INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
+    VALUES (tarjeta_pizzeria, 'purchase_earn', 700.00, 7, 'PIZZA-002');
+    UPDATE public.loyalty_cards SET points = points + 7 WHERE id = tarjeta_pizzeria;
+
+    -- Transacción 3: Canjea Pizza Personal - 25 puntos (Total: 0)
+    INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
+    VALUES (tarjeta_pizzeria, 'redeem', 0, -25, 'PIZZA-CANJE-001');
+    UPDATE public.loyalty_cards SET points = points - 25 WHERE id = tarjeta_pizzeria;
+
+    -- Transacción 4: Gana 20 puntos (Total: 20)
+    INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
+    VALUES (tarjeta_pizzeria, 'purchase_earn', 2000.00, 20, 'PIZZA-003');
+    UPDATE public.loyalty_cards SET points = points + 20 WHERE id = tarjeta_pizzeria;
 
 END $$;
 
