@@ -5,9 +5,6 @@ export default function BusinessLayout() {
 		<Stack screenOptions={{ headerShown: false }}>
 			<Stack.Screen name="[id]" />
 			<Stack.Screen name="search" />
-			<Stack.Screen name="promotions" />
-			<Stack.Screen name="raffles" />
-			<Stack.Screen name="rewards" />
 		</Stack>
 	);
 }

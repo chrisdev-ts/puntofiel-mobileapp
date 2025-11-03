@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import RewardDetailScreen from "@/src/presentation/screens/owner/rewards/RewardDetailScreen";
+import { RewardDetailScreen } from "@/src/presentation/screens/shared";
 
 export default function RewardDetailRoute() {
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -8,5 +8,5 @@ export default function RewardDetailRoute() {
 		return null;
 	}
 
-	return <RewardDetailScreen rewardId={id} />;
+	return <RewardDetailScreen />;
 }
