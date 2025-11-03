@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
 import { AlertCircleIcon, GiftIcon } from "lucide-react-native";
 import React from "react";
-import { Box } from "@/components/ui/box";
+import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -17,6 +17,7 @@ import {
 	FeedbackScreen,
 	ListContainer,
 	ListItem,
+	RewardsListSkeleton,
 } from "@/src/presentation/components/common";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
@@ -40,7 +41,11 @@ export default function RewardsIndexScreen() {
 
 	// Estado de carga inicial
 	if (loadingBusiness || isLoadingRewards) {
-		return <FeedbackScreen variant="loading" title="Cargando recompensas..." />;
+		return (
+			<AppLayout showHeader={true} headerVariant="default" showNavBar={true}>
+				<RewardsListSkeleton />
+			</AppLayout>
+		);
 	}
 
 	// Manejo de errores
@@ -149,11 +154,9 @@ export default function RewardsIndexScreen() {
 							imageAlt={reward.name}
 							title={reward.name}
 							badge={
-								<Box className="bg-primary-500 self-start px-3 py-1 rounded-full">
-									<Text size="sm" className="text-typography-0">
-										{reward.pointsRequired} puntos
-									</Text>
-								</Box>
+								<Badge action="success" variant="solid" size="md">
+									<BadgeText>{reward.pointsRequired} puntos</BadgeText>
+								</Badge>
 							}
 							onPress={handleRewardPress}
 						/>
