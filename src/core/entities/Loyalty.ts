@@ -5,7 +5,7 @@
  */
 export interface CustomerLoyaltyCard {
 	cardId: number; // Es 'BIGINT' en la BBDD
-	points: number; // Es 'NUMERIC'
+	points: number; // Es 'INTEGER' en la BBDD (1% del monto de compra, redondeado)
 	businessId: string; // UUID
 	businessName: string;
 	businessLogoUrl: string | null;
