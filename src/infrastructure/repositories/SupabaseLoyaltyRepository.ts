@@ -32,10 +32,17 @@ export class SupabaseLoyaltyRepository implements ILoyaltyRepository {
 	}
 
 	async getCardsByCustomer(customerId: string): Promise<CustomerLoyaltyCard[]> {
+		console.log(
+			"[SupabaseLoyaltyRepository] Buscando tarjetas para:",
+			customerId,
+		);
+
 		// 1. Llamamos a la función de BD segura (RPC)
 		const { data, error } = await supabase.rpc("get_customer_loyalty_summary", {
 			p_customer_id: customerId,
 		});
+
+		console.log("[SupabaseLoyaltyRepository] Resultado RPC:", { data, error });
 
 		// 2. Manejamos el error
 		if (error) {
@@ -60,8 +67,17 @@ export class SupabaseLoyaltyRepository implements ILoyaltyRepository {
 
 		// Si no hay datos, retornar array vacío
 		if (!data) {
+			console.warn(
+				"[SupabaseLoyaltyRepository] No hay datos, retornando array vacío",
+			);
 			return [];
 		}
+
+		console.log(
+			"[SupabaseLoyaltyRepository] Datos encontrados:",
+			data.length,
+			"tarjetas",
+		);
 
 		// 3. Mapeamos la respuesta de la BBDD a nuestra entidad del 'core'
 		return data.map(
