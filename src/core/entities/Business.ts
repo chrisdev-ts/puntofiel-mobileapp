@@ -1,4 +1,17 @@
 /**
+ * Categorías de negocios disponibles
+ */
+export type BusinessCategory =
+	| "food" // Comida general
+	| "cafe" // Cafetería
+	| "restaurant" // Restaurante
+	| "retail" // Tiendas de retail/ropa
+	| "services" // Servicios
+	| "entertainment" // Entretenimiento
+	| "health" // Salud y bienestar
+	| "other"; // Otros
+
+/**
  * Entidad de dominio: Negocio
  *
  * Representa un negocio registrado en la plataforma PuntoFiel.
@@ -18,6 +31,9 @@ export interface Business {
 
 	/** Nombre del negocio */
 	name: string;
+
+	/** Categoría del negocio */
+	category: BusinessCategory;
 
 	/** Dirección física del negocio */
 	locationAddress?: string;
@@ -39,6 +55,9 @@ export interface CreateBusinessDTO {
 	/** Nombre del negocio */
 	name: string;
 
+	/** Categoría del negocio */
+	category: BusinessCategory;
+
 	/** Dirección física del negocio */
 	locationAddress?: string;
 
@@ -55,6 +74,9 @@ export interface CreateBusinessDTO {
 export interface UpdateBusinessDTO {
 	/** Nuevo nombre del negocio */
 	name?: string;
+
+	/** Nueva categoría */
+	category?: BusinessCategory;
 
 	/** Nueva dirección */
 	locationAddress?: string;

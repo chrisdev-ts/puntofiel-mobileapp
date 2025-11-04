@@ -1,10 +1,12 @@
 import { useRouter } from "expo-router";
 import { AlertCircleIcon, QrCodeIcon } from "lucide-react-native";
+import { useEffect } from "react";
+import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
-import { Text } from "@/components/ui/text";
 import {
 	FeedbackScreen,
+	HomeScreenSkeleton,
 	ListContainer,
 	ListItem,
 } from "@/src/presentation/components/common";
@@ -12,13 +14,23 @@ import { useLoyalty } from "@/src/presentation/hooks/useLoyalty";
 import { AppLayout } from "../../components/layout/AppLayout";
 
 export default function HomeScreen() {
-	const { cards, isLoading, error } = useLoyalty();
+	const { cards, isLoading, error, refetch } = useLoyalty();
 	const router = useRouter();
+
+	// Forzar refetch cuando se monta el componente (debugging)
+	useEffect(() => {
+		console.log("[HomeScreen] Componente montado, forzando refetch...");
+		refetch();
+	}, [refetch]);
+
+	console.log("[HomeScreen] Estado actual:", { cards, isLoading, error });
 
 	// 1. Estado de Carga
 	if (isLoading) {
 		return (
-			<FeedbackScreen variant="loading" title="Cargando tus negocios..." />
+			<AppLayout showHeader={true} headerVariant="default" showNavBar={true}>
+				<HomeScreenSkeleton />
+			</AppLayout>
 		);
 	}
 
@@ -71,9 +83,9 @@ export default function HomeScreen() {
 							imageAlt={`Logo de ${card.businessName}`}
 							title={card.businessName}
 							badge={
-								<Text size="sm" className="text-typography-600">
-									{card.points.toFixed(2)} puntos
-								</Text>
+								<Badge action="success" variant="solid" size="md">
+									<BadgeText>{card.points} puntos</BadgeText>
+								</Badge>
 							}
 							onPress={(businessId) => {
 								router.push(`/(customer)/business/${businessId}` as never);
