@@ -1,3 +1,15 @@
+import { useRouter } from "expo-router";
+import {
+	AlertCircleIcon,
+	FilterIcon,
+	HeartIcon,
+	MapPinIcon,
+	SearchIcon,
+	StoreIcon,
+	TrendingUpIcon,
+} from "lucide-react-native";
+import { useState } from "react";
+import { Pressable, ScrollView } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -21,18 +33,6 @@ import {
 	useNearbyBusinesses,
 	usePopularBusinesses,
 } from "@/src/presentation/hooks/useBusinesses";
-import { useRouter } from "expo-router";
-import {
-	AlertCircleIcon,
-	FilterIcon,
-	HeartIcon,
-	MapPinIcon,
-	SearchIcon,
-	StoreIcon,
-	TrendingUpIcon,
-} from "lucide-react-native";
-import { useState } from "react";
-import { Pressable, ScrollView } from "react-native";
 
 // Categorías de negocios
 const BUSINESS_CATEGORIES: { id: BusinessCategory; label: string }[] = [

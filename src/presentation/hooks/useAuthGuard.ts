@@ -59,13 +59,11 @@ export function useAuthGuard() {
 					router.replace("/(owner)/(tabs)/home");
 					break;
 				case "employee":
-					router.replace("/(employee)/(tabs)/scan");
+					router.replace("/(employee)/(tabs)/scan-qr");
 					break;
 			}
 			return;
-		}
-
-		// Verificar que el usuario esté en el grupo correcto según su rol
+		} // Verificar que el usuario esté en el grupo correcto según su rol
 		const isInCorrectGroup =
 			(user.role === "customer" && inCustomerGroup) ||
 			(user.role === "owner" && inOwnerGroup) ||
@@ -83,7 +81,7 @@ export function useAuthGuard() {
 					router.replace("/(owner)/(tabs)/home");
 					break;
 				case "employee":
-					router.replace("/(employee)/(tabs)/scan");
+					router.replace("/(employee)/(tabs)/scan-qr");
 					break;
 			}
 		}

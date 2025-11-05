@@ -13,9 +13,6 @@ async function fetchBusinessDetail(
 	businessId: string,
 	customerId: string,
 ): Promise<BusinessDetailData> {
-	console.log("[useBusinessDetail] Buscando negocio:", businessId);
-	console.log("[useBusinessDetail] Para cliente:", customerId);
-
 	// 1. Obtener datos del negocio
 	const { data: businessData, error: businessError } = await supabase
 		.from("businesses")
@@ -24,14 +21,12 @@ async function fetchBusinessDetail(
 		.single();
 
 	if (businessError) {
-		console.error(
-			"[useBusinessDetail] Error obteniendo negocio:",
-			businessError,
-		);
+		console.error("useBusinessDetail: Error fetching business", {
+			message: businessError.message,
+			code: businessError.code,
+		});
 		throw new Error(`Error al obtener negocio: ${businessError.message}`);
 	}
-
-	console.log("[useBusinessDetail] Negocio encontrado:", businessData.name);
 
 	// 2. Obtener la loyalty card del cliente para este negocio
 	const { data: loyaltyData, error: loyaltyError } = await supabase.rpc(
@@ -42,14 +37,12 @@ async function fetchBusinessDetail(
 	);
 
 	if (loyaltyError) {
-		console.error(
-			"[useBusinessDetail] Error obteniendo loyalty card:",
-			loyaltyError,
-		);
+		console.error("useBusinessDetail: Error fetching loyalty card", {
+			message: loyaltyError.message,
+			code: loyaltyError.code,
+		});
 		// No lanzamos error aquí, simplemente no tendrá loyalty card
 	}
-
-	console.log("[useBusinessDetail] Loyalty data:", loyaltyData);
 
 	// Buscar la loyalty card específica de este negocio
 	const loyaltyCard =
@@ -72,6 +65,7 @@ async function fetchBusinessDetail(
 		updatedAt: new Date(businessData.updated_at),
 		ownerId: businessData.owner_id,
 		name: businessData.name,
+		category: businessData.category,
 		locationAddress: businessData.location_address,
 		openingHours: businessData.opening_hours,
 		logoUrl: businessData.logo_url,
@@ -98,21 +92,15 @@ async function fetchBusinessDetail(
 	};
 }
 
-export function useBusinessDetail(businessId: string | undefined) {
+export function useBusinessDetail(businessId: string) {
 	const user = useAuthStore((state) => state.user);
 	const customerId = user?.id;
-
-	console.log("[useBusinessDetail] Hook ejecutado con:", {
-		businessId,
-		customerId,
-	});
 
 	return useQuery({
 		queryKey: ["businessDetail", businessId, customerId],
 		queryFn: () => {
-			console.log("[useBusinessDetail] QueryFn ejecutándose...");
 			if (!businessId || !customerId) {
-				console.error("[useBusinessDetail] Falta businessId o customerId");
+				console.error("useBusinessDetail: Missing businessId or customerId");
 				throw new Error("Business ID o Customer ID no disponible");
 			}
 			return fetchBusinessDetail(businessId, customerId);

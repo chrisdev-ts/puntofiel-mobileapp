@@ -18,6 +18,10 @@ async function fetchCustomerProfile(
 		.single();
 
 	if (error) {
+		console.error("useCustomerProfile: Error fetching profile", {
+			message: error.message,
+			code: error.code,
+		});
 		throw new Error("No se pudo obtener el perfil del cliente");
 	}
 
@@ -27,6 +31,7 @@ async function fetchCustomerProfile(
 
 	// Validar que sea un customer
 	if (data.role !== "customer") {
+		console.warn("useCustomerProfile: Invalid role", data.role);
 		return {
 			fullName: "",
 			isValid: false,

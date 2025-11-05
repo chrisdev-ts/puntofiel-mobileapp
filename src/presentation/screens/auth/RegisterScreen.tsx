@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import { useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
-import { Alert } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
 	Checkbox,
@@ -23,7 +22,12 @@ import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Link, LinkText } from "@/components/ui/link";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
-import { FeedbackModal } from "@/src/presentation/components/common";
+import {
+	Toast,
+	ToastDescription,
+	ToastTitle,
+	useToast,
+} from "@/components/ui/toast";
 import { AppLayout } from "@/src/presentation/components/layout";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
 import {
@@ -36,9 +40,7 @@ import {
 export function RegisterScreen() {
 	const router = useRouter();
 	const { register, isRegistering, registerError } = useAuth();
-
-	// Estado para mostrar overlay de éxito
-	const [showSuccess, setShowSuccess] = useState(false);
+	const toast = useToast();
 
 	// Estados para mostrar/ocultar contraseñas
 	const [showPassword, setShowPassword] = useState(false);
@@ -106,15 +108,47 @@ export function RegisterScreen() {
 			{
 				onSuccess: (user) => {
 					console.log("Registro exitoso, usuario:", user);
-					console.log("[RegisterScreen] Mostrando overlay de éxito");
-					setShowSuccess(true);
+					toast.show({
+						placement: "top",
+						duration: 5000,
+						render: ({ id }) => {
+							const uniqueToastId = `toast-${id}`;
+							return (
+								<Toast
+									nativeID={uniqueToastId}
+									action="success"
+									variant="solid"
+								>
+									<ToastTitle>¡Registro exitoso!</ToastTitle>
+									<ToastDescription>
+										Te hemos enviado un correo de verificación. Por favor revisa
+										tu bandeja de entrada.
+									</ToastDescription>
+								</Toast>
+							);
+						},
+					});
+					setTimeout(() => {
+						router.replace("/(public)/login");
+					}, 1000);
 				},
 				onError: (error) => {
 					console.error("Error en el registro:", error);
-					Alert.alert(
-						"Error al registrarse",
-						error.message || "Ocurrió un error. Intenta nuevamente.",
-					);
+					toast.show({
+						placement: "top",
+						duration: 4000,
+						render: ({ id }) => {
+							const uniqueToastId = `toast-${id}`;
+							return (
+								<Toast nativeID={uniqueToastId} action="error" variant="solid">
+									<ToastTitle>Error al registrarse</ToastTitle>
+									<ToastDescription>
+										{error.message || "Ocurrió un error. Intenta nuevamente."}
+									</ToastDescription>
+								</Toast>
+							);
+						},
+					});
 				},
 			},
 		);
@@ -449,18 +483,6 @@ export function RegisterScreen() {
 					{isRegistering ? "Registrando..." : "Crear cuenta"}
 				</ButtonText>
 			</Button>
-
-			{/* Overlay de éxito */}
-			<FeedbackModal
-				visible={showSuccess}
-				variant="success"
-				message="Te hemos enviado un correo de verificación. Por favor revisa tu bandeja de entrada y haz clic en el enlace para verificar tu cuenta."
-				buttonText="Ir a iniciar sesión"
-				onClose={() => {
-					setShowSuccess(false);
-					router.replace("/(public)/login");
-				}}
-			/>
 		</AppLayout>
 	);
 }

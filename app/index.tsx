@@ -8,7 +8,7 @@ import { useAuth } from "@/src/presentation/hooks/useAuth";
  * - No autenticado → /(public)/welcome
  * - Cliente → /(customer)/(tabs)/home
  * - Propietario → /(owner)/(tabs)/home
- * - Empleado → /(employee)/(tabs)/scan
+ * - Empleado → /(employee)/(tabs)/scan-qr
  */
 export default function Index() {
 	const { user, isLoading } = useAuth();
@@ -36,7 +36,7 @@ export default function Index() {
 				} else if (user.role === "owner") {
 					router.replace("/(owner)/(tabs)/home");
 				} else if (user.role === "employee") {
-					router.replace("/(employee)/(tabs)/scan");
+					router.replace("/(employee)/(tabs)/scan-qr");
 				} else {
 					// Rol desconocido, ir a welcome
 					router.replace("/(public)/welcome");

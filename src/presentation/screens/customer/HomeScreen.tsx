@@ -14,7 +14,7 @@ import { useLoyalty } from "@/src/presentation/hooks/useLoyalty";
 import { AppLayout } from "../../components/layout/AppLayout";
 
 export default function HomeScreen() {
-	const { cards, isLoading, error, refetch } = useLoyalty();
+	const { data: cards, isLoading, error, refetch } = useLoyalty();
 	const router = useRouter();
 
 	// Forzar refetch cuando se monta el componente (debugging)
@@ -65,7 +65,7 @@ export default function HomeScreen() {
 				<ButtonText>Buscar negocios</ButtonText>
 			</Button>
 			{/* Estado vacío */}
-			{cards.length === 0 ? (
+			{!cards || cards.length === 0 ? (
 				<FeedbackScreen
 					variant="empty"
 					icon={QrCodeIcon}

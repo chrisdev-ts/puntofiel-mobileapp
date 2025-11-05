@@ -12,13 +12,15 @@ import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
+import { useAuth } from "@/src/presentation/hooks/useAuth";
 
-export default function ScanScreen() {
+export default function ScanQRScreen() {
 	const [permission, requestPermission] = useCameraPermissions();
 	const [scanned, setScanned] = useState(false);
 	const [flashEnabled, setFlashEnabled] = useState(false);
 	const cameraRef = useRef(null);
 	const [error, setError] = useState<string | null>(null);
+	const { user } = useAuth();
 
 	useEffect(() => {
 		if (!permission) {
@@ -29,21 +31,48 @@ export default function ScanScreen() {
 
 	const handleBarCodeScanned = (result: BarcodeScanningResult) => {
 		if (scanned) return;
+
 		setScanned(true);
 		setError(null);
-		// El QR del negocio contiene el businessId
-		const businessId = result.data;
-		if (!businessId || businessId.length < 10) {
-			setError("QR inválido");
+
+		const customerId = result.data;
+
+		// Validación del customerId
+		if (!customerId) {
+			console.error("ScanQRScreen: Empty or null QR");
+			setError("QR inválido - No contiene datos");
 			setScanned(false);
 			return;
 		}
-		navigateToBusinessDetail(businessId);
+
+		if (customerId.length < 10) {
+			console.error(`ScanQRScreen: QR too short (${customerId.length} chars)`);
+			setError(
+				`QR inválido - Longitud insuficiente (${customerId.length} caracteres)`,
+			);
+			setScanned(false);
+			return;
+		}
+
+		navigateToRegisterLoyalty(customerId);
 	};
 
-	// Función auxiliar para navegar al detalle del negocio
-	const navigateToBusinessDetail = (businessId: string) => {
-		router.push(`/(customer)/business/${businessId}` as never);
+	// Función auxiliar para navegar al registro de puntos
+	const navigateToRegisterLoyalty = (customerId: string) => {
+		const baseRoute =
+			user?.role === "owner"
+				? "/(owner)/loyalty/register"
+				: "/(employee)/loyalty/register";
+
+		const route = `${baseRoute}?customerId=${customerId}`;
+
+		try {
+			router.push(route as never);
+		} catch (error) {
+			console.error("ScanQRScreen: Navigation error", error);
+			setError("Error al navegar a la pantalla de registro");
+			setScanned(false);
+		}
 	};
 
 	if (!permission?.granted) {

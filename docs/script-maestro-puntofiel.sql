@@ -2,7 +2,7 @@
 -- PUNTOFIEL - SCRIPT COMPLETO DE BASE DE DATOS Y CONFIGURACIÓN (VERSION FINAL)
 -- Descripción: Creación de esquema completo (tablas, funciones, triggers, RLS)
 --              para el sistema de lealtad PuntoFiel, con lógica RPC.
--- Ultima modificación: 02 de noviembre de 2025 a las 11:45 PM
+-- Ultima modificación: 04 de noviembre de 2025 a las 11:20 PM
 -- ============================================================================
 
 ---------------------------------------------------------------------------
@@ -61,7 +61,8 @@ GRANT EXECUTE ON FUNCTION public.check_email_exists(TEXT) TO authenticated;
 CREATE OR REPLACE FUNCTION public.process_loyalty(
     p_customer_id UUID,
     p_business_id UUID,
-    p_amount NUMERIC
+    p_amount NUMERIC,
+    p_notes TEXT DEFAULT NULL
 )
 RETURNS TABLE (
     success BOOLEAN,
@@ -117,17 +118,19 @@ BEGIN
         RETURNING points INTO v_new_balance;
     END IF;
 
-    -- 6. Registrar la transacción en el historial
+    -- 6. Registrar la transacción en el historial (con notas opcionales)
     INSERT INTO public.transactions (
         card_id,
         transaction_type,
         purchase_amount,
-        points_change
+        points_change,
+        invoice_ref
     ) VALUES (
         v_card_id,
         'purchase_earn',
         p_amount,
-        v_points_earned
+        v_points_earned,
+        p_notes
     );
 
     -- 7. Retornar resultado exitoso
@@ -144,7 +147,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- PERMISOS: Permitir ejecución a usuarios autenticados
-GRANT EXECUTE ON FUNCTION public.process_loyalty(UUID, UUID, NUMERIC) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.process_loyalty(UUID, UUID, NUMERIC, TEXT) TO authenticated;
 
 
 -- FUNCIÓN RPC: get_customer_loyalty_summary
@@ -262,7 +265,7 @@ CREATE TABLE IF NOT EXISTS public.businesses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    owner_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    owner_id UUID NOT NULL UNIQUE REFERENCES public.profiles(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     category business_category_enum NOT NULL DEFAULT 'other',
     location_address TEXT,
@@ -272,7 +275,7 @@ CREATE TABLE IF NOT EXISTS public.businesses (
 
 -- Comentarios en la tabla
 COMMENT ON TABLE public.businesses IS 'Negocios registrados en la plataforma PuntoFiel';
-COMMENT ON COLUMN public.businesses.owner_id IS 'Referencia al dueño del negocio (perfil con role owner)';
+COMMENT ON COLUMN public.businesses.owner_id IS 'Referencia al dueño del negocio (perfil con role owner). UNIQUE: Un owner solo puede tener un negocio';
 COMMENT ON COLUMN public.businesses.category IS 'Categoría del negocio para filtrado y búsqueda';
 
 -- Crear índice para mejorar las búsquedas por categoría
@@ -600,9 +603,10 @@ DELETE FROM public.profiles;
 
 -- 1. Insertar perfiles de prueba
 -- 🔑 CREDENCIALES DE PRUEBA: (Contraseña para todos: 'password123')
--- Dueño 1: Amairany Meza Vilorio (owner.ama@cafetal.com)
--- Dueño 2: Ismael Flores Luna (owner.ismael@fitness.com)
--- Dueño 3: Juan de Dios Madrid Ortiz (owner.madrid@tacos.com)
+-- Dueño 1: Amairany Meza Vilorio (owner.ama@cafetal.com) - Café El Portal
+-- Dueño 2: Ismael Flores Luna (owner.ismael@fitness.com) - GymZone Fitness
+-- Dueño 3: Juan de Dios Madrid Ortiz (owner.madrid@tacos.com) - Tacos El Rey
+-- Dueño 4: José Aaron Hernández Rodríguez (owner.aaron@napoli.com) - Pizzería Napoli
 -- Cliente: Jorge Christian Serrano Puertos (customer.chris@email.com)
 -- Empleado: Erick Ernesto López Valdés (employee.erick@gmail.com)
 INSERT INTO public.profiles (id, first_name, last_name, second_last_name, role)
@@ -610,6 +614,7 @@ VALUES
     ('02c05bc0-afeb-439b-8841-049176d8eab6', 'Amairany', 'Meza', 'Vilorio', 'owner'),
     ('22f3022e-8402-4592-a87f-895f8a78b699', 'Ismael', 'Flores', 'Luna', 'owner'),
     ('63664654-44dc-476a-b79c-ce9680440f74', 'Juan de Dios', 'Madrid', 'Ortiz', 'owner'),
+    ('df014b67-7f18-4007-93f3-1734e7135c0e', 'José Aaron', 'Hernández', 'Rodríguez', 'owner'),
     ('3234cb32-b89f-4bd4-932b-6d3b1d72935c', 'Jorge Christian', 'Serrano', 'Puertos', 'customer'),
     ('66b54f8c-3d8a-4934-8848-f7810e8613a2', 'Erick Ernesto', 'López', 'Valdés', 'employee');
 
@@ -618,8 +623,9 @@ VALUES
 DO $$
 DECLARE
     owner_ama_id UUID := '02c05bc0-afeb-439b-8841-049176d8eab6';
-    owner_maria_id UUID := '22f3022e-8402-4592-a87f-895f8a78b699';
-    owner_carlos_id UUID := '63664654-44dc-476a-b79c-ce9680440f74';
+    owner_ismael_id UUID := '22f3022e-8402-4592-a87f-895f8a78b699';
+    owner_madrid_id UUID := '63664654-44dc-476a-b79c-ce9680440f74';
+    owner_aaron_id UUID := 'df014b67-7f18-4007-93f3-1734e7135c0e';
     employee_erick_id UUID := '66b54f8c-3d8a-4934-8848-f7810e8613a2';
     cafe_el_portal_id UUID;
     gym_fitzone_id UUID;
@@ -734,7 +740,7 @@ BEGIN
     -- ========================================================================
     INSERT INTO public.businesses (owner_id, name, category, location_address, opening_hours, logo_url)
     VALUES (
-        owner_maria_id,
+        owner_ismael_id,
         'GymZone Fitness',
         'health',
         'Calle 5 de Mayo 123, Col. Centro, 94500 Córdoba, Ver.',
@@ -790,7 +796,7 @@ BEGIN
     -- ========================================================================
     INSERT INTO public.businesses (owner_id, name, category, location_address, opening_hours, logo_url)
     VALUES (
-        owner_carlos_id,
+        owner_madrid_id,
         'Tacos El Rey',
         'restaurant',
         'Av. Insurgentes 456, Col. Bugambilias, 94500 Córdoba, Ver.',
@@ -854,7 +860,7 @@ BEGIN
     -- ========================================================================
     INSERT INTO public.businesses (owner_id, name, category, location_address, opening_hours, logo_url)
     VALUES (
-        owner_ama_id,
+        owner_aaron_id,
         'Pizzería Napoli',
         'restaurant',
         'Calle 3 Sur 789, Col. Centro, 94500 Córdoba, Ver.',

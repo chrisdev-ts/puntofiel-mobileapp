@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { Eye, EyeOff } from "lucide-react-native";
 import { useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
-import { Alert } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
 	FormControl,
@@ -13,6 +12,12 @@ import { Heading } from "@/components/ui/heading";
 import { Image } from "@/components/ui/image";
 import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+import {
+	Toast,
+	ToastDescription,
+	ToastTitle,
+	useToast,
+} from "@/components/ui/toast";
 import { AppLayout } from "@/src/presentation/components/layout";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
 import { type LoginFormData, loginSchema } from "./LoginSchema";
@@ -21,6 +26,7 @@ export function LoginScreen() {
 	const router = useRouter();
 	const { login, isLoggingIn, loginError } = useAuth();
 	const [showPassword, setShowPassword] = useState(false);
+	const toast = useToast();
 
 	const {
 		control,
@@ -55,17 +61,34 @@ export function LoginScreen() {
 							redirectPath = "/(owner)/(tabs)/home";
 							break;
 						case "employee":
-							redirectPath = "/(employee)/(tabs)/scan";
+							redirectPath = "/(employee)/(tabs)/scan-qr";
 							break;
 						case "customer":
 							redirectPath = "/(customer)/(tabs)/home";
 							break;
 						default:
 							console.error("Rol desconocido:", user.role);
-							Alert.alert("Error", "Rol de usuario no reconocido.");
+							toast.show({
+								placement: "top",
+								duration: 4000,
+								render: ({ id }) => {
+									const uniqueToastId = `toast-${id}`;
+									return (
+										<Toast
+											nativeID={uniqueToastId}
+											action="error"
+											variant="solid"
+										>
+											<ToastTitle>Error</ToastTitle>
+											<ToastDescription>
+												Rol de usuario no reconocido.
+											</ToastDescription>
+										</Toast>
+									);
+								},
+							});
 							return;
 					}
-
 					console.log("Redirigiendo a:", redirectPath);
 					router.replace(redirectPath as never);
 				},
@@ -74,29 +97,47 @@ export function LoginScreen() {
 
 					// Manejo especial para email no verificado
 					if (error.message.includes("verificar tu correo")) {
-						Alert.alert(
-							"Email no verificado",
-							"Debes verificar tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada y haz clic en el enlace de verificación.",
-							[
-								{ text: "Entendido" },
-								{
-									text: "¿Reenviar email?",
-									onPress: () => {
-										// TODO: Implementar reenvío de email de verificación
-										Alert.alert(
-											"Función en desarrollo",
-											"Próximamente podrás reenviar el email de verificación.",
-										);
-									},
-								},
-							],
-						);
+						toast.show({
+							placement: "top",
+							duration: 6000,
+							render: ({ id }) => {
+								const uniqueToastId = `toast-${id}`;
+								return (
+									<Toast
+										nativeID={uniqueToastId}
+										action="warning"
+										variant="solid"
+									>
+										<ToastTitle>Email no verificado</ToastTitle>
+										<ToastDescription>
+											Debes verificar tu correo electrónico antes de iniciar
+											sesión. Revisa tu bandeja de entrada.
+										</ToastDescription>
+									</Toast>
+								);
+							},
+						});
 					} else {
-						Alert.alert(
-							"Error al iniciar sesión",
-							error.message ||
-								"Ocurrió un error. Verifica tus credenciales e intenta nuevamente.",
-						);
+						toast.show({
+							placement: "top",
+							duration: 4000,
+							render: ({ id }) => {
+								const uniqueToastId = `toast-${id}`;
+								return (
+									<Toast
+										nativeID={uniqueToastId}
+										action="error"
+										variant="solid"
+									>
+										<ToastTitle>Error al iniciar sesión</ToastTitle>
+										<ToastDescription>
+											{error.message ||
+												"Verifica tus credenciales e intenta nuevamente."}
+										</ToastDescription>
+									</Toast>
+								);
+							},
+						});
 					}
 				},
 			},
@@ -213,10 +254,21 @@ export function LoginScreen() {
 			<Button
 				variant="link"
 				onPress={() =>
-					Alert.alert(
-						"Función en desarrollo",
-						"Próximamente podrás recuperar tu contraseña.",
-					)
+					toast.show({
+						placement: "top",
+						duration: 3000,
+						render: ({ id }) => {
+							const uniqueToastId = `toast-${id}`;
+							return (
+								<Toast nativeID={uniqueToastId} action="info" variant="solid">
+									<ToastTitle>Función en desarrollo</ToastTitle>
+									<ToastDescription>
+										Próximamente podrás recuperar tu contraseña.
+									</ToastDescription>
+								</Toast>
+							);
+						},
+					})
 				}
 			>
 				<ButtonText className="text-sm text-gray-600">

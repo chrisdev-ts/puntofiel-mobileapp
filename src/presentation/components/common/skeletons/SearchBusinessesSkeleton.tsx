@@ -1,7 +1,7 @@
+import { ScrollView } from "react-native";
 import { HStack } from "@/components/ui/hstack";
 import { Skeleton, SkeletonText } from "@/components/ui/skeleton";
 import { VStack } from "@/components/ui/vstack";
-import { ScrollView } from "react-native";
 import { BusinessSectionSkeleton } from "./BusinessSectionSkeleton";
 
 /**

@@ -2,12 +2,18 @@ import { Spinner } from "@gluestack-ui/themed";
 import type { ImagePickerAsset } from "expo-image-picker";
 import * as ImagePicker from "expo-image-picker";
 import { CameraIcon, ImageIcon } from "lucide-react-native";
-import { Alert, Platform, Pressable } from "react-native";
+import { Platform, Pressable } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
+import {
+	Toast,
+	ToastDescription,
+	ToastTitle,
+	useToast,
+} from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
 
 type RewardFormStep2Props = {
@@ -29,6 +35,8 @@ export function RewardFormStep2({
 	onBack,
 	isSubmitting,
 }: RewardFormStep2Props) {
+	const toast = useToast();
+
 	// Solicitar permisos de cámara y galería
 	const requestPermissions = async () => {
 		const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
@@ -39,10 +47,21 @@ export function RewardFormStep2({
 			cameraPermission.status !== "granted" ||
 			mediaLibraryPermission.status !== "granted"
 		) {
-			Alert.alert(
-				"Permisos requeridos",
-				"Necesitas otorgar permisos a la cámara y galería para continuar.",
-			);
+			toast.show({
+				placement: "top",
+				duration: 4000,
+				render: ({ id }) => {
+					const uniqueToastId = `toast-${id}`;
+					return (
+						<Toast nativeID={uniqueToastId} action="warning" variant="solid">
+							<ToastTitle>Permisos requeridos</ToastTitle>
+							<ToastDescription>
+								Necesitas otorgar permisos a la cámara y galería para continuar.
+							</ToastDescription>
+						</Toast>
+					);
+				},
+			});
 			return false;
 		}
 		return true;

@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { AlertCircleIcon, EditIcon, InfoIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -10,6 +9,12 @@ import { HStack } from "@/components/ui/hstack";
 import { Icon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
+import {
+	Toast,
+	ToastDescription,
+	ToastTitle,
+	useToast,
+} from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
 import {
 	FeedbackScreen,
@@ -27,6 +32,7 @@ export default function RewardDetailScreen() {
 	const router = useRouter();
 	const { user } = useAuth();
 	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const toast = useToast();
 
 	const isOwner = user?.role === "owner";
 	const isCustomer = user?.role === "customer";
@@ -37,9 +43,11 @@ export default function RewardDetailScreen() {
 	// Cargar datos de la recompensa
 	const { data: reward, isLoading: loadingReward, error } = useRewardDetail(id);
 
-	// Solo cargar datos del negocio si es cliente
+	// Solo cargar datos del negocio si es cliente y hay businessId
+	const businessId = reward?.businessId || "";
+	const shouldLoadBusiness = isCustomer && !!reward?.businessId;
 	const { data: businessDetail, isLoading: loadingBusiness } =
-		useBusinessDetail(isCustomer ? reward?.businessId : undefined);
+		useBusinessDetail(shouldLoadBusiness ? businessId : "");
 
 	// Hook de mutation para eliminar (solo owner)
 	const { deleteReward, isDeleting, deleteSuccess, deleteError } =
@@ -50,11 +58,24 @@ export default function RewardDetailScreen() {
 	// Navegar cuando se elimine exitosamente
 	useEffect(() => {
 		if (deleteSuccess) {
-			Alert.alert("Éxito", "Recompensa desactivada correctamente", [
-				{ text: "OK", onPress: () => router.back() },
-			]);
+			toast.show({
+				placement: "top",
+				duration: 3000,
+				render: ({ id }) => {
+					const uniqueToastId = `toast-${id}`;
+					return (
+						<Toast nativeID={uniqueToastId} action="success" variant="solid">
+							<ToastTitle>Éxito</ToastTitle>
+							<ToastDescription>
+								Recompensa desactivada correctamente
+							</ToastDescription>
+						</Toast>
+					);
+				},
+			});
+			setTimeout(() => router.back(), 500);
 		}
-	}, [deleteSuccess, router]);
+	}, [deleteSuccess, router, toast]);
 
 	if (isLoading) {
 		return (
