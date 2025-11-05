@@ -73,7 +73,7 @@ export function NavBar() {
 				{
 					IconComponent: ScanLine,
 					label: "Escanear",
-					route: "/(owner)/(tabs)/scan",
+					route: "/(owner)/(tabs)/scan-qr",
 				},
 				{
 					IconComponent: MedalIcon,
@@ -123,7 +123,7 @@ export function NavBar() {
 					{
 						IconComponent: ScanLine,
 						label: "Escanear",
-						route: "/(owner)/(tabs)/scan",
+						route: "/(owner)/(tabs)/scan-qr",
 					},
 					{
 						IconComponent: MedalIcon,
@@ -142,7 +142,7 @@ export function NavBar() {
 					{
 						IconComponent: ScanLine,
 						label: "Escanear",
-						route: "/(employee)/(tabs)/scan",
+						route: "/(employee)/(tabs)/scan-qr",
 					},
 					{
 						IconComponent: User,
