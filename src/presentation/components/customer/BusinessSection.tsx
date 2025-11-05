@@ -1,3 +1,6 @@
+import type { LucideIcon } from "lucide-react-native";
+import { ArrowRightIcon } from "lucide-react-native";
+import { Pressable, ScrollView } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
@@ -7,9 +10,6 @@ import { VStack } from "@/components/ui/vstack";
 import type { Business, BusinessCategory } from "@/src/core/entities/Business";
 import { ListItem } from "@/src/presentation/components/common";
 import { BusinessSectionSkeleton } from "@/src/presentation/components/common/skeletons";
-import type { LucideIcon } from "lucide-react-native";
-import { ArrowRightIcon } from "lucide-react-native";
-import { Pressable, ScrollView } from "react-native";
 
 interface BusinessSectionProps {
 	/** Título de la sección */
