@@ -1,6 +1,3 @@
-import { useRouter } from "expo-router";
-import { AlertCircleIcon, QrCodeIcon } from "lucide-react-native";
-import { useEffect } from "react";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -11,10 +8,13 @@ import {
 	ListItem,
 } from "@/src/presentation/components/common";
 import { useLoyalty } from "@/src/presentation/hooks/useLoyalty";
+import { useRouter } from "expo-router";
+import { AlertCircleIcon, QrCodeIcon } from "lucide-react-native";
+import { useEffect } from "react";
 import { AppLayout } from "../../components/layout/AppLayout";
 
 export default function HomeScreen() {
-	const { cards, isLoading, error, refetch } = useLoyalty();
+	const { data: cards, isLoading, error, refetch } = useLoyalty();
 	const router = useRouter();
 
 	// Forzar refetch cuando se monta el componente (debugging)
@@ -65,7 +65,7 @@ export default function HomeScreen() {
 				<ButtonText>Buscar negocios</ButtonText>
 			</Button>
 			{/* Estado vacío */}
-			{cards.length === 0 ? (
+			{!cards || cards.length === 0 ? (
 				<FeedbackScreen
 					variant="empty"
 					icon={QrCodeIcon}
