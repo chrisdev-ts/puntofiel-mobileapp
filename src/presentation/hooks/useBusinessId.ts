@@ -12,12 +12,14 @@ async function fetchBusinessId(userId: string): Promise<string> {
 		.single();
 
 	if (error) {
-		console.error("Error obteniendo negocio:", error);
+		console.error("useBusinessId: Error fetching business", {
+			message: error.message,
+			code: error.code,
+		});
 		throw new Error(`No se encontró el negocio del usuario: ${error.message}`);
 	}
 
 	if (!data) {
-		console.error("No hay datos de negocio");
 		throw new Error("No se encontró el negocio del usuario");
 	}
 
