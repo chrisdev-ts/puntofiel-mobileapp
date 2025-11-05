@@ -10,17 +10,24 @@ export class ProcessLoyaltyUseCase {
 		customerId: string,
 		businessId: string,
 		amount: number,
+		notes?: string,
 	): Promise<ProcessLoyaltyResult> {
+		// Validación de negocio
 		if (amount <= 0) {
+			console.error("ProcessLoyaltyUseCase: Invalid amount", { amount });
 			return {
 				success: false,
 				message: "El monto debe ser mayor a cero.",
 			};
 		}
-		return this.loyaltyRepository.processLoyalty(
+
+		const result = await this.loyaltyRepository.processLoyalty(
 			customerId,
 			businessId,
 			amount,
+			notes,
 		);
+
+		return result;
 	}
 }
