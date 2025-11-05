@@ -4,10 +4,15 @@ import type { ImagePickerAsset } from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Alert } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
+import {
+	Toast,
+	ToastDescription,
+	ToastTitle,
+	useToast,
+} from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
 import { AppLayout } from "@/src/presentation/components/layout";
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
@@ -36,6 +41,7 @@ export default function RewardForm({
 	const router = useRouter();
 	const [step, setStep] = useState(1);
 	const [image, setImage] = useState<ImagePickerAsset | null>(null);
+	const toast = useToast();
 
 	const isEditMode = mode === "edit";
 
@@ -72,22 +78,26 @@ export default function RewardForm({
 	// Navegación automática al completar la acción
 	useEffect(() => {
 		if (createSuccess || updateSuccess) {
-			Alert.alert(
-				"Éxito",
-				isEditMode
-					? "Recompensa actualizada correctamente"
-					: "Recompensa creada correctamente",
-				[
-					{
-						text: "OK",
-						onPress: () => {
-							resetCreate();
-							resetUpdate();
-							router.back();
-						},
-					},
-				],
-			);
+			toast.show({
+				placement: "top",
+				duration: 3000,
+				render: ({ id }) => {
+					const uniqueToastId = `toast-${id}`;
+					return (
+						<Toast nativeID={uniqueToastId} action="success" variant="solid">
+							<ToastTitle>Éxito</ToastTitle>
+							<ToastDescription>
+								{isEditMode
+									? "Recompensa actualizada correctamente"
+									: "Recompensa creada correctamente"}
+							</ToastDescription>
+						</Toast>
+					);
+				},
+			});
+			resetCreate();
+			resetUpdate();
+			setTimeout(() => router.back(), 500);
 		}
 	}, [
 		createSuccess,
@@ -96,6 +106,7 @@ export default function RewardForm({
 		router,
 		resetCreate,
 		resetUpdate,
+		toast,
 	]);
 
 	// Validar paso 1 antes de avanzar
@@ -109,7 +120,21 @@ export default function RewardForm({
 	// Submit final del formulario
 	const handleFormSubmit = (data: CreateRewardFormValues) => {
 		if (!businessId) {
-			Alert.alert("Error", "No se encontró el ID del negocio");
+			toast.show({
+				placement: "top",
+				duration: 3000,
+				render: ({ id }) => {
+					const uniqueToastId = `toast-${id}`;
+					return (
+						<Toast nativeID={uniqueToastId} action="error" variant="solid">
+							<ToastTitle>Error</ToastTitle>
+							<ToastDescription>
+								No se encontró el ID del negocio
+							</ToastDescription>
+						</Toast>
+					);
+				},
+			});
 			return;
 		}
 
