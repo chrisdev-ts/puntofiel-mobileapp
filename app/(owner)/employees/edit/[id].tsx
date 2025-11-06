@@ -1,11 +1,3 @@
-import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
+import EditEmployeeScreen from "@/src/presentation/screens/owner/employees/EditEmployeeScreen";
 
-export default function EmployeeEditScreen() {
-	return (
-		<FeedbackScreen
-			variant="empty"
-			title="Editar Empleado"
-			description="Esta pantalla está en desarrollo."
-		/>
-	);
-}
+export default EditEmployeeScreen;
