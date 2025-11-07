@@ -1,6 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import type { Employee } from "@/src/core/entities/Employee";
 import { SupabaseEmployeeRepository } from "@/src/infrastructure/repositories/SupabaseEmployeeRepository";
-import { useQuery } from "@tanstack/react-query";
 
 const employeeRepository = new SupabaseEmployeeRepository();
 

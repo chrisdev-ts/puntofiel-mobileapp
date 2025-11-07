@@ -1,11 +1,10 @@
+import { AlertCircleIcon, CheckCircleIcon } from "lucide-react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
 import { Modal, ModalBackdrop, ModalContent } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { AlertCircleIcon, CheckCircleIcon } from "lucide-react-native";
-import React from "react";
 
 /**
  * Props del componente SuccessDialog

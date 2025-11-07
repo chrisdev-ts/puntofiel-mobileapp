@@ -1,3 +1,5 @@
+import { useRouter } from "expo-router";
+import { AlertCircleIcon, UserIcon } from "lucide-react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
@@ -10,9 +12,6 @@ import { EmployeeListItem } from "@/src/presentation/components/employees";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
 import { useEmployee } from "@/src/presentation/hooks/useEmployee";
-import { useRouter } from "expo-router";
-import { AlertCircleIcon, UserIcon } from "lucide-react-native";
-import React from "react";
 
 /**
  * Pantalla de lista de empleados del negocio

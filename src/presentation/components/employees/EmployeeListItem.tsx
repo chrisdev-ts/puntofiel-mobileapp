@@ -1,4 +1,3 @@
-import React from "react";
 import { Pressable } from "react-native";
 import { HStack } from "@/components/ui/hstack";
 import { ArrowRightIcon, Icon } from "@/components/ui/icon";

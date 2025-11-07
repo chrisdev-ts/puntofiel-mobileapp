@@ -137,63 +137,63 @@ export class SupabaseEmployeeRepository implements IEmployeeRepository {
 	}
 
 	async createEmployee(employeeData: {
-            firstName: string;
-            lastName: string;
-            secondLastName?: string;
-            email: string;
-            password: string;
-            businessId: string;
-        }): Promise<Employee> {
-            console.log("[createEmployee] Creando empleado:", {
-                ...employeeData,
-                password: "***",
-            });
+		firstName: string;
+		lastName: string;
+		secondLastName?: string;
+		email: string;
+		password: string;
+		businessId: string;
+	}): Promise<Employee> {
+		console.log("[createEmployee] Creando empleado:", {
+			...employeeData,
+			password: "***",
+		});
 
-            // 1. Crear usuario en auth.users
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email: employeeData.email,
-                password: employeeData.password,
-                options: {
-                    emailRedirectTo: undefined,
-                },
-            });
+		// 1. Crear usuario en auth.users
+		const { data: authData, error: authError } = await supabase.auth.signUp({
+			email: employeeData.email,
+			password: employeeData.password,
+			options: {
+				emailRedirectTo: undefined,
+			},
+		});
 
-            if (authError || !authData.user) {
-                console.error("[createEmployee] Error en Auth:", authError);
-                throw new Error(
-                    `Error al crear cuenta: ${authError?.message || "Usuario no creado"}`,
-                );
-            }
+		if (authError || !authData.user) {
+			console.error("[createEmployee] Error en Auth:", authError);
+			throw new Error(
+				`Error al crear cuenta: ${authError?.message || "Usuario no creado"}`,
+			);
+		}
 
-            console.log("[createEmployee] Usuario creado en Auth:", authData.user.id);
+		console.log("[createEmployee] Usuario creado en Auth:", authData.user.id);
 
-            try {
-                // 2. Crear perfil en public.profiles
-                const { error: profileError } = await supabase.from("profiles").insert({
-                    id: authData.user.id,
-                    first_name: employeeData.firstName,
-                    last_name: employeeData.lastName,
-                    second_last_name: employeeData.secondLastName || null,
-                    role: "employee",
-                });
+		try {
+			// 2. Crear perfil en public.profiles
+			const { error: profileError } = await supabase.from("profiles").insert({
+				id: authData.user.id,
+				first_name: employeeData.firstName,
+				last_name: employeeData.lastName,
+				second_last_name: employeeData.secondLastName || null,
+				role: "employee",
+			});
 
-                if (profileError) {
-                    console.error("[createEmployee] Error creando perfil:", profileError);
-                    throw new Error(`Error al crear perfil: ${profileError.message}`);
-                }
+			if (profileError) {
+				console.error("[createEmployee] Error creando perfil:", profileError);
+				throw new Error(`Error al crear perfil: ${profileError.message}`);
+			}
 
-                console.log("[createEmployee] Perfil creado");
+			console.log("[createEmployee] Perfil creado");
 
-                // 3. Crear registro en public.employees
-                const { data: employeeRecord, error: employeeError } = await supabase
-                    .from("employees")
-                    .insert({
-                        business_id: employeeData.businessId,
-                        profile_id: authData.user.id,
-                        is_active: true,
-                    })
-                    .select(
-                        `
+			// 3. Crear registro en public.employees
+			const { data: employeeRecord, error: employeeError } = await supabase
+				.from("employees")
+				.insert({
+					business_id: employeeData.businessId,
+					profile_id: authData.user.id,
+					is_active: true,
+				})
+				.select(
+					`
             id,
             business_id,
             profile_id,
@@ -201,181 +201,216 @@ export class SupabaseEmployeeRepository implements IEmployeeRepository {
             created_at,
             profiles!inner(first_name, last_name, second_last_name)
             `,
-                    )
-                    .single();
+				)
+				.single();
 
-                if (employeeError || !employeeRecord) {
-                    console.error(
-                        "[createEmployee] Error asociando empleado:",
-                        employeeError,
-                    );
-                    throw new Error(
-                        `Error al asociar empleado: ${employeeError?.message || "Sin datos"}`,
-                    );
-                }
+			if (employeeError || !employeeRecord) {
+				console.error(
+					"[createEmployee] Error asociando empleado:",
+					employeeError,
+				);
+				throw new Error(
+					`Error al asociar empleado: ${employeeError?.message || "Sin datos"}`,
+				);
+			}
 
-                console.log("[createEmployee] Empleado asociado:", employeeRecord.id);
+			console.log("[createEmployee] Empleado asociado:", employeeRecord.id);
 
-                const typedRecord = employeeRecord as unknown as EmployeeQueryResult;
+			const typedRecord = employeeRecord as unknown as EmployeeQueryResult;
 
-                return {
-                    id: typedRecord.id,
-                    businessId: typedRecord.business_id,
-                    profileId: typedRecord.profile_id,
-                    isActive: typedRecord.is_active,
-                    createdAt: typedRecord.created_at,
-                    profile: {
-                        firstName: typedRecord.profiles.first_name,
-                        lastName: typedRecord.profiles.last_name,
-                        secondLastName: typedRecord.profiles.second_last_name,
-                        email: employeeData.email,
-                    },
-                };
-            } catch (rollbackError) {
-                console.error("[createEmployee] Rollback iniciado:", rollbackError);
-                await supabase.from("profiles").delete().eq("id", authData.user.id);
-                await supabase.auth.admin.deleteUser(authData.user.id);
-                throw rollbackError;
-            }
-        }
+			return {
+				id: typedRecord.id,
+				businessId: typedRecord.business_id,
+				profileId: typedRecord.profile_id,
+				isActive: typedRecord.is_active,
+				createdAt: typedRecord.created_at,
+				profile: {
+					firstName: typedRecord.profiles.first_name,
+					lastName: typedRecord.profiles.last_name,
+					secondLastName: typedRecord.profiles.second_last_name,
+					email: employeeData.email,
+				},
+			};
+		} catch (rollbackError) {
+			console.error("[createEmployee] Rollback iniciado:", rollbackError);
+			await supabase.from("profiles").delete().eq("id", authData.user.id);
+			await supabase.auth.admin.deleteUser(authData.user.id);
+			throw rollbackError;
+		}
+	}
 
-        async deleteEmployee(employeeId: number): Promise<void> {
-            console.log("[deleteEmployee] Desactivando empleado:", employeeId);
+	async deleteEmployee(employeeId: number): Promise<void> {
+		console.log("[deleteEmployee] Desactivando empleado:", employeeId);
 
-            const { error } = await supabase
-                .from("employees")
-                .update({ is_active: false })
-                .eq("id", employeeId);
+		const { error } = await supabase
+			.from("employees")
+			.update({ is_active: false })
+			.eq("id", employeeId);
 
-            if (error) {
-                console.error("[deleteEmployee] Error:", error);
-                throw new Error(`Error al desactivar empleado: ${error.message}`);
-            }
+		if (error) {
+			console.error("[deleteEmployee] Error:", error);
+			throw new Error(`Error al desactivar empleado: ${error.message}`);
+		}
 
-            console.log("[deleteEmployee] Empleado desactivado");
-        }
+		console.log("[deleteEmployee] Empleado desactivado");
+	}
 
-        async updateEmployee(
-        employeeId: number,
-        employeeData: {
-            firstName: string;
-            lastName: string;
-            secondLastName?: string;
-            email: string;
-            password?: string;
-        },
-    ): Promise<Employee> {
-        console.log("[updateEmployee] INICIO - ID:", employeeId);
-        console.log("[updateEmployee] Datos:", {
-            ...employeeData,
-            password: employeeData.password ? "***" : "(sin cambio)",
-        });
+	async updateEmployee(
+		employeeId: number,
+		employeeData: {
+			firstName: string;
+			lastName: string;
+			secondLastName?: string;
+			email: string;
+			password?: string;
+		},
+	): Promise<Employee> {
+		console.log("[updateEmployee] INICIO - ID:", employeeId);
+		console.log("[updateEmployee] Datos:", {
+			...employeeData,
+			password: employeeData.password ? "***" : "(sin cambio)",
+		});
 
-        try {
-            console.log("[updateEmployee] PASO 1: Obteniendo empleado actual...");
-            const employee = await this.getEmployeeById(employeeId);
+		try {
+			console.log("[updateEmployee] PASO 1: Obteniendo empleado actual...");
+			const employee = await this.getEmployeeById(employeeId);
 
-            if (!employee) {
-                throw new Error("Empleado no encontrado");
-            }
-            console.log("[updateEmployee] PASO 1: Empleado obtenido - profileId:", employee.profileId);
+			if (!employee) {
+				throw new Error("Empleado no encontrado");
+			}
+			console.log(
+				"[updateEmployee] PASO 1: Empleado obtenido - profileId:",
+				employee.profileId,
+			);
 
-            // PASO 2: Actualizar perfil
-            console.log("[updateEmployee] PASO 2: Actualizando perfil...");
-            const { error: profileError } = await supabase
-                .from("profiles")
-                .update({
-                    first_name: employeeData.firstName,
-                    last_name: employeeData.lastName,
-                    second_last_name: employeeData.secondLastName || null,
-                })
-                .eq("id", employee.profileId);
+			// PASO 2: Actualizar perfil
+			console.log("[updateEmployee] PASO 2: Actualizando perfil...");
+			const { error: profileError } = await supabase
+				.from("profiles")
+				.update({
+					first_name: employeeData.firstName,
+					last_name: employeeData.lastName,
+					second_last_name: employeeData.secondLastName || null,
+				})
+				.eq("id", employee.profileId);
 
-            if (profileError) {
-                console.error("[updateEmployee] PASO 2: Error:", profileError);
-                throw new Error(`Error al actualizar perfil: ${profileError.message}`);
-            }
-            console.log("[updateEmployee] PASO 2: Perfil actualizado");
+			if (profileError) {
+				console.error("[updateEmployee] PASO 2: Error:", profileError);
+				throw new Error(`Error al actualizar perfil: ${profileError.message}`);
+			}
+			console.log("[updateEmployee] PASO 2: Perfil actualizado");
 
-            // PASO 3: Actualizar email (si cambió)
-            if (employeeData.email !== employee.profile.email) {
-                console.log("[updateEmployee] PASO 3: Actualizando email...");
-                console.log("[updateEmployee] Email anterior:", employee.profile.email);
-                console.log("[updateEmployee] Email nuevo:", employeeData.email);
+			// PASO 3: Actualizar email (si cambió)
+			if (employeeData.email !== employee.profile.email) {
+				console.log("[updateEmployee] PASO 3: Actualizando email...");
+				console.log("[updateEmployee] Email anterior:", employee.profile.email);
+				console.log("[updateEmployee] Email nuevo:", employeeData.email);
 
-                const { data: emailResult, error: emailError } = await supabase.rpc(
-                    "update_employee_email",
-                    {
-                        target_user_id: employee.profileId,
-                        new_email: employeeData.email,
-                    }
-                );
+				const { data: emailResult, error: emailError } = await supabase.rpc(
+					"update_employee_email",
+					{
+						target_user_id: employee.profileId,
+						new_email: employeeData.email,
+					},
+				);
 
-                console.log("[updateEmployee] PASO 3: Resultado RPC:", { emailResult, emailError });
+				console.log("[updateEmployee] PASO 3: Resultado RPC:", {
+					emailResult,
+					emailError,
+				});
 
-                if (emailError) {
-                    console.error("[updateEmployee] PASO 3: Error RPC:", emailError);
-                    throw new Error(`Error al actualizar email: ${emailError.message}`);
-                }
+				if (emailError) {
+					console.error("[updateEmployee] PASO 3: Error RPC:", emailError);
+					throw new Error(`Error al actualizar email: ${emailError.message}`);
+				}
 
-                if (emailResult && !emailResult.success) {
-                    console.error("[updateEmployee] PASO 3: Error en resultado:", emailResult.error);
-                    throw new Error(emailResult.error || "Error desconocido al actualizar email");
-                }
+				if (emailResult && !emailResult.success) {
+					console.error(
+						"[updateEmployee] PASO 3: Error en resultado:",
+						emailResult.error,
+					);
+					throw new Error(
+						emailResult.error || "Error desconocido al actualizar email",
+					);
+				}
 
-                console.log("[updateEmployee] PASO 3: Email actualizado exitosamente");
-            } else {
-                console.log("[updateEmployee] PASO 3: Email sin cambios, saltando...");
-            }
+				console.log("[updateEmployee] PASO 3: Email actualizado exitosamente");
+			} else {
+				console.log("[updateEmployee] PASO 3: Email sin cambios, saltando...");
+			}
 
-            // PASO 4: Actualizar contraseña (si se proporcionó)
-            if (employeeData.password && employeeData.password.length > 0) {
-                console.log("[updateEmployee] PASO 4: Actualizando contraseña...");
-                console.log("[updateEmployee] PASO 4: Longitud contraseña:", employeeData.password.length);
-                console.log("[updateEmployee] PASO 4: Target user_id:", employee.profileId);
+			// PASO 4: Actualizar contraseña (si se proporcionó)
+			if (employeeData.password && employeeData.password.length > 0) {
+				console.log("[updateEmployee] PASO 4: Actualizando contraseña...");
+				console.log(
+					"[updateEmployee] PASO 4: Longitud contraseña:",
+					employeeData.password.length,
+				);
+				console.log(
+					"[updateEmployee] PASO 4: Target user_id:",
+					employee.profileId,
+				);
 
-                // Usar RPC para actualizar contraseña del EMPLEADO
-                const { data: passwordResult, error: passwordError } = await supabase.rpc(
-                    "update_employee_password",
-                    {
-                        target_user_id: employee.profileId,
-                        new_password: employeeData.password,
-                    }
-                );
+				// Usar RPC para actualizar contraseña del EMPLEADO
+				const { data: passwordResult, error: passwordError } =
+					await supabase.rpc("update_employee_password", {
+						target_user_id: employee.profileId,
+						new_password: employeeData.password,
+					});
 
-                console.log("[updateEmployee] PASO 4: Resultado RPC:", { passwordResult, passwordError });
+				console.log("[updateEmployee] PASO 4: Resultado RPC:", {
+					passwordResult,
+					passwordError,
+				});
 
-                if (passwordError) {
-                    console.error("[updateEmployee] PASO 4: Error RPC:", passwordError);
-                    throw new Error(`Error al actualizar contraseña: ${passwordError.message}`);
-                }
+				if (passwordError) {
+					console.error("[updateEmployee] PASO 4: Error RPC:", passwordError);
+					throw new Error(
+						`Error al actualizar contraseña: ${passwordError.message}`,
+					);
+				}
 
-                if (passwordResult && !passwordResult.success) {
-                    console.error("[updateEmployee] PASO 4: Error en resultado:", passwordResult.error);
-                    throw new Error(passwordResult.error || "Error desconocido al actualizar contraseña");
-                }
+				if (passwordResult && !passwordResult.success) {
+					console.error(
+						"[updateEmployee] PASO 4: Error en resultado:",
+						passwordResult.error,
+					);
+					throw new Error(
+						passwordResult.error ||
+							"Error desconocido al actualizar contraseña",
+					);
+				}
 
-                console.log("[updateEmployee] PASO 4: Contraseña actualizada exitosamente");
-            } else {
-                console.log("[updateEmployee] PASO 4: Sin nueva contraseña, saltando...");
-            }
+				console.log(
+					"[updateEmployee] PASO 4: Contraseña actualizada exitosamente",
+				);
+			} else {
+				console.log(
+					"[updateEmployee] PASO 4: Sin nueva contraseña, saltando...",
+				);
+			}
 
-            // PASO 5: Obtener empleado actualizado
-            console.log("[updateEmployee] PASO 5: Obteniendo empleado actualizado...");
-            const updatedEmployee = await this.getEmployeeById(employeeId);
+			// PASO 5: Obtener empleado actualizado
+			console.log(
+				"[updateEmployee] PASO 5: Obteniendo empleado actualizado...",
+			);
+			const updatedEmployee = await this.getEmployeeById(employeeId);
 
-            if (!updatedEmployee) {
-                throw new Error("Error al obtener empleado actualizado");
-            }
+			if (!updatedEmployee) {
+				throw new Error("Error al obtener empleado actualizado");
+			}
 
-            console.log("[updateEmployee] PASO 5: Empleado actualizado obtenido");
-            console.log("[updateEmployee] FINALIZADO EXITOSAMENTE");
+			console.log("[updateEmployee] PASO 5: Empleado actualizado obtenido");
+			console.log("[updateEmployee] FINALIZADO EXITOSAMENTE");
 
-            return updatedEmployee;
-        } catch (error) {
-            console.error("[updateEmployee] ERROR FATAL:", error);
-            console.error("[updateEmployee] Stack trace:", error instanceof Error ? error.stack : "N/A");
-            throw error;
-        }
-    }
+			return updatedEmployee;
+		} catch (error) {
+			console.error("[updateEmployee] ERROR FATAL:", error);
+			console.error(
+				"[updateEmployee] Stack trace:",
+				error instanceof Error ? error.stack : "N/A",
+			);
+			throw error;
+		}
+	}
 }

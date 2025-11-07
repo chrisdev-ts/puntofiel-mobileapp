@@ -6,7 +6,6 @@ import { UpdateEmployeeUseCase } from "@/src/core/usecases/employee/UpdateEmploy
 import { SupabaseEmployeeRepository } from "@/src/infrastructure/repositories/SupabaseEmployeeRepository";
 import { useTemporaryPasswordStore } from "@/src/presentation/stores/temporaryPasswordStore"; // ✅ AGREGADO
 
-
 const employeeRepository = new SupabaseEmployeeRepository();
 const getEmployeeUseCase = new GetEmployeeUseCase(employeeRepository);
 const createEmployeeUseCase = new CreateEmployeeUseCase(employeeRepository);

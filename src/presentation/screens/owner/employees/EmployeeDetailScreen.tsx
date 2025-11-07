@@ -6,7 +6,7 @@ import {
 	EditIcon,
 	TrashIcon,
 } from "lucide-react-native";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, Modal, useWindowDimensions } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonSpinner, ButtonText } from "@/components/ui/button";
