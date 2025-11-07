@@ -2,7 +2,7 @@
 -- PUNTOFIEL - SCRIPT COMPLETO DE BASE DE DATOS Y CONFIGURACIÓN (VERSION FINAL)
 -- Descripción: Creación de esquema completo (tablas, funciones, triggers, RLS)
 --              para el sistema de lealtad PuntoFiel, con lógica RPC.
--- Ultima modificación: 04 de noviembre de 2025 a las 11:20 PM
+-- Ultima modificación: 07 de noviembre de 2025 a las 11:25 PM
 -- ============================================================================
 
 ---------------------------------------------------------------------------
@@ -200,6 +200,96 @@ $$ LANGUAGE plpgsql;
 GRANT EXECUTE ON FUNCTION public.get_customer_loyalty_summary(UUID) TO authenticated;
 
 
+-- FUNCIÓN RPC: update_employee_password
+-- Descripción: Actualiza la contraseña de un empleado usando auth.users
+CREATE OR REPLACE FUNCTION public.update_employee_password(
+    target_user_id UUID,
+    new_password TEXT
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+DECLARE
+    result JSON;
+    v_business_id UUID;
+    v_owner_id UUID;
+BEGIN
+    -- Validar longitud mínima de contraseña
+    IF LENGTH(new_password) < 8 THEN
+        RETURN json_build_object(
+            'success', false,
+            'error', 'La contraseña debe tener al menos 8 caracteres'
+        );
+    END IF;
+
+    -- Obtener el negocio del empleado usando profile_id
+    SELECT business_id INTO v_business_id
+    FROM employees
+    WHERE profile_id = target_user_id;
+
+    IF v_business_id IS NULL THEN
+        RETURN json_build_object(
+            'success', false,
+            'error', 'Empleado no encontrado'
+        );
+    END IF;
+
+    -- Obtener el owner del negocio
+    SELECT owner_id INTO v_owner_id
+    FROM businesses
+    WHERE id = v_business_id;
+
+    -- Verificar que el usuario autenticado es el owner
+    IF auth.uid() != v_owner_id THEN
+        RETURN json_build_object(
+            'success', false,
+            'error', 'No tienes permiso para actualizar este empleado'
+        );
+    END IF;
+
+    -- Actualizar la contraseña usando Supabase Auth
+    -- La encriptación se hace automáticamente con crypt
+    UPDATE auth.users
+    SET 
+        raw_app_meta_data = jsonb_set(
+            COALESCE(raw_app_meta_data, '{}'::jsonb),
+            '{password_reset_required}',
+            'true'::jsonb
+        ),
+        encrypted_password = extensions.crypt(new_password, extensions.gen_salt('bf')),
+        updated_at = NOW()
+    WHERE id = target_user_id;
+
+    IF NOT FOUND THEN
+        RETURN json_build_object(
+            'success', false,
+            'error', 'Usuario no encontrado en auth.users'
+        );
+    END IF;
+
+    RETURN json_build_object(
+        'success', true,
+        'message', 'Contraseña actualizada correctamente'
+    );
+
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN json_build_object(
+            'success', false,
+            'error', SQLERRM
+        );
+END;
+$$;
+
+COMMENT ON FUNCTION public.update_employee_password(UUID, TEXT) IS 
+'Actualiza la contraseña de un empleado. Solo el owner del negocio puede ejecutar esta función.';
+
+-- PERMISOS: Permitir ejecución a usuarios autenticados (la función valida internamente)
+GRANT EXECUTE ON FUNCTION public.update_employee_password(UUID, TEXT) TO authenticated;
+
+
 ---------------------------------------------------------------------------
 -- 2. TIPOS Y PERFILES DE USUARIO
 ---------------------------------------------------------------------------
@@ -313,6 +403,7 @@ CREATE TABLE IF NOT EXISTS public.employees (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     business_id UUID NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
     profile_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    is_active BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(business_id, profile_id)
 );
 

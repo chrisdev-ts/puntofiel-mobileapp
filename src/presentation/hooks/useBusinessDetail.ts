@@ -92,7 +92,7 @@ async function fetchBusinessDetail(
 	};
 }
 
-export function useBusinessDetail(businessId: string) {
+export function useBusinessDetail(businessId: string | undefined) {
 	const user = useAuthStore((state) => state.user);
 	const customerId = user?.id;
 
