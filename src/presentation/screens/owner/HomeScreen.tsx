@@ -28,11 +28,10 @@ export default function DashboardScreen() {
 					<Button
 						variant="solid"
 						action="primary"
-						onPress={() => router.push("/(owner)/(tabs)/scan" as never)}
+						onPress={() => router.push("/(owner)/(tabs)/scan-qr" as never)}
 					>
 						<ButtonText>Escanear QR Cliente</ButtonText>
-					</Button>
-
+					</Button>{" "}
 					<Button
 						variant="outline"
 						action="primary"

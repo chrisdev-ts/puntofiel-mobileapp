@@ -11,8 +11,8 @@ export default function EmployeeTabsLayout() {
 				headerShown: false,
 			}}
 		>
-			<Stack.Screen name="scan" />
-			<Stack.Screen name="clients" />
+			<Stack.Screen name="scan-qr" />
+			<Stack.Screen name="profile" />
 		</Stack>
 	);
 }

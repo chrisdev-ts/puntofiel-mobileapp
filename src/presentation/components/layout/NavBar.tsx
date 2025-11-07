@@ -73,7 +73,7 @@ export function NavBar() {
 				{
 					IconComponent: ScanLine,
 					label: "Escanear",
-					route: "/(owner)/(tabs)/scan",
+					route: "/(owner)/(tabs)/scan-qr",
 				},
 				{
 					IconComponent: MedalIcon,
@@ -123,7 +123,7 @@ export function NavBar() {
 					{
 						IconComponent: ScanLine,
 						label: "Escanear",
-						route: "/(owner)/(tabs)/scan",
+						route: "/(owner)/(tabs)/scan-qr",
 					},
 					{
 						IconComponent: MedalIcon,
@@ -142,7 +142,7 @@ export function NavBar() {
 					{
 						IconComponent: ScanLine,
 						label: "Escanear",
-						route: "/(employee)/(tabs)/scan",
+						route: "/(employee)/(tabs)/scan-qr",
 					},
 					{
 						IconComponent: User,
@@ -164,10 +164,40 @@ export function NavBar() {
 
 	/**
 	 * Determina si una ruta está activa
+	 * Compara el pathname actual con la ruta del tab para determinar cuál está activo
 	 */
 	const isRouteActive = (route: string): boolean => {
 		if (!pathname) return false;
-		return pathname === route || pathname.startsWith(`${route}/`);
+
+		// Extraer el nombre del tab de la ruta (ej: "/(customer)/(tabs)/home" -> "home")
+		const tabNameMatch = route.match(/\(tabs\)\/([^/]+)/);
+		if (!tabNameMatch) return false;
+
+		const tabName = tabNameMatch[1];
+
+		// Casos especiales para detectar el tab activo:
+
+		// 1. Si el pathname termina con el nombre del tab (ej: "/home", "/profile", "/show-qr")
+		if (pathname === `/${tabName}`) return true;
+
+		// 2. Si el pathname incluye el nombre del tab seguido de algo más
+		if (pathname.startsWith(`/${tabName}/`)) return true;
+
+		// 3. Para el tab "home", si estamos en rutas relacionadas
+		if (tabName === "home") {
+			// Para customer: /business/ es parte del flujo de "home"
+			if (pathname.startsWith("/business")) return true;
+			// Para owner: rutas que no sean de otros tabs específicos
+			if (
+				pathname.startsWith("/employees") ||
+				pathname.startsWith("/promotions") ||
+				pathname.startsWith("/loyalty")
+			) {
+				return true;
+			}
+		}
+
+		return false;
 	};
 
 	// Siempre mostrar el navbar (aunque sea con tabs por defecto)

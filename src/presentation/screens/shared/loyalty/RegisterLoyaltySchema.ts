@@ -11,6 +11,7 @@ export const registerLoyaltySchema = z.object({
 		.refine((val) => Number(val) > 0, {
 			message: "El monto debe ser mayor a 0",
 		}),
+	notes: z.string().optional(),
 });
 
 export type RegisterLoyaltyFormValues = z.infer<typeof registerLoyaltySchema>;

@@ -1,6 +1,10 @@
 import { useLocalSearchParams } from "expo-router";
 import { AlertCircleIcon } from "lucide-react-native";
-import { FeedbackScreen } from "@/src/presentation/components/common";
+import {
+	FeedbackScreen,
+	RewardDetailSkeleton,
+} from "@/src/presentation/components/common";
+import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { RewardForm } from "@/src/presentation/components/rewards";
 import { useRewardDetail } from "@/src/presentation/hooks/useRewardDetail";
 
@@ -11,7 +15,11 @@ export default function EditRewardScreen() {
 	const { data: reward, isLoading, error } = useRewardDetail(id);
 
 	if (isLoading) {
-		return <FeedbackScreen variant="loading" title="Cargando recompensa..." />;
+		return (
+			<AppLayout showHeader={true} headerVariant="back" showNavBar={false}>
+				<RewardDetailSkeleton />
+			</AppLayout>
+		);
 	}
 
 	if (error || !reward) {

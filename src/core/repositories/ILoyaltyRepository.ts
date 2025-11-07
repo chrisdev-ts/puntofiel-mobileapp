@@ -15,6 +15,7 @@ export interface ILoyaltyRepository {
 		customerId: string,
 		businessId: string,
 		amount: number,
+		notes?: string,
 	): Promise<ProcessLoyaltyResult>;
 
 	/**
