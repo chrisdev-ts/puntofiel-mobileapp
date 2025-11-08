@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import { useState } from "react";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -12,6 +13,7 @@ import {
 	ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
 
@@ -47,21 +49,39 @@ export default function ProfileScreen() {
 
 	return (
 		<AppLayout headerVariant="default" contentSpacing="xs">
+			{/* TEMPORAL: Información básica del usuario */}
 			<Text className="text-center text-typography-900 text-xl font-semibold">
 				{user.firstName} {user.lastName}
 			</Text>
 			<Text className="text-center text-typography-500">{user.email}</Text>
 
-			<Button
-				size="lg"
-				action="negative"
-				onPress={() => {
-					console.log("[ProfileScreen] Abriendo modal de logout");
-					setShowLogoutModal(true);
-				}}
-			>
-				<ButtonText>Cerrar sesión</ButtonText>
-			</Button>
+			<VStack space="md" className="mt-6">
+				{/* TEMPORAL: Botón de acceso a empleados solo para owners */}
+				{user.role === "owner" && (
+					<Button
+						size="lg"
+						action="primary"
+						onPress={() => {
+							console.log("[ProfileScreen] Navegando a lista de empleados");
+							router.push("/(owner)/employees");
+						}}
+					>
+						<ButtonText>Gestionar empleados</ButtonText>
+					</Button>
+				)}
+
+				{/* TEMPORAL: Botón de cerrar sesión */}
+				<Button
+					size="lg"
+					action="negative"
+					onPress={() => {
+						console.log("[ProfileScreen] Abriendo modal de logout");
+						setShowLogoutModal(true);
+					}}
+				>
+					<ButtonText>Cerrar sesión</ButtonText>
+				</Button>
+			</VStack>
 
 			{/* Modal de confirmación */}
 			<Modal
