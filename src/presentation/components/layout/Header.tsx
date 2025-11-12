@@ -68,7 +68,7 @@ export function Header({
 
 	return (
 		<Box
-			className="w-full border-b border-gray-400 bg-white flex-row items-center px-4"
+			className="w-full border-b border-gray-200 bg-white flex-row items-center px-4"
 			style={{
 				position: "absolute" as const,
 				top: 0,
