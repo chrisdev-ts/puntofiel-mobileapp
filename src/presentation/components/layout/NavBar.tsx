@@ -1,9 +1,15 @@
-import { usePathname, useRouter } from "expo-router";
-import { GiftIcon, Home, MedalIcon, ScanLine, User } from "lucide-react-native";
-import { Pressable } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
+import { usePathname, useRouter } from "expo-router";
+import { GiftIcon, Home, MedalIcon, ScanLine, User } from "lucide-react-native";
+import { Pressable } from "react-native";
+
+// Constantes de color del tema
+const COLORS = {
+	primary: "#2F4858",
+	inactive: "#9ca3af",
+} as const;
 
 interface NavItemProps {
 	IconComponent: React.ComponentType<{ size: number; color: string }>;
@@ -23,15 +29,12 @@ interface NavItem {
  * Componente individual de navegación
  */
 function NavItem({ IconComponent, label, isActive, onPress }: NavItemProps) {
-	const activeColor = "#2F4858"; // primary-500
-	const inactiveColor = "#9ca3af"; // gray-400
-
 	return (
 		<Pressable onPress={onPress} className="flex-1 items-center justify-center">
 			<Box className="items-center justify-center space-y-1">
 				<IconComponent
 					size={24}
-					color={isActive ? activeColor : inactiveColor}
+					color={isActive ? COLORS.primary : COLORS.inactive}
 				/>
 				<Text
 					size="xs"
@@ -159,6 +162,10 @@ export function NavBar() {
 	const navItems = getNavItems();
 
 	const handleNavigation = (route: string) => {
+		// No navegar si ya estamos en la ruta activa para evitar duplicados
+		if (isRouteActive(route)) {
+			return;
+		}
 		router.push(route as never);
 	};
 
@@ -175,46 +182,46 @@ export function NavBar() {
 
 		const tabName = tabNameMatch[1];
 
+		// Normalizar pathname (remover slashes finales y barras iniciales múltiples)
+		const normalizedPath = pathname.replace(/\/+$/, "").replace(/^\/+/, "/");
+
 		// Casos especiales para detectar el tab activo:
 
-		// 1. Si el pathname termina con el nombre del tab (ej: "/home", "/profile", "/show-qr")
-		if (pathname === `/${tabName}`) return true;
+		// 1. Comparación exacta con el nombre del tab
+		if (normalizedPath === `/${tabName}`) return true;
 
-		// 2. Si el pathname incluye el nombre del tab seguido de algo más
-		if (pathname.startsWith(`/${tabName}/`)) return true;
+		// 2. Si el pathname termina con el nombre del tab
+		if (normalizedPath.endsWith(`/${tabName}`)) return true;
 
-		// 3. Para el tab "home", si estamos en rutas relacionadas
+		// 3. Si el pathname incluye el nombre del tab seguido de algo más
+		if (normalizedPath.includes(`/${tabName}/`)) return true;
+
+		// 4. Para el tab "home", casos especiales por rol
 		if (tabName === "home") {
 			// Para customer: /business/ es parte del flujo de "home"
-			if (pathname.startsWith("/business")) return true;
+			if (normalizedPath.includes("/business")) return true;
+
 			// Para owner: rutas que no sean de otros tabs específicos
 			if (
-				pathname.startsWith("/employees") ||
-				pathname.startsWith("/promotions") ||
-				pathname.startsWith("/loyalty")
+				normalizedPath.includes("/employees") ||
+				normalizedPath.includes("/promotions") ||
+				normalizedPath.includes("/loyalty")
 			) {
 				return true;
 			}
+
+			// Si estamos en la raíz de (customer) o (owner) también es home
+			if (normalizedPath === "/" || normalizedPath === "") return true;
 		}
 
 		return false;
-	};
-
-	// Siempre mostrar el navbar (aunque sea con tabs por defecto)
+	}; // Siempre mostrar el navbar (aunque sea con tabs por defecto)
 	if (navItems.length === 0) {
 		return null;
 	}
 
 	return (
-		<Box
-			className="w-full bg-white border-t border-gray-300 flex-row items-center justify-around py-2"
-			style={{
-				position: "absolute" as const,
-				bottom: 0,
-				left: 0,
-				width: "100%",
-			}}
-		>
+		<Box className="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 flex-row items-center justify-around py-2">
 			{navItems.map((item) => (
 				<NavItem
 					key={item.route}
