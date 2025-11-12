@@ -1,9 +1,9 @@
+import { Text, useWindowDimensions, View } from "react-native";
+import QRCode from "react-native-qrcode-svg";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { VStack } from "@/components/ui/vstack";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
-import { Text, useWindowDimensions, View } from "react-native";
-import QRCode from "react-native-qrcode-svg";
 
 export default function ShowQRScreen() {
 	const { user, isLoading } = useAuth();
@@ -61,7 +61,12 @@ export default function ShowQRScreen() {
 				</Text>
 
 				<VStack space="md" className="items-center">
-					<Badge action="success" variant="solid" size="md" className="self-center">
+					<Badge
+						action="success"
+						variant="solid"
+						size="md"
+						className="self-center"
+					>
 						<BadgeText>Listo para escanear</BadgeText>
 					</Badge>
 
