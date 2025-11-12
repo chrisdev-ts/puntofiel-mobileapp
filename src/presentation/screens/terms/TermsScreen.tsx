@@ -1,5 +1,3 @@
-import { router } from "expo-router";
-import { ScrollView } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,15 +7,17 @@ import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { AppLayout } from "@/src/presentation/components/layout";
+import { router } from "expo-router";
+import { ScrollView } from "react-native";
 
 interface TermsScreenProps {
 	type: "user" | "owner";
 }
 
 const UserTermsContent = () => (
-	<VStack space="md">
+	<VStack space="lg">
 		<Heading size="xl" className="text-primary-500 text-center">
-			Términos y Condiciones de Uso
+			Términos y condiciones de uso
 		</Heading>
 
 		<Heading size="lg" className="text-primary-500">
@@ -112,9 +112,9 @@ const UserTermsContent = () => (
 );
 
 const OwnerTermsContent = () => (
-	<VStack space="md">
+	<VStack space="lg">
 		<Heading size="xl" className="text-primary-500 text-center">
-			Términos y Condiciones para Comercios Asociados
+			Términos y condiciones para comercios asociados
 		</Heading>
 
 		<Heading size="lg" className="text-primary-500">
@@ -239,9 +239,8 @@ export function TermsScreen({ type }: TermsScreenProps) {
 		<AppLayout
 			showHeader={true}
 			showNavBar={false}
-			headerTitle="Términos de Uso"
+			headerTitle="Términos de uso"
 			headerVariant="back"
-			backgroundColor="bg-background-50"
 			contentSpacing="md"
 			centerContent={false}
 		>
@@ -256,7 +255,7 @@ export function TermsScreen({ type }: TermsScreenProps) {
 						/>
 					</Box>
 
-					<Card className="bg-white rounded-2xl shadow-md">
+					<Card className="bg-white rounded-2xl border border-gray-200">
 						<VStack space="lg" className="p-6">
 							{type === "user" ? <UserTermsContent /> : <OwnerTermsContent />}
 
