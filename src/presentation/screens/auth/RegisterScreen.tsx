@@ -1,3 +1,8 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "expo-router";
+import { Eye, EyeOff } from "lucide-react-native";
+import { useState } from "react";
+import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
 	Checkbox,
@@ -25,11 +30,6 @@ import {
 } from "@/components/ui/toast";
 import { AppLayout } from "@/src/presentation/components/layout";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "expo-router";
-import { Eye, EyeOff } from "lucide-react-native";
-import { useState } from "react";
-import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import {
 	cleanPhoneNumber,
 	formatPhoneNumber,
@@ -162,11 +162,8 @@ export function RegisterScreen() {
 	};
 
 	const handleTermsPress = () => {
-		if (isBusinessOwner) {
-			router.push("/(public)/ownerterms"); //terms-business
-		} else {
-			router.push("/(public)/userterms"); //terms-customer
-		}
+		const termType = isBusinessOwner ? "owner" : "user";
+		router.push(`/(public)/terms/${termType}`);
 	};
 
 	const handlePhoneChange = (
