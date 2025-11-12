@@ -8,35 +8,84 @@ Usamos una combinación:
 
 ## 1. El "Qué": Componentes de gluestack-ui
 
-**Regla:** No reinventes la rueda.
+**Regla:** No reinventes la rueda. **SIEMPRE usa los componentes nativos de gluestack-ui antes de crear componentes personalizados.**
 
-`gluestack-ui` es nuestra librería de componentes base. Nos da los bloques de construcción accesibles y listos para usar:
-
-* `Box`, `VStack`, `HStack`
-* `Text`, `Heading`
-* `Button`, `Input`, `FormControl`
-* `Modal`, `Card`, `Spinner`
-* ...y muchos más.
+`gluestack-ui` es nuestra librería de componentes base. Nos da los bloques de construcción accesibles y listos para usar.
 
 ➡️ **Documentación oficial:** [https://gluestack.io/ui/docs/components/all-components](https://gluestack.io/ui/docs/components/all-components)
 
-### 1.1. Instalación de componentes
+### 1.1. Componentes Disponibles
+
+Estos son **TODOS** los componentes de gluestack-ui que puedes usar en el proyecto:
+
+#### Layout & Structure
+- `accordion` - Acordeones colapsables
+- `box` - Contenedor genérico (equivalente a `<div>`)
+- `card` - Tarjetas de contenido
+- `center` - Centrar contenido
+- `divider` - Líneas separadoras
+- `grid` - Sistema de grid
+- `hstack` - Stack horizontal
+- `vstack` - Stack vertical
+
+#### Forms & Inputs
+- `checkbox` - Casillas de verificación
+- `form-control` - Control de formularios
+- `input` - Campos de texto
+- `radio` - Botones de radio
+- `select` - Selectores desplegables
+- `slider` - Deslizadores de valor
+- `switch` - Interruptores on/off
+- `textarea` - Áreas de texto multilínea
+
+#### Navigation & Actions
+- `actionsheet` - Hojas de acciones
+- `button` - Botones
+- `fab` - Botón flotante de acción
+- `link` - Enlaces
+- `menu` - Menús desplegables
+- `pressable` - Área presionable
+
+#### Feedback & Overlays
+- `alert` - Alertas y mensajes de feedback
+- `alert-dialog` - Diálogos de confirmación
+- `drawer` - Cajón lateral
+- `modal` - Modales
+- `popover` - Popovers
+- `portal` - Portales para renderizado
+- `spinner` - Indicadores de carga
+- `toast` - Notificaciones temporales
+- `tooltip` - Tooltips informativos
+- `progress` - Barras de progreso
+- `skeleton` - Esqueletos de carga
+
+#### Content & Media
+- `avatar` - Avatares de usuario
+- `badge` - Insignias
+- `heading` - Encabezados
+- `icon` - Iconos
+- `image` - Imágenes
+- `table` - Tablas
+- `text` - Texto
+
+### 1.2. Instalación de componentes
 
 **Los componentes de gluestack-ui se instalan bajo demanda.** Si un componente no está en la carpeta `components/ui/`, debes instalarlo primero:
 
 ```bash
-npx gluestack-ui add <nombre-del-componente>
+npx gluestack-ui add <nombre-componente>
 ```
 
 **Ejemplos:**
 
 ```bash
-npx gluestack-ui add box
-npx gluestack-ui add button
-npx gluestack-ui add input
-npx gluestack-ui add spinner
-npx gluestack-ui add toast
+npx gluestack-ui add alert      # Para mensajes de feedback
+npx gluestack-ui add toast      # Para notificaciones
+npx gluestack-ui add spinner    # Para indicadores de carga
+npx gluestack-ui add skeleton   # Para estados de carga
+npx gluestack-ui add modal      # Para modales
 ```
+
 ---
 
 ## 2. El "Cómo": Estilos con NativeWind (Tailwind)

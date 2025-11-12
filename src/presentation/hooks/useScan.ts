@@ -14,6 +14,7 @@ interface ProcessLoyaltyParams {
 	customerId: string;
 	businessId: string;
 	amount: number;
+	notes?: string;
 }
 
 export function useScan() {
@@ -27,15 +28,17 @@ export function useScan() {
 			customerId,
 			businessId,
 			amount,
+			notes,
 		}: ProcessLoyaltyParams) => {
 			const result = await processLoyaltyUseCase.execute(
 				customerId,
 				businessId,
 				amount,
+				notes,
 			);
 
-			// Si el resultado no fue exitoso, lanzamos un error para que TanStack Query lo maneje
 			if (!result.success) {
+				console.error("useScan: Transaction failed -", result.message);
 				throw new Error(result.message);
 			}
 

@@ -1,11 +1,7 @@
-import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
+import EmployeesIndexScreen from "@/src/presentation/screens/owner/employees/EmployeesIndexScreen";
 
-export default function EmployeesIndexScreen() {
-	return (
-		<FeedbackScreen
-			variant="empty"
-			title="Empleados"
-			description="Esta pantalla está en desarrollo."
-		/>
-	);
-}
+/**
+ * Ruta: /(owner)/employees
+ * Pantalla de lista de empleados del negocio
+ */
+export default EmployeesIndexScreen;

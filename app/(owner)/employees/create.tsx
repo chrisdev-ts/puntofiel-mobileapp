@@ -1,11 +1,7 @@
-import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
+import CreateEmployeeScreen from "@/src/presentation/screens/owner/employees/CreateEmployeeScreen";
 
-export default function EmployeeCreateScreen() {
-	return (
-		<FeedbackScreen
-			variant="empty"
-			title="Crear Empleado"
-			description="Esta pantalla está en desarrollo."
-		/>
-	);
-}
+/**
+ * Ruta: /(owner)/employees/create
+ * Pantalla para registrar un nuevo empleado
+ */
+export default CreateEmployeeScreen;

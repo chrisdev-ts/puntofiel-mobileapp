@@ -13,7 +13,7 @@ export default function OwnerTabsLayout() {
 		>
 			<Stack.Screen name="home" />
 			<Stack.Screen name="rewards" />
-			<Stack.Screen name="scan" />
+			<Stack.Screen name="scan-qr" />
 			<Stack.Screen name="raffles" />
 			<Stack.Screen name="profile" />
 		</Stack>

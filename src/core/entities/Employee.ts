@@ -7,14 +7,25 @@ export interface Employee {
 	/** Identificador único del empleado */
 	id: number;
 
-	/** Fecha de creación del registro */
-	createdAt: Date;
-
 	/** ID del negocio al que pertenece */
 	businessId: string;
 
 	/** ID del perfil del empleado (referencia a profiles) */
 	profileId: string;
+
+	/** Status del empleado */
+	isActive: boolean;
+
+	/** Fecha de creación del registro */
+	createdAt: string;
+
+	// Datos del perfil relacionado
+	profile: {
+		firstName: string;
+		lastName: string | null;
+		secondLastName: string | null;
+		email: string;
+	};
 }
 
 /**

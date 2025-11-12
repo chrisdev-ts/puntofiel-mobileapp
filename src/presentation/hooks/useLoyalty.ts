@@ -7,29 +7,21 @@ import { useAuthStore } from "@/src/presentation/stores/authStore";
 const loyaltyRepository = new SupabaseLoyaltyRepository();
 const getLoyaltyCardsUseCase = new GetLoyaltyCardsUseCase(loyaltyRepository);
 
-export const useLoyalty = () => {
-	// 2. Obtenemos el ID del usuario del store de autenticación
+export function useLoyalty() {
 	const user = useAuthStore((state) => state.user);
-	const customerId = user?.id ?? null;
+	const customerId = user?.id;
 
-	// 3. Definimos el useQuery
-	const { data, isLoading, error, refetch } = useQuery({
-		// La Query Key identifica esta 'fetch'
+	return useQuery({
 		queryKey: ["loyaltyCards", customerId],
+		queryFn: async () => {
+			if (!customerId) {
+				throw new Error("No hay usuario autenticado");
+			}
 
-		queryFn: () => {
-			if (!customerId) return Promise.resolve([]); // No hacer fetch si no hay user
-			return getLoyaltyCardsUseCase.execute(customerId);
+			const result = await getLoyaltyCardsUseCase.execute(customerId);
+			return result;
 		},
-
-		// Solo habilita la query si el customerId existe
 		enabled: !!customerId,
+		staleTime: 1000 * 60 * 5,
 	});
-
-	return {
-		cards: data ?? [], // Devuelve array vacío por defecto
-		isLoading,
-		error,
-		refetch,
-	};
-};
+}
