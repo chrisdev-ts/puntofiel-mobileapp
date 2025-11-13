@@ -3,7 +3,7 @@ import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 
 export default function NotificationsScreen() {
 	return (
-		<AppLayout headerVariant="default" centerContent>
+		<AppLayout headerVariant="back" centerContent>
 			<Text className="text-center text-typography-900 text-2xl font-bold">
 				Notificaciones
 			</Text>
