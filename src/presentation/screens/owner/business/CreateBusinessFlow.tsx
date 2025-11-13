@@ -124,6 +124,32 @@ export default function CreateBusinessFlow() {
         mode: "onChange",
     });
 
+    // Observar cambios en todos los campos
+    const formValues = watch();
+
+    // Calcular progreso dinámicamente
+    const calculateProgress = (): number => {
+        let completedFields = 0;
+        const totalFields = 6; // name, category, address, directions, hours, logo
+
+        // Campos obligatorios (peso: 2 puntos cada uno)
+        if (formValues.name && formValues.name.length >= 3) completedFields += 2;
+        if (formValues.category && formValues.category !== "other") completedFields += 2;
+
+        // Campos opcionales (peso: 1 punto cada uno)
+        if (formValues.locationAddress && formValues.locationAddress.trim()) completedFields += 1;
+        if (formValues.directions && formValues.directions.trim()) completedFields += 1;
+        if (formValues.openingHours && formValues.openingHours.trim()) completedFields += 1;
+
+        // Logo (peso: 1 punto)
+        if (logoImage) completedFields += 1;
+
+        // Calcular porcentaje (sobre 8 puntos totales)
+        return Math.round((completedFields / 8) * 100);
+    };
+
+    const progressPercentage = calculateProgress();
+
     // Solicitar permisos de cámara y galería
     const requestPermissions = async () => {
         const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
@@ -163,11 +189,33 @@ export default function CreateBusinessFlow() {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
-            quality: 0.8,
+            quality: 0.5, // Compresión al 50% para reducir tamaño
         });
 
         if (!result.canceled && result.assets[0]) {
-            setLogoImage(result.assets[0]);
+            const asset = result.assets[0];
+
+            // Validar tamaño (5MB = 5242880 bytes)
+            if (asset.fileSize && asset.fileSize > 5242880) {
+                toast.show({
+                    placement: "top",
+                    duration: 4000,
+                    render: ({ id }) => {
+                        const uniqueToastId = `toast-${id}`;
+                        return (
+                            <Toast nativeID={uniqueToastId} action="error" variant="solid">
+                                <ToastTitle>Imagen muy grande</ToastTitle>
+                                <ToastDescription>
+                                    La imagen debe ser menor a 5MB. Por favor selecciona otra.
+                                </ToastDescription>
+                            </Toast>
+                        );
+                    },
+                });
+                return;
+            }
+
+            setLogoImage(asset);
         }
     };
 
@@ -179,11 +227,33 @@ export default function CreateBusinessFlow() {
         const result = await ImagePicker.launchCameraAsync({
             allowsEditing: true,
             aspect: [1, 1],
-            quality: 0.8,
+            quality: 0.5, // Compresión al 50%
         });
 
         if (!result.canceled && result.assets[0]) {
-            setLogoImage(result.assets[0]);
+            const asset = result.assets[0];
+
+            // Validar tamaño
+            if (asset.fileSize && asset.fileSize > 5242880) {
+                toast.show({
+                    placement: "top",
+                    duration: 4000,
+                    render: ({ id }) => {
+                        const uniqueToastId = `toast-${id}`;
+                        return (
+                            <Toast nativeID={uniqueToastId} action="error" variant="solid">
+                                <ToastTitle>Imagen muy grande</ToastTitle>
+                                <ToastDescription>
+                                    La imagen debe ser menor a 5MB. Por favor toma otra foto.
+                                </ToastDescription>
+                            </Toast>
+                        );
+                    },
+                });
+                return;
+            }
+
+            setLogoImage(asset);
         }
     };
 
@@ -280,21 +350,18 @@ export default function CreateBusinessFlow() {
         }
     };
 
-    // Calcular progreso
-    const progressPercentage = (currentStep / totalSteps) * 100;
-
     return (
         <AppLayout>
             <ScrollView className="flex-1 bg-white">
                 <VStack className="p-6 gap-6">
-                    {/* Barra de progreso */}
+                    {/* Barra de progreso dinámica */}
                     <VStack className="gap-2">
                         <HStack className="justify-between items-center">
                             <Text className="text-sm text-gray-600">
                                 Paso {currentStep} de {totalSteps}
                             </Text>
                             <Text className="text-sm font-semibold text-blue-600">
-                                {Math.round(progressPercentage)}%
+                                {progressPercentage}%
                             </Text>
                         </HStack>
                         <Box className="h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -303,6 +370,11 @@ export default function CreateBusinessFlow() {
                                 style={{ width: `${progressPercentage}%` }}
                             />
                         </Box>
+                        {progressPercentage < 100 && (
+                            <Text className="text-xs text-gray-500">
+                                Completa todos los campos para avanzar
+                            </Text>
+                        )}
                     </VStack>
 
                     {/* Título */}
