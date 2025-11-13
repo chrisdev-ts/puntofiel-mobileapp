@@ -1,6 +1,8 @@
+import { useAuthStore } from "@/src/presentation/stores/authStore";
 import { useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
-import { useAuthStore } from "@/src/presentation/stores/authStore";
+import { useOwnerBusinessCheck } from "./useOwnerbusinessCheck";
+/**
 
 /**
  * Hook que protege rutas según el estado de autenticación y el rol del usuario
@@ -8,6 +10,7 @@ import { useAuthStore } from "@/src/presentation/stores/authStore";
  * Funcionalidad:
  * - Redirige a /welcome si no está autenticado y está en rutas protegidas
  * - Redirige a la ruta correcta si está autenticado pero en ruta incorrecta para su rol
+ * - Redirige a owners sin negocios al flujo de registro (una sola vez)
  * - Permite acceso a rutas públicas siempre
  *
  * @example
@@ -21,6 +24,8 @@ export function useAuthGuard() {
 	const segments = useSegments();
 	const router = useRouter();
 	const { user, isLoading } = useAuthStore();
+	// Verificar si el owner tiene negocios registrados
+	useOwnerBusinessCheck();
 
 	useEffect(() => {
 		if (isLoading) return; // No hacer nada mientras se carga la sesión
