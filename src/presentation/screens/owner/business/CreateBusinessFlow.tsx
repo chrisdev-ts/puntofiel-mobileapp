@@ -36,20 +36,28 @@ import { Text } from "@/components/ui/text";
 import { Toast, ToastDescription, ToastTitle, useToast } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
 import type { BusinessCategory } from "@/src/core/entities/Business";
+import { SupabaseBusinessRepository } from "@/src/infrastructure/repositories/SupabaseBusinessRepository";
+import { BusinessHoursSelector } from "@/src/presentation/components/business/BusinessHoursSelector";
 import { AppLayout } from "@/src/presentation/components/layout";
 import { useCreateBusiness } from "@/src/presentation/hooks/useCreateBusiness";
 import { useAuthStore } from "@/src/presentation/stores/authStore";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ImagePickerAsset } from "expo-image-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { CameraIcon, ImageIcon } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Pressable, ScrollView } from "react-native";
 import { z } from "zod";
 
-// Esquema de validación con Zod
+
+interface CreateBusinessFlowProps {
+    isEditMode?: boolean;
+    businessId?: string;
+}
+
 const businessFormSchema = z.object({
     name: z
         .string()
@@ -85,20 +93,21 @@ const CATEGORY_LABELS: Record<BusinessCategory, string> = {
     other: "Otro",
 };
 
-export default function CreateBusinessFlow() {
+export default function CreateBusinessFlow({
+    isEditMode = false,
+    businessId,
+}: CreateBusinessFlowProps) {
     const router = useRouter();
     const toast = useToast();
     const user = useAuthStore((state) => state.user);
     const { createBusinessAsync, isCreating } = useCreateBusiness();
+        const queryClient = useQueryClient();
 
-    // Control de pasos
     const [currentStep, setCurrentStep] = useState(1);
     const totalSteps = 3;
 
-    // Estado para la imagen
     const [logoImage, setLogoImage] = useState<ImagePickerAsset | null>(null);
 
-    // Estado para diálogo de éxito/error
     const [showAlert, setShowAlert] = useState(false);
     const [alertConfig, setAlertConfig] = useState<{
         title: string;
@@ -106,12 +115,14 @@ export default function CreateBusinessFlow() {
         type: "success" | "error";
     }>({ title: "", message: "", type: "success" });
 
-    // Formulario con react-hook-form
+    const [isLoadingBusiness, setIsLoadingBusiness] = useState(false);
+
     const {
         control,
         handleSubmit,
         formState: { errors },
         watch,
+        setValue,
     } = useForm<BusinessFormData>({
         resolver: zodResolver(businessFormSchema),
         defaultValues: {
@@ -124,33 +135,75 @@ export default function CreateBusinessFlow() {
         mode: "onChange",
     });
 
-    // Observar cambios en todos los campos
     const formValues = watch();
 
-    // Calcular progreso dinámicamente
+    useEffect(() => {
+        if (isEditMode && businessId) {
+            loadBusinessData();
+        }
+    }, [isEditMode, businessId]);
+
+    const loadBusinessData = async () => {
+        setIsLoadingBusiness(true);
+        try {
+            const businessRepo = new SupabaseBusinessRepository();
+            const business = await businessRepo.getBusinessById(businessId!);
+
+            if (business) {
+                setValue("name", business.name);
+                setValue("category", business.category);
+                setValue("locationAddress", business.locationAddress || "");
+                setValue("directions", "");
+                setValue("openingHours", business.openingHours || "");
+
+                if (business.logoUrl) {
+                    setLogoImage({
+                        uri: business.logoUrl,
+                        width: 400,
+                        height: 400,
+                    } as ImagePickerAsset);
+                }
+            }
+        } catch (error) {
+            console.error("Error cargando negocio:", error);
+            toast.show({
+                placement: "top",
+                duration: 4000,
+                render: ({ id }) => {
+                    const uniqueToastId = `toast-${id}`;
+                    return (
+                        <Toast nativeID={uniqueToastId} action="error" variant="solid">
+                            <ToastTitle>Error</ToastTitle>
+                            <ToastDescription>
+                                No se pudo cargar la información del negocio
+                            </ToastDescription>
+                        </Toast>
+                    );
+                },
+            });
+        } finally {
+            setIsLoadingBusiness(false);
+        }
+    };
+
     const calculateProgress = (): number => {
         let completedFields = 0;
-        const totalFields = 6; // name, category, address, directions, hours, logo
+        const totalFields = 6;
 
-        // Campos obligatorios (peso: 2 puntos cada uno)
         if (formValues.name && formValues.name.length >= 3) completedFields += 2;
         if (formValues.category && formValues.category !== "other") completedFields += 2;
 
-        // Campos opcionales (peso: 1 punto cada uno)
         if (formValues.locationAddress && formValues.locationAddress.trim()) completedFields += 1;
         if (formValues.directions && formValues.directions.trim()) completedFields += 1;
         if (formValues.openingHours && formValues.openingHours.trim()) completedFields += 1;
 
-        // Logo (peso: 1 punto)
         if (logoImage) completedFields += 1;
 
-        // Calcular porcentaje (sobre 8 puntos totales)
         return Math.round((completedFields / 8) * 100);
     };
 
     const progressPercentage = calculateProgress();
 
-    // Solicitar permisos de cámara y galería
     const requestPermissions = async () => {
         const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
         const mediaLibraryPermission =
@@ -180,7 +233,6 @@ export default function CreateBusinessFlow() {
         return true;
     };
 
-    // Abrir galería
     const pickImageFromGallery = async () => {
         const hasPermission = await requestPermissions();
         if (!hasPermission) return;
@@ -189,13 +241,12 @@ export default function CreateBusinessFlow() {
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
-            quality: 0.5, // Compresión al 50% para reducir tamaño
+            quality: 0.5,
         });
 
         if (!result.canceled && result.assets[0]) {
             const asset = result.assets[0];
 
-            // Validar tamaño (5MB = 5242880 bytes)
             if (asset.fileSize && asset.fileSize > 5242880) {
                 toast.show({
                     placement: "top",
@@ -219,7 +270,6 @@ export default function CreateBusinessFlow() {
         }
     };
 
-    // Abrir cámara
     const takePhoto = async () => {
         const hasPermission = await requestPermissions();
         if (!hasPermission) return;
@@ -227,13 +277,12 @@ export default function CreateBusinessFlow() {
         const result = await ImagePicker.launchCameraAsync({
             allowsEditing: true,
             aspect: [1, 1],
-            quality: 0.5, // Compresión al 50%
+            quality: 0.5,
         });
 
         if (!result.canceled && result.assets[0]) {
             const asset = result.assets[0];
 
-            // Validar tamaño
             if (asset.fileSize && asset.fileSize > 5242880) {
                 toast.show({
                     placement: "top",
@@ -257,7 +306,6 @@ export default function CreateBusinessFlow() {
         }
     };
 
-    // Validar paso actual antes de continuar
     const validateCurrentStep = (): boolean => {
         const formData = watch();
 
@@ -267,7 +315,6 @@ export default function CreateBusinessFlow() {
         return true;
     };
 
-    // Navegar entre pasos
     const handleNext = () => {
         if (!validateCurrentStep()) {
             toast.show({
@@ -299,7 +346,6 @@ export default function CreateBusinessFlow() {
         }
     };
 
-    // Enviar formulario
     const onSubmit = async (data: BusinessFormData) => {
         if (!user?.id) {
             setAlertConfig({
@@ -312,31 +358,69 @@ export default function CreateBusinessFlow() {
         }
 
         try {
-            await createBusinessAsync({
-                businessData: {
-                    ownerId: user.id,
+            if (isEditMode && businessId) {
+                const businessRepo = new SupabaseBusinessRepository();
+
+                let newLogoUrl = undefined;
+                if (logoImage?.uri && !logoImage.uri.startsWith("http")) {
+                    newLogoUrl = await businessRepo.uploadBusinessLogo(
+                        logoImage.uri,
+                        businessId
+                    );
+                }
+
+                await businessRepo.updateBusiness(businessId, {
                     name: data.name,
                     category: data.category,
                     locationAddress: data.locationAddress || undefined,
                     openingHours: data.openingHours || undefined,
-                },
-                logoUri: logoImage?.uri,
-            });
+                    logoUrl: newLogoUrl,
+                });
+                
+                await queryClient.invalidateQueries({ 
+                    queryKey: ["businesses"] 
+                });
+                
+                // Esperar un momento para que la UI se actualice
+                await new Promise(resolve => setTimeout(resolve, 300));
 
-            setAlertConfig({
-                title: "¡Éxito!",
-                message: "Tu negocio ha sido registrado correctamente",
-                type: "success",
-            });
+                setAlertConfig({
+                    title: "Actualizado",
+                    message: "Los datos del negocio se actualizaron correctamente",
+                    type: "success",
+                });
+            } else {
+                await createBusinessAsync({
+                    businessData: {
+                        ownerId: user.id,
+                        name: data.name,
+                        category: data.category,
+                        locationAddress: data.locationAddress || undefined,
+                        openingHours: data.openingHours || undefined,
+                    },
+                    logoUri: logoImage?.uri,
+                });
+                
+                await queryClient.invalidateQueries({ 
+                    queryKey: ["businesses"] 
+                });
+
+                setAlertConfig({
+                    title: "Exito",
+                    message: "Tu negocio ha sido registrado correctamente",
+                    type: "success",
+                });
+            }
+
             setShowAlert(true);
         } catch (error) {
-            console.error("Error creando negocio:", error);
+            console.error("Error guardando negocio:", error);
             setAlertConfig({
                 title: "Error",
                 message:
                     error instanceof Error
                         ? error.message
-                        : "Ocurrió un error al crear el negocio",
+                        : "Ocurrió un error al guardar el negocio",
                 type: "error",
             });
             setShowAlert(true);
@@ -350,23 +434,35 @@ export default function CreateBusinessFlow() {
         }
     };
 
+    if (isLoadingBusiness) {
+        return (
+            <AppLayout showNavBar={false}>
+                <VStack className="p-6 gap-6">
+                    <Box className="h-8 w-48 rounded bg-gray-200" />
+                    <Box className="h-12 w-full rounded bg-gray-200" />
+                    <Box className="h-12 w-full rounded bg-gray-200" />
+                    <Box className="h-12 w-full rounded bg-gray-200" />
+                </VStack>
+            </AppLayout>
+        );
+    }
+
     return (
-        <AppLayout>
+        <AppLayout showNavBar={isEditMode}>
             <ScrollView className="flex-1 bg-white">
                 <VStack className="p-6 gap-6">
-                    {/* Barra de progreso dinámica */}
                     <VStack className="gap-2">
                         <HStack className="justify-between items-center">
                             <Text className="text-sm text-gray-600">
                                 Paso {currentStep} de {totalSteps}
                             </Text>
-                            <Text className="text-sm font-semibold text-blue-600">
+                            <Text className="text-sm font-semibold text-gray-600">
                                 {progressPercentage}%
                             </Text>
                         </HStack>
                         <Box className="h-2 bg-gray-200 rounded-full overflow-hidden">
                             <Box
-                                className="h-full bg-blue-500 transition-all duration-300"
+                                className="h-full bg-primary-500 transition-all duration-300"
                                 style={{ width: `${progressPercentage}%` }}
                             />
                         </Box>
@@ -377,19 +473,16 @@ export default function CreateBusinessFlow() {
                         )}
                     </VStack>
 
-                    {/* Título */}
                     <Heading size="xl" className="text-gray-900">
-                        Registrar Negocio
+                        {isEditMode ? "Editar Negocio" : "Registrar Negocio"}
                     </Heading>
 
-                    {/* Paso 1: Información básica */}
                     {currentStep === 1 && (
                         <VStack className="gap-4">
                             <Text className="text-base text-gray-700">
                                 Ingresa la información básica de tu negocio
                             </Text>
 
-                            {/* Nombre del negocio */}
                             <FormControl isInvalid={!!errors.name} isRequired>
                                 <FormControlLabel>
                                     <FormControlLabelText>Nombre del negocio</FormControlLabelText>
@@ -415,7 +508,6 @@ export default function CreateBusinessFlow() {
                                 )}
                             </FormControl>
 
-                            {/* Categoría */}
                             <FormControl isInvalid={!!errors.category} isRequired>
                                 <FormControlLabel>
                                     <FormControlLabelText>Categoría</FormControlLabelText>
@@ -452,7 +544,6 @@ export default function CreateBusinessFlow() {
                                 )}
                             </FormControl>
 
-                            {/* Dirección */}
                             <FormControl>
                                 <FormControlLabel>
                                     <FormControlLabelText>Dirección</FormControlLabelText>
@@ -473,7 +564,6 @@ export default function CreateBusinessFlow() {
                                 />
                             </FormControl>
 
-                            {/* Indicaciones (opcional) */}
                             <FormControl>
                                 <FormControlLabel>
                                     <FormControlLabelText>
@@ -500,49 +590,31 @@ export default function CreateBusinessFlow() {
                         </VStack>
                     )}
 
-                    {/* Paso 2: Horarios */}
                     {currentStep === 2 && (
                         <VStack className="gap-4">
                             <Text className="text-base text-gray-700">
                                 Define tus horarios de atención
                             </Text>
 
-                            <FormControl>
-                                <FormControlLabel>
-                                    <FormControlLabelText>Horarios de atención</FormControlLabelText>
-                                </FormControlLabel>
-                                <Controller
-                                    control={control}
-                                    name="openingHours"
-                                    render={({ field: { onChange, onBlur, value } }) => (
-                                        <Input>
-                                            <InputField
-                                                placeholder="Ej: Lunes a Viernes: 9:00 AM - 6:00 PM"
-                                                value={value}
-                                                onChangeText={onChange}
-                                                onBlur={onBlur}
-                                                multiline
-                                                numberOfLines={3}
-                                            />
-                                        </Input>
-                                    )}
-                                />
-                            </FormControl>
-
-                            <Text className="text-sm text-gray-500 mt-2">
-                                Puedes dejar este campo vacío y configurarlo después
-                            </Text>
+                            <Controller
+                                control={control}
+                                name="openingHours"
+                                render={({ field: { onChange, value } }) => (
+                                    <BusinessHoursSelector
+                                        onChange={onChange}
+                                        initialValue={value}
+                                    />
+                                )}
+                            />
                         </VStack>
                     )}
 
-                    {/* Paso 3: Logo */}
                     {currentStep === 3 && (
                         <VStack className="gap-4">
                             <Text className="text-base text-gray-700">
                                 Sube el logo de tu negocio
                             </Text>
 
-                            {/* Preview de la imagen */}
                             {logoImage ? (
                                 <VStack className="gap-3">
                                     <Image
@@ -568,11 +640,10 @@ export default function CreateBusinessFlow() {
                                         </Text>
                                     </Box>
 
-                                    {/* Botones para seleccionar imagen */}
                                     <HStack className="gap-3">
                                         <Pressable
                                             onPress={pickImageFromGallery}
-                                            className="flex-1 bg-blue-500 p-4 rounded-lg items-center justify-center"
+                                            className="flex-1 bg-primary-500 p-4 rounded-lg items-center justify-center"
                                         >
                                             <Icon as={ImageIcon} size="lg" className="text-white mb-1" />
                                             <Text className="text-white font-semibold">Galería</Text>
@@ -580,7 +651,7 @@ export default function CreateBusinessFlow() {
 
                                         <Pressable
                                             onPress={takePhoto}
-                                            className="flex-1 bg-blue-500 p-4 rounded-lg items-center justify-center"
+                                            className="flex-1 bg-primary-500 p-4 rounded-lg items-center justify-center"
                                         >
                                             <Icon as={CameraIcon} size="lg" className="text-white mb-1" />
                                             <Text className="text-white font-semibold">Cámara</Text>
@@ -595,7 +666,6 @@ export default function CreateBusinessFlow() {
                         </VStack>
                     )}
 
-                    {/* Botones de navegación */}
                     <HStack className="gap-3 mt-6">
                         {currentStep > 1 && (
                             <Button
@@ -609,17 +679,31 @@ export default function CreateBusinessFlow() {
                         )}
 
                         {currentStep < totalSteps ? (
-                            <Button onPress={handleNext} className="flex-1 bg-blue-500">
+                            <Button
+                                onPress={handleNext}
+                                className="flex-1"
+                                variant="solid"
+                                action="primary"
+                            >
                                 <ButtonText>Continuar</ButtonText>
                             </Button>
                         ) : (
                             <Button
                                 onPress={handleSubmit(onSubmit)}
-                                className="flex-1 bg-blue-500"
+                                className="flex-1"
                                 isDisabled={isCreating}
+                                variant="solid"
+                                action="primary"
                             >
                                 <ButtonText>
-                                    {isCreating ? "Registrando..." : "Finalizar"}
+                                    {isCreating
+                                        ? isEditMode
+                                            ? "Actualizando..."
+                                            : "Registrando..."
+                                        : isEditMode
+                                        ? "Guardar Cambios"
+                                        : "Finalizar"
+                                    }
                                 </ButtonText>
                             </Button>
                         )}
@@ -627,7 +711,6 @@ export default function CreateBusinessFlow() {
                 </VStack>
             </ScrollView>
 
-            {/* AlertDialog para éxito/error */}
             <AlertDialog isOpen={showAlert} onClose={handleAlertClose}>
                 <AlertDialogBackdrop />
                 <AlertDialogContent>
@@ -638,7 +721,11 @@ export default function CreateBusinessFlow() {
                         <Text>{alertConfig.message}</Text>
                     </AlertDialogBody>
                     <AlertDialogFooter>
-                        <Button onPress={handleAlertClose} className="bg-blue-500">
+                        <Button
+                            onPress={handleAlertClose}
+                            variant="solid"
+                            action="primary"
+                        >
                             <ButtonText>Aceptar</ButtonText>
                         </Button>
                     </AlertDialogFooter>
