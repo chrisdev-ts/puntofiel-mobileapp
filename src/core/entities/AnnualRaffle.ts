@@ -3,32 +3,47 @@
  *
  * Representa una rifa anual de la plataforma PuntoFiel.
  */
-export interface AnnualRaffle {
-	/** Identificador único de la rifa */
-	id: number;
-
-	/** Año de la rifa */
-	raffleYear: number;
-
-	/** Fecha de realización de la rifa */
-	raffleDate: Date;
-
-	/** ID del cliente ganador (opcional hasta que se realice el sorteo) */
-	winnerCustomerId?: string;
-
-	/** Indica si la rifa ya fue completada/sorteada */
-	isCompleted: boolean;
+export interface Raffle {
+    id: string;
+    businessId: string;
+    name: string;
+    prize: string;
+    description: string;
+    pointsRequired: number;
+    maxTicketsPerUser: number;
+    startDate: Date;
+    endDate: Date;
+    imageUrl?: string;
+    // 👇 Agregados
+    winnerCustomerId?: string | null; 
+    isCompleted: boolean; 
+    // 👆
+    isActive: boolean;
+    createdAt: Date;
 }
 
 /**
  * DTO para crear una nueva rifa anual
  */
-export interface CreateAnnualRaffleDTO {
-	/** Año de la rifa */
-	raffleYear: number;
+export interface CreateRaffleDTO {
+    businessId: string;
+    name: string;
+    prize: string;
+    description: string;
+    pointsRequired: number;
+    maxTicketsPerUser: number;
+    startDate: Date;
+    endDate: Date;
+}
 
-	/** Fecha de realización */
-	raffleDate: Date;
+export interface UpdateRaffleDTO {
+    name?: string;
+    prize?: string;
+    description?: string;
+    pointsRequired?: number;
+    maxTicketsPerUser?: number;
+    startDate?: Date;
+    endDate?: Date;
 }
 
 /**
