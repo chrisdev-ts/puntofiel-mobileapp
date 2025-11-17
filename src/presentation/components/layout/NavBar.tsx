@@ -1,9 +1,9 @@
-import { usePathname, useRouter } from "expo-router";
-import { GiftIcon, Home, MedalIcon, ScanLine, User } from "lucide-react-native";
-import { Pressable } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Text } from "@/components/ui/text";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
+import { usePathname, useRouter } from "expo-router";
+import { GiftIcon, Home, MedalIcon, ScanLine, User } from "lucide-react-native";
+import { Pressable } from "react-native";
 
 // Constantes de color del tema
 const COLORS = {
@@ -103,6 +103,11 @@ export function NavBar() {
 						IconComponent: ScanLine,
 						label: "Mi QR",
 						route: "/(customer)/(tabs)/show-qr",
+					},
+					{
+						IconComponent: MedalIcon,
+						label: "Rifas",
+						route: "/(customer)/(tabs)/raffles",
 					},
 					{
 						IconComponent: User,
