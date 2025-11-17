@@ -7,6 +7,7 @@ import { Image } from "@/components/ui/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import type { BusinessCategory } from "@/src/core/entities/Business";
 import { SupabaseBusinessRepository } from "@/src/infrastructure/repositories/SupabaseBusinessRepository";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useAuthStore } from "@/src/presentation/stores/authStore";
@@ -15,6 +16,18 @@ import { useRouter } from "expo-router";
 import { Edit3Icon } from "lucide-react-native";
 
 const businessRepository = new SupabaseBusinessRepository();
+
+// Mapeo de categorías de inglés a español
+const CATEGORY_LABELS: Record<BusinessCategory, string> = {
+    food: "Comida",
+    cafe: "Cafetería",
+    restaurant: "Restaurante",
+    retail: "Retail/Ropa",
+    services: "Servicios",
+    entertainment: "Entretenimiento",
+    health: "Salud y Bienestar",
+    other: "Otro",
+};
 
 export default function DashboardScreen() {
     const router = useRouter();
@@ -39,6 +52,11 @@ export default function DashboardScreen() {
                 params: { id: business.id },
             });
         }
+    };
+
+    // Función para obtener la etiqueta en español de la categoría
+    const getCategoryLabel = (category: BusinessCategory): string => {
+        return CATEGORY_LABELS[category] || category;
     };
 
     return (
@@ -71,7 +89,7 @@ export default function DashboardScreen() {
                                         {business.name}
                                     </Heading>
                                     <Text className="text-sm text-gray-600">
-                                        {business.category}
+                                        {getCategoryLabel(business.category)}
                                     </Text>
                                 </VStack>
                                 <Button
