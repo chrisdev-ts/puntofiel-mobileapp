@@ -1,3 +1,5 @@
+import { router } from "expo-router";
+import { ScrollView } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,8 +9,6 @@ import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { AppLayout } from "@/src/presentation/components/layout";
-import { router } from "expo-router";
-import { ScrollView } from "react-native";
 
 interface TermsScreenProps {
 	type: "user" | "owner";
