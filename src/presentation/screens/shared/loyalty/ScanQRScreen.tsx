@@ -1,3 +1,10 @@
+import { Box } from "@/components/ui/box";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
+import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
+import { useAuth } from "@/src/presentation/hooks/useAuth";
 import {
 	type BarcodeScanningResult,
 	CameraView,
@@ -6,13 +13,6 @@ import {
 import { router } from "expo-router";
 import { Zap } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
-import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
-import { Text } from "@/components/ui/text";
-import { VStack } from "@/components/ui/vstack";
-import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
-import { useAuth } from "@/src/presentation/hooks/useAuth";
 
 export default function ScanQRScreen() {
 	const [permission, requestPermission] = useCameraPermissions();
@@ -31,43 +31,25 @@ export default function ScanQRScreen() {
 
 	const handleBarCodeScanned = (result: BarcodeScanningResult) => {
 		if (scanned) return;
-
 		setScanned(true);
 		setError(null);
 
-		const customerId = result.data;
+		const qrData = result.data;
 
-		// Validación del customerId
-		if (!customerId) {
-			console.error("ScanQRScreen: Empty or null QR");
-			setError("QR inválido - No contiene datos");
-			setScanned(false);
-			return;
-		}
-
-		if (customerId.length < 10) {
-			console.error(`ScanQRScreen: QR too short (${customerId.length} chars)`);
-			setError(
-				`QR inválido - Longitud insuficiente (${customerId.length} caracteres)`,
-			);
-			setScanned(false);
-			return;
-		}
-
-		navigateToRegisterLoyalty(customerId);
-	};
-
-	// Función auxiliar para navegar al registro de puntos
-	const navigateToRegisterLoyalty = (customerId: string) => {
-		const baseRoute =
-			user?.role === "owner"
-				? "/(owner)/loyalty/register"
-				: "/(employee)/loyalty/register";
-
-		const route = `${baseRoute}?customerId=${customerId}`;
-
+		// 1. DETECTAR TIPO DE QR
 		try {
-			router.push(route as never);
+			// Intentamos parsear como JSON (QR de Recompensa)
+			const json = JSON.parse(qrData);
+
+			if (json.rewardId && json.userId) {
+				// Es un canje de recompensa -> Ir a pantalla de validación
+				// Codificamos los datos para pasarlos por URL
+				const params = encodeURIComponent(qrData);
+
+				const baseRoute = user?.role === "owner" ? "/(owner)" : "/(employee)";
+				router.push(`${baseRoute}/rewards/validate-redemption?data=${params}` as never);
+				return;
+			}
 		} catch (error) {
 			console.error("ScanQRScreen: Navigation error", error);
 			setError("Error al navegar a la pantalla de registro");
