@@ -19,7 +19,6 @@ import { HStack } from "@/components/ui/hstack";
 import { CheckIcon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
 import { Input, InputField, InputIcon, InputSlot } from "@/components/ui/input";
-import { Link, LinkText } from "@/components/ui/link";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import {
@@ -439,19 +438,21 @@ export function RegisterScreen() {
 							<CheckboxIndicator>
 								<CheckboxIcon as={CheckIcon} />
 							</CheckboxIndicator>
-							<CheckboxLabel className="flex-1 flex-wrap">
+							<CheckboxLabel>
 								<Text size="sm" className="leading-5">
 									He leído y acepto los{" "}
-									<Link onPress={handleTermsPress}>
-										<LinkText
-											size="sm"
-											className="font-bold underline text-primary-600 leading-5"
-										>
-											{isBusinessOwner
-												? "Términos y condiciones para comercios"
-												: "Términos y condiciones"}
-										</LinkText>
-									</Link>
+									<Text
+										size="sm"
+										className="font-bold underline text-primary-600 leading-5"
+										onPress={handleTermsPress}
+										// Estas props hacen que el Text se comporte como un link
+										accessible={true}
+										accessibilityRole="link"
+									>
+										{isBusinessOwner
+											? "Términos y condiciones para comercios"
+											: "Términos y condiciones"}
+									</Text>
 								</Text>
 							</CheckboxLabel>
 						</Checkbox>

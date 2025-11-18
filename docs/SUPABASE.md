@@ -176,3 +176,62 @@ async processPurchase(userId: string, businessId: string, amount: number) {
   return data; // La función puede devolver un resultado (ej. puntos nuevos)
 }
 ```
+
+---
+
+## 5. Supabase Storage (Bucket único)
+
+PuntoFiel usa un **bucket único** llamado `puntofiel-assets` para almacenar todas las imágenes.
+
+### Estructura del bucket
+
+```
+puntofiel-assets/
+├── rewards/             # Imágenes de recompensas
+│   └── {businessId}/
+│       └── {filename}
+└── business-logos/      # Logos de negocios
+    └── {businessId}/
+        └── {filename}
+```
+
+### ✅ Patrón recomendado: Usar utilidades centralizadas
+
+**SIEMPRE** usar las funciones de `src/infrastructure/services/storage.ts`:
+
+```typescript
+import {
+  BUCKET_NAME,
+  STORAGE_PATHS,
+  uploadFile,
+  getPublicUrl,
+  deleteFile,
+  extractPathFromUrl,
+} from '@/src/infrastructure/services/storage';
+
+// 1. Generar ruta con STORAGE_PATHS
+const path = STORAGE_PATHS.rewards(businessId, 'reward-1.jpg');
+
+// 2. Subir archivo
+await uploadFile(path, blob, { upsert: true });
+
+// 3. Obtener URL pública
+const url = getPublicUrl(path);
+
+// 4. Eliminar archivo
+await deleteFile(path);
+
+// 5. Extraer ruta de una URL completa
+const path = extractPathFromUrl(url);
+```
+
+### ❌ Evitar: Acceso directo al bucket
+
+```typescript
+// ❌ NO hacer esto
+await supabase.storage.from('rewards').upload(...);
+await supabase.storage.from('business-logos').upload(...);
+
+// ✅ Usar siempre BUCKET_NAME
+await supabase.storage.from(BUCKET_NAME).upload(...);
+```

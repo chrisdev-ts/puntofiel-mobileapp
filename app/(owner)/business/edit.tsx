@@ -1,4 +1,4 @@
-import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
+/*import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
 
 export default function BusinessEditScreen() {
 	return (
@@ -8,4 +8,13 @@ export default function BusinessEditScreen() {
 			description="Esta pantalla está en desarrollo."
 		/>
 	);
+}*/
+
+import { useLocalSearchParams } from "expo-router";
+import CreateBusinessFlow from "@/src/presentation/screens/owner/business/CreateBusinessFlow";
+
+export default function EditBusinessScreen() {
+	const { id } = useLocalSearchParams<{ id: string }>();
+
+	return <CreateBusinessFlow isEditMode={true} businessId={id} />;
 }

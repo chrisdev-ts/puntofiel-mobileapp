@@ -4,13 +4,24 @@ import type {
 	UpdateRewardDTO,
 } from "@/src/core/entities/Reward";
 import type { IRewardRepository } from "@/src/core/repositories/IRewardRepository";
+import {
+	BUCKET_NAME,
+	deleteFile,
+	extractPathFromUrl,
+	getPublicUrl,
+	STORAGE_PATHS,
+} from "@/src/infrastructure/services/storage";
 import { supabase } from "@/src/infrastructure/services/supabase";
 
 export class SupabaseRewardRepository implements IRewardRepository {
 	/**
 	 * Sube una imagen a Supabase Storage y retorna la URL pública
 	 */
-	async uploadRewardImage(imageUri: string, rewardId: string): Promise<string> {
+	async uploadRewardImage(
+		imageUri: string,
+		rewardId: string,
+		businessId: string,
+	): Promise<string> {
 		try {
 			console.log("Subiendo imagen:", imageUri);
 
@@ -34,13 +45,13 @@ export class SupabaseRewardRepository implements IRewardRepository {
 
 			// Nombre único para la imagen
 			const fileName = `${rewardId}-${Date.now()}.jpg`;
-			const filePath = fileName;
+			const filePath = STORAGE_PATHS.rewards(businessId, fileName);
 
 			console.log("Subiendo a:", filePath);
 
-			// Subir a Storage
+			// Subir a Storage usando utilidad centralizada
 			const { data, error } = await supabase.storage
-				.from("rewards")
+				.from(BUCKET_NAME)
 				.upload(filePath, arrayBuffer, {
 					contentType: "image/jpeg",
 					upsert: true,
@@ -51,14 +62,12 @@ export class SupabaseRewardRepository implements IRewardRepository {
 				throw new Error(`Error al subir la imagen: ${error.message}`);
 			}
 
-			// Obtener URL pública
-			const { data: publicUrlData } = supabase.storage
-				.from("rewards")
-				.getPublicUrl(data.path);
+			// Obtener URL pública usando utilidad centralizada
+			const publicUrl = getPublicUrl(data.path);
 
-			console.log("URL pública:", publicUrlData.publicUrl);
+			console.log("URL pública:", publicUrl);
 
-			return publicUrlData.publicUrl;
+			return publicUrl;
 		} catch (error) {
 			console.error("Error en uploadRewardImage:", error);
 			throw error;
@@ -70,18 +79,10 @@ export class SupabaseRewardRepository implements IRewardRepository {
 	 */
 	async deleteRewardImage(imageUrl: string): Promise<void> {
 		try {
-			const urlParts = imageUrl.split("/rewards/");
-			if (urlParts.length < 2) return;
+			const filePath = extractPathFromUrl(imageUrl);
+			if (!filePath) return;
 
-			const filePath = urlParts[1];
-
-			const { error } = await supabase.storage
-				.from("rewards")
-				.remove([filePath]);
-
-			if (error) {
-				console.error("Error eliminando imagen:", error);
-			}
+			await deleteFile(filePath);
 		} catch (error) {
 			console.error("Error en deleteRewardImage:", error);
 		}
@@ -174,7 +175,11 @@ export class SupabaseRewardRepository implements IRewardRepository {
 			if (imageUri) {
 				try {
 					console.log("Subiendo imagen...");
-					imageUrl = await this.uploadRewardImage(imageUri, rewardId);
+					imageUrl = await this.uploadRewardImage(
+						imageUri,
+						rewardId,
+						dto.businessId,
+					);
 
 					// Actualizar con la URL
 					const { error: updateError } = await supabase
@@ -217,11 +222,21 @@ export class SupabaseRewardRepository implements IRewardRepository {
 		try {
 			console.log("Actualizando recompensa:", rewardId);
 
+			// Obtener businessId de la recompensa existente
+			const existingReward = await this.getRewardById(rewardId);
+			if (!existingReward) {
+				throw new Error("Recompensa no encontrada");
+			}
+
 			// 1. Si hay nueva imagen, subirla
 			let newImageUrl: string | undefined;
 			if (imageUri) {
 				try {
-					newImageUrl = await this.uploadRewardImage(imageUri, rewardId);
+					newImageUrl = await this.uploadRewardImage(
+						imageUri,
+						rewardId,
+						existingReward.businessId,
+					);
 				} catch (uploadError) {
 					console.error("Error subiendo imagen:", uploadError);
 				}

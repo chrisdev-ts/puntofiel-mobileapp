@@ -1,4 +1,4 @@
-import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
+/*import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
 
 export default function BusinessCreateScreen() {
 	return (
@@ -8,4 +8,14 @@ export default function BusinessCreateScreen() {
 			description="Esta pantalla está en desarrollo. Aquí podrás crear un nuevo negocio."
 		/>
 	);
+}*/
+
+/*
+import CreateBusinessFlow from "@/src/presentation/screens/owner/business/CreateBusinessFlow";
+
+export default function BusinessCreateScreen() {
+    return <CreateBusinessFlow />;
 }
+*/
+
+export { default } from "@/src/presentation/screens/owner/business/CreateBusinessFlow";

@@ -18,7 +18,7 @@ async function fetchBusinessDetail(
 		.from("businesses")
 		.select("*")
 		.eq("id", businessId)
-		.single();
+		.maybeSingle();
 
 	if (businessError) {
 		console.error("useBusinessDetail: Error fetching business", {
@@ -26,6 +26,10 @@ async function fetchBusinessDetail(
 			code: businessError.code,
 		});
 		throw new Error(`Error al obtener negocio: ${businessError.message}`);
+	}
+
+	if (!businessData) {
+		throw new Error("No se encontró el negocio");
 	}
 
 	// 2. Obtener la loyalty card del cliente para este negocio

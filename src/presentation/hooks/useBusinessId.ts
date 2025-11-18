@@ -9,7 +9,7 @@ async function fetchBusinessId(userId: string): Promise<string> {
 		.from("businesses")
 		.select("id")
 		.eq("owner_id", userId)
-		.single();
+		.maybeSingle();
 
 	if (error) {
 		console.error("useBusinessId: Error fetching business", {

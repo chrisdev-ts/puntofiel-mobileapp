@@ -15,7 +15,7 @@ async function fetchCustomerProfile(
 		.from("profiles")
 		.select("first_name, last_name, second_last_name, role")
 		.eq("id", customerId)
-		.single();
+		.maybeSingle();
 
 	if (error) {
 		console.error("useCustomerProfile: Error fetching profile", {

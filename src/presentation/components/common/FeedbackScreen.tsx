@@ -1,10 +1,10 @@
-import { Spinner } from "@gluestack-ui/themed";
 import { usePathname, useRouter } from "expo-router";
 import type { LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
+import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 
