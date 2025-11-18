@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-export default function PromotionsLayout() {
+export default function EditLayout() {
   return (
     <Stack
       screenOptions={{
@@ -15,25 +15,7 @@ export default function PromotionsLayout() {
       }}
     >
       <Stack.Screen
-        name="index"
-        options={{
-          title: 'Mis Promociones',
-        }}
-      />
-      <Stack.Screen
-        name="create"
-        options={{
-          title: 'Crear Promoción',
-        }}
-      />
-      <Stack.Screen
         name="[id]"
-        options={{
-          title: 'Detalles',
-        }}
-      />
-      <Stack.Screen
-        name="edit/[id]"
         options={{
           title: 'Editar Promoción',
         }}

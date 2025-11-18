@@ -4,32 +4,16 @@
  * Representa una promoción temporal creada por un negocio.
  */
 export interface Promotion {
-	/** Identificador único de la promoción */
-	id: string;
-
-	/** Fecha de creación */
-	createdAt: Date;
-
-	/** Fecha de última actualización */
-	updatedAt: Date;
-
-	/** ID del negocio que ofrece la promoción */
-	businessId: string;
-
-	/** Título de la promoción */
-	title: string;
-
-	/** Contenido/descripción de la promoción */
-	content: string;
-
-	/** Fecha de inicio de la promoción */
-	startDate: Date;
-
-	/** Fecha de fin de la promoción (opcional) */
-	endDate?: Date;
-
-	/** Indica si la promoción está activa */
-	isActive: boolean;
+  id: string;
+  businessId: string;
+  title: string;
+  content: string;
+  startDate: string | Date;
+  endDate?: string | Date | null;
+  imageUrl?: string | null; // ✅ Agregado
+  isActive: boolean;
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }
 
 /**

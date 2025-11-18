@@ -31,6 +31,8 @@ export function useBusinessId() {
 	const user = useAuthStore((state) => state.user);
 	const userId = user?.id;
 
+	console.log('useBusinessId hook:', { userId, user });
+
 	return useQuery({
 		queryKey: ["businessId", userId],
 		queryFn: () => {

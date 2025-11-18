@@ -1,11 +1,5 @@
-import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
+import ListPromotionsScreen from '@/src/presentation/screens/owner/promotions/ListPromotionsScreen';
 
 export default function PromotionsIndexScreen() {
-	return (
-		<FeedbackScreen
-			variant="empty"
-			title="Promociones"
-			description="Esta pantalla está en desarrollo."
-		/>
-	);
+  return <ListPromotionsScreen />;
 }
