@@ -149,6 +149,16 @@ export default function DashboardScreen() {
                         Estadísticas próximamente...
                     </Text>
                 </Box>
+
+                {/* Botón Ver Mis Promociones */}
+                <Button
+                    onPress={() => router.push("/(owner)/promotions")}
+                    className="w-full"
+                    variant="solid"
+                    action="primary"
+                >
+                    <ButtonText>Ver mis promociones</ButtonText>
+                </Button>
             </VStack>
         </AppLayout>
     );
