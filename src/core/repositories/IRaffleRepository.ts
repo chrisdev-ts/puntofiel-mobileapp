@@ -4,6 +4,15 @@ import type {
     UpdateRaffleDTO,
 } from "@/src/core/entities/AnnualRaffle";
 
+export interface RaffleParticipant {
+    id: string; // ID del ticket
+    customer: {
+        id: string;
+        firstName: string;
+        lastName: string;
+    };
+}
+
 /**
  * Define el contrato (interfaz) para el repositorio de rifas anuales.
  * La capa de infraestructura implementará este contrato.
@@ -55,4 +64,7 @@ export interface IRaffleRepository {
      * @param businessId - ID del negocio (para validar propiedad)
      */
     deleteRaffle(raffleId: string, businessId: string): Promise<void>;
+
+    getParticipants(raffleId: string): Promise<RaffleParticipant[]>;
+    selectWinner(raffleId: string, customerId: string): Promise<void>;
 }

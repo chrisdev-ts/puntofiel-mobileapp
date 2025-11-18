@@ -7,7 +7,7 @@ import type { IRaffleRepository } from "@/src/core/repositories/IRaffleRepositor
 import { supabase } from "@/src/infrastructure/services/supabase"; // Ajusta la ruta si es diferente
 
 export class SupabaseRaffleRepository implements IRaffleRepository {
-    
+
     /**
      * Sube una imagen a Supabase Storage y retorna la URL pública
      * Reutilizamos el bucket 'rewards' para no crear uno nuevo,
@@ -43,7 +43,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
 
             // Subir a Storage (Usamos el bucket 'rewards' que ya tienes configurado)
             const { data, error } = await supabase.storage
-                .from("rewards") 
+                .from("rewards")
                 .upload(filePath, arrayBuffer, {
                     contentType: "image/jpeg",
                     upsert: true,
@@ -273,6 +273,69 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
             console.log("Rifa eliminada correctamente");
         } catch (error) {
             console.error("Error en deleteRaffle:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtiene la lista de participantes (tickets) de una rifa.
+     * Incluye la información del perfil del cliente.
+     */
+    async getParticipants(raffleId: string): Promise<any[]> {
+        try {
+            const { data, error } = await supabase
+                .from('raffle_tickets')
+                .select(`
+                    id,
+                    customer:profiles (
+                        id,
+                        first_name,
+                        last_name
+                    )
+                `)
+                .eq('raffle_id', raffleId);
+
+            if (error) {
+                console.error("Error obteniendo participantes:", error);
+                throw new Error(`Error al obtener participantes: ${error.message}`);
+            }
+
+            // Mapeamos la respuesta de Supabase a nuestra estructura limpia
+            return (data || []).map((ticket: any) => ({
+                id: ticket.id.toString(),
+                customer: {
+                    id: ticket.customer.id,
+                    firstName: ticket.customer.first_name,
+                    lastName: ticket.customer.last_name || "",
+                }
+            }));
+        } catch (error) {
+            console.error("Error en getParticipants:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Selecciona un ganador y cierra la rifa.
+     */
+    async selectWinner(raffleId: string, customerId: string): Promise<void> {
+        try {
+            console.log(`Seleccionando ganador ${customerId} para rifa ${raffleId}`);
+
+            const { error } = await supabase
+                .from('annual_raffles')
+                .update({
+                    winner_customer_id: customerId,
+                    is_completed: true
+                })
+                .eq('id', raffleId);
+
+            if (error) {
+                console.error("Error guardando ganador:", error);
+                throw new Error(`Error al guardar ganador: ${error.message}`);
+            }
+        } catch (error) {
+            console.error("Error en selectWinner:", error);
             throw error;
         }
     }
