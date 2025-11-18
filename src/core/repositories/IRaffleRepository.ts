@@ -65,6 +65,11 @@ export interface IRaffleRepository {
      */
     deleteRaffle(raffleId: string, businessId: string): Promise<void>;
 
+    /**
+     * Obtiene las rifas de TODOS los negocios donde el cliente tiene una tarjeta de lealtad.
+     */
+    getRafflesForCustomer(customerId: string): Promise<Raffle[]>;
+    
     getParticipants(raffleId: string): Promise<RaffleParticipant[]>;
     selectWinner(raffleId: string, customerId: string): Promise<void>;
 }

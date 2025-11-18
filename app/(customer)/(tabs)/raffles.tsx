@@ -1,2 +1,1 @@
-export { default } from "@/src/presentation/screens/customer/RafflesScreen";
-
+export { default } from "@/src/presentation/screens/customer/business/RafflesIndexScreen";

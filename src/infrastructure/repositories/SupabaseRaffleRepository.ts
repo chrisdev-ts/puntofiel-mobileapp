@@ -339,4 +339,55 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
             throw error;
         }
     }
+
+    async getRafflesForCustomer(customerId: string): Promise<Raffle[]> {
+        try {
+            // 1. Obtener los IDs de negocios donde el usuario tiene tarjeta (está vinculado)
+            const { data: loyaltyCards, error: loyaltyError } = await supabase
+                .from('loyalty_cards')
+                .select('business_id')
+                .eq('customer_id', customerId);
+
+            if (loyaltyError) throw new Error(loyaltyError.message);
+
+            // Si no tiene negocios vinculados, retornamos vacío
+            if (!loyaltyCards || loyaltyCards.length === 0) return [];
+
+            const businessIds = loyaltyCards.map(card => card.business_id);
+
+            // 2. Obtener las rifas de ESOS negocios
+            const { data, error } = await supabase
+                .from("annual_raffles")
+                .select("*")
+                .in('business_id', businessIds) // <--- EL FILTRO MÁGICO
+                .order("end_date", { ascending: true }); // Ordenar por las que terminan pronto
+
+            if (error) {
+                console.error("Error obteniendo rifas del cliente:", error);
+                throw new Error(`Error al obtener rifas: ${error.message}`);
+            }
+
+            // Mapear a entidad
+            return (data || []).map((row) => ({
+                id: row.id.toString(),
+                businessId: row.business_id,
+                name: row.name,
+                prize: row.prize,
+                description: row.description || "",
+                pointsRequired: row.points_required,
+                maxTicketsPerUser: row.max_tickets_per_user,
+                startDate: new Date(row.start_date),
+                endDate: new Date(row.end_date),
+                imageUrl: row.image_url || undefined,
+                winnerCustomerId: row.winner_customer_id,
+                isCompleted: row.is_completed,
+                isActive: new Date(row.end_date) > new Date() && !row.is_completed,
+                createdAt: new Date(row.created_at),
+            }));
+
+        } catch (error) {
+            console.error("Error en getRafflesForCustomer:", error);
+            throw error;
+        }
+    }
 }
