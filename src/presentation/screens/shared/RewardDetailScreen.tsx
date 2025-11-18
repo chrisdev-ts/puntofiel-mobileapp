@@ -1,6 +1,3 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { AlertCircleIcon, EditIcon, InfoIcon } from "lucide-react-native";
-import { useEffect, useState } from "react";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -26,6 +23,9 @@ import { useBusinessDetail } from "@/src/presentation/hooks/useBusinessDetail";
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
 import { useReward } from "@/src/presentation/hooks/useReward";
 import { useRewardDetail } from "@/src/presentation/hooks/useRewardDetail";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { AlertCircleIcon, EditIcon, InfoIcon } from "lucide-react-native";
+import { useEffect, useState } from "react";
 
 export default function RewardDetailScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -192,7 +192,8 @@ export default function RewardDetailScreen() {
 					>
 						<BadgeText>{reward.pointsRequired} puntos</BadgeText>
 					</Badge>
-				</VStack>{" "}
+				</VStack>
+
 				{/* Información de uso (solo para clientes) */}
 				{isCustomer && (
 					<Box className="border border-blue-200 bg-blue-50 rounded-lg p-4">
@@ -236,7 +237,7 @@ export default function RewardDetailScreen() {
 						)}
 					</>
 				) : isOwner ? (
-					<VStack space="md" className="mt-5">
+					<VStack space="md">
 						{/* Botón editar */}
 						<Button
 							onPress={handleEditPress}

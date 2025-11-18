@@ -1,6 +1,3 @@
-import { useRouter } from "expo-router";
-import { AlertCircleIcon, GiftIcon } from "lucide-react-native";
-import React from "react";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -22,6 +19,9 @@ import {
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
 import { useReward } from "@/src/presentation/hooks/useReward";
+import { useRouter } from "expo-router";
+import { AlertCircleIcon, GiftIcon } from "lucide-react-native";
+import React from "react";
 
 export default function RewardsIndexScreen() {
 	const router = useRouter();
