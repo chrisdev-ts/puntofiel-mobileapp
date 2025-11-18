@@ -1,14 +1,12 @@
-import { AuthApiError, Session } from "@supabase/supabase-js";
-import type {
-    IUserRepository,
-} from "@/src/core/repositories/IUserRepository";
-import type {
-    CreateUserDTO,
-    LoginUserDTO,
-    User,
-    UserRole,
-} from "@/src/core/entities/User";
+import { AuthApiError, type Session } from "@supabase/supabase-js";
 import type { UpdateUserDTO } from "@/src/core/entities/UpdateUserDTO";
+import type {
+	CreateUserDTO,
+	LoginUserDTO,
+	User,
+	UserRole,
+} from "@/src/core/entities/User";
+import type { IUserRepository } from "@/src/core/repositories/IUserRepository";
 import { supabase } from "@/src/infrastructure/services/supabase";
 
 /**
@@ -16,213 +14,228 @@ import { supabase } from "@/src/infrastructure/services/supabase";
  * Lectura del teléfono: ÚNICAMENTE desde los metadatos de la sesión.
  */
 const mapToUserEntity = (
-    supabaseProfile: any,
-    authSession: Session | null = null,
+	supabaseProfile: any,
+	authSession: Session | null = null,
 ): User => {
-    const email = authSession?.user.email || supabaseProfile.email;
+	const email = authSession?.user.email || supabaseProfile.email;
 
-    // Obtener Teléfono: SOLO desde los metadatos del usuario Auth
-    const phoneFromAuthMetadata = authSession?.user?.user_metadata?.phone;
-    
-    return {
-        id: supabaseProfile.id,
-        email: email || '',
-        firstName: supabaseProfile.first_name,
-        lastName: supabaseProfile.last_name,
-        secondLastName: supabaseProfile.second_last_name || undefined, 
-        phone: phoneFromAuthMetadata || '', // <-- LECTURA CORRECTA
-        role: supabaseProfile.role as UserRole,
-        createdAt: new Date(supabaseProfile.created_at),
-        updatedAt: new Date(supabaseProfile.updated_at),
-    };
+	// Obtener Teléfono: SOLO desde los metadatos del usuario Auth
+	const phoneFromAuthMetadata = authSession?.user?.user_metadata?.phone;
+
+	return {
+		id: supabaseProfile.id,
+		email: email || "",
+		firstName: supabaseProfile.first_name,
+		lastName: supabaseProfile.last_name,
+		secondLastName: supabaseProfile.second_last_name || undefined,
+		phone: phoneFromAuthMetadata || "", // <-- LECTURA CORRECTA
+		role: supabaseProfile.role as UserRole,
+		createdAt: new Date(supabaseProfile.created_at),
+		updatedAt: new Date(supabaseProfile.updated_at),
+	};
 };
 
 /**
  * Implementación del repositorio de usuarios que utiliza Supabase.
  */
 export default class SupabaseUserRepository implements IUserRepository {
-    updateProfile(userId: string, updatedData: Partial<Omit<User, "id" | "role" | "createdAt" | "updatedAt">>): Promise<User> {
-        throw new Error("Method not implemented.");
-    }
-    
-    /**
-     * Implementación requerida por IUserRepository.
-     */
-    async updateUser(userId: string, data: UpdateUserDTO): Promise<User> {
-        // 1. Preparar la actualización de la tabla 'profiles' (nombre, apellidos)
-        const updateProfilePayload: Record<string, any> = {};
-        let needsProfileUpdate = false;
+	updateProfile(
+		_userId: string,
+		_updatedData: Partial<
+			Omit<User, "id" | "role" | "createdAt" | "updatedAt">
+		>,
+	): Promise<User> {
+		throw new Error("Method not implemented.");
+	}
 
-        if (data.firstName !== undefined) {
-            updateProfilePayload.first_name = data.firstName;
-            needsProfileUpdate = true;
-        }
-        if (data.lastName !== undefined) {
-            updateProfilePayload.last_name = data.lastName;
-            needsProfileUpdate = true;
-        }
-        if (data.secondLastName !== undefined) {
-            updateProfilePayload.second_last_name = data.secondLastName;
-            needsProfileUpdate = true;
-        }
+	/**
+	 * Implementación requerida por IUserRepository.
+	 */
+	async updateUser(userId: string, data: UpdateUserDTO): Promise<User> {
+		// 1. Preparar la actualización de la tabla 'profiles' (nombre, apellidos)
+		const updateProfilePayload: Record<string, any> = {};
+		let needsProfileUpdate = false;
 
-        // 2. Preparar la actualización de Auth User Metadata (teléfono)
-        let updatedAuthUser = null;
-        if (data.phone !== undefined) {
-            const { data: userData, error: authError } = await supabase.auth.updateUser({
-                data: { phone: data.phone },
-            });
+		if (data.firstName !== undefined) {
+			updateProfilePayload.first_name = data.firstName;
+			needsProfileUpdate = true;
+		}
+		if (data.lastName !== undefined) {
+			updateProfilePayload.last_name = data.lastName;
+			needsProfileUpdate = true;
+		}
+		if (data.secondLastName !== undefined) {
+			updateProfilePayload.second_last_name = data.secondLastName;
+			needsProfileUpdate = true;
+		}
 
-            if (authError) {
-                console.error("Supabase Auth error updating user metadata:", authError);
-                throw new Error("Hubo un problema al actualizar el teléfono en la autenticación.");
-            }
-            updatedAuthUser = userData.user;
-        }
+		// 2. Preparar la actualización de Auth User Metadata (teléfono)
+		let updatedAuthUser = null;
+		if (data.phone !== undefined) {
+			const { data: userData, error: authError } =
+				await supabase.auth.updateUser({
+					data: { phone: data.phone },
+				});
 
-        // 3. Ejecutar actualización de la tabla 'profiles' si es necesario
-        let updatedProfile = null;
-        if (needsProfileUpdate) {
-            const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .update(updateProfilePayload)
-                .eq('id', userId)
-                .select()
-                .single();
+			if (authError) {
+				console.error("Supabase Auth error updating user metadata:", authError);
+				throw new Error(
+					"Hubo un problema al actualizar el teléfono en la autenticación.",
+				);
+			}
+			updatedAuthUser = userData.user;
+		}
 
-            if (profileError) {
-                console.error("Supabase error updating profile:", profileError);
-                throw new Error(
-                    'Hubo un problema al actualizar la información del perfil.',
-                );
-            }
-            updatedProfile = profile;
-        }
+		// 3. Ejecutar actualización de la tabla 'profiles' si es necesario
+		let updatedProfile = null;
+		if (needsProfileUpdate) {
+			const { data: profile, error: profileError } = await supabase
+				.from("profiles")
+				.update(updateProfilePayload)
+				.eq("id", userId)
+				.select()
+				.single();
 
-        // 4. Si no hubo actualizaciones, devolver el usuario actual
-        if (!needsProfileUpdate && !updatedAuthUser) {
-            const user = await this.getUserById(userId);
-            if (!user) throw new Error("Usuario no encontrado para retornar.");
-            return user;
-        }
+			if (profileError) {
+				console.error("Supabase error updating profile:", profileError);
+				throw new Error(
+					"Hubo un problema al actualizar la información del perfil.",
+				);
+			}
+			updatedProfile = profile;
+		}
 
-        // 5. Obtener la sesión para mapear el resultado (necesaria para el email y phone metadata)
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        // Si solo se actualizó Auth, necesitamos obtener el perfil para mapear.
-        if (!updatedProfile) {
-            updatedProfile = await this.getProfileById(userId);
-            if (!updatedProfile) throw new Error("Perfil de usuario no encontrado.");
-        }
+		// 4. Si no hubo actualizaciones, devolver el usuario actual
+		if (!needsProfileUpdate && !updatedAuthUser) {
+			const user = await this.getUserById(userId);
+			if (!user) throw new Error("Usuario no encontrado para retornar.");
+			return user;
+		}
 
-        const userEntity = mapToUserEntity(updatedProfile, session);
-        
-        console.log(`[Repo] Usuario ${userId} actualizado exitosamente.`);
-        return userEntity;
-    }
+		// 5. Obtener la sesión para mapear el resultado (necesaria para el email y phone metadata)
+		const {
+			data: { session },
+		} = await supabase.auth.getSession();
 
-    /**
-     * Método auxiliar para obtener el perfil de la DB (excluyendo la lógica de sesión)
-     */
-    private async getProfileById(userId: string): Promise<any | null> {
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single();
+		// Si solo se actualizó Auth, necesitamos obtener el perfil para mapear.
+		if (!updatedProfile) {
+			updatedProfile = await this.getProfileById(userId);
+			if (!updatedProfile) throw new Error("Perfil de usuario no encontrado.");
+		}
 
-        if (profileError && profileError.code !== 'PGRST116') {
-            console.error("Supabase error fetching profile:", profileError);
-            throw new Error("Error al obtener el perfil del usuario.");
-        }
-        return profile;
-    }
+		const userEntity = mapToUserEntity(updatedProfile, session);
 
+		console.log(`[Repo] Usuario ${userId} actualizado exitosamente.`);
+		return userEntity;
+	}
 
-    async createUser(userData: CreateUserDTO): Promise<User> {
-        // 1. Crear cuenta en Supabase Auth y guardar teléfono en metadata
-        const {
-            data: { user: authUser, session },
-            error: authError,
-        } = await supabase.auth.signUp({
-            email: userData.email,
-            password: userData.password,
-            options: { data: { phone: userData.phone } }, 
-        });
+	/**
+	 * Método auxiliar para obtener el perfil de la DB (excluyendo la lógica de sesión)
+	 */
+	private async getProfileById(userId: string): Promise<any | null> {
+		const { data: profile, error: profileError } = await supabase
+			.from("profiles")
+			.select("*")
+			.eq("id", userId)
+			.single();
 
-        if (authError) {
-            if (authError instanceof AuthApiError && authError.status === 400) {
-                throw new Error("El email ya está registrado o el formato es inválido.");
-            }
-            console.error("Supabase Auth error during registration:", authError);
-            throw new Error("Error al registrar el usuario en la autenticación.");
-        }
+		if (profileError && profileError.code !== "PGRST116") {
+			console.error("Supabase error fetching profile:", profileError);
+			throw new Error("Error al obtener el perfil del usuario.");
+		}
+		return profile;
+	}
 
-        if (!authUser) {
-            throw new Error("Registro fallido: No se pudo obtener el usuario de autenticación.");
-        }
+	async createUser(userData: CreateUserDTO): Promise<User> {
+		// 1. Crear cuenta en Supabase Auth y guardar teléfono en metadata
+		const {
+			data: { user: authUser, session },
+			error: authError,
+		} = await supabase.auth.signUp({
+			email: userData.email,
+			password: userData.password,
+			options: { data: { phone: userData.phone } },
+		});
 
-        // 2. Crear perfil en tabla 'profiles' (SIN el teléfono)
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-                id: authUser.id,
-                first_name: userData.firstName,
-                last_name: userData.lastName,
-                second_last_name: userData.secondLastName,
-                role: userData.role,
-            })
-            .select()
-            .single();
+		if (authError) {
+			if (authError instanceof AuthApiError && authError.status === 400) {
+				throw new Error(
+					"El email ya está registrado o el formato es inválido.",
+				);
+			}
+			console.error("Supabase Auth error during registration:", authError);
+			throw new Error("Error al registrar el usuario en la autenticación.");
+		}
 
-        if (profileError) {
-            console.error("Supabase error creating profile:", profileError);
-            throw new Error(
-                'Error al crear el perfil del usuario en la base de datos.',
-            );
-        }
+		if (!authUser) {
+			throw new Error(
+				"Registro fallido: No se pudo obtener el usuario de autenticación.",
+			);
+		}
 
-        return mapToUserEntity(profile, session);
-    }
+		// 2. Crear perfil en tabla 'profiles' (SIN el teléfono)
+		const { data: profile, error: profileError } = await supabase
+			.from("profiles")
+			.insert({
+				id: authUser.id,
+				first_name: userData.firstName,
+				last_name: userData.lastName,
+				second_last_name: userData.secondLastName,
+				role: userData.role,
+			})
+			.select()
+			.single();
 
-    async loginUser(credentials: LoginUserDTO): Promise<User> {
-        const {
-            data: { session },
-            error: authError,
-        } = await supabase.auth.signInWithPassword({
-            email: credentials.email,
-            password: credentials.password,
-        });
+		if (profileError) {
+			console.error("Supabase error creating profile:", profileError);
+			throw new Error(
+				"Error al crear el perfil del usuario en la base de datos.",
+			);
+		}
 
-        if (authError) {
-            console.error("Supabase Auth error during login:", authError);
-            throw new Error("Credenciales inválidas o email no verificado.");
-        }
+		return mapToUserEntity(profile, session);
+	}
 
-        if (!session) {
-            throw new Error("No se pudo iniciar sesión.");
-        }
+	async loginUser(credentials: LoginUserDTO): Promise<User> {
+		const {
+			data: { session },
+			error: authError,
+		} = await supabase.auth.signInWithPassword({
+			email: credentials.email,
+			password: credentials.password,
+		});
 
-        const user = await this.getUserById(session.user.id);
-        if (!user) {
-            throw new Error("Perfil de usuario no encontrado después del login.");
-        }
+		if (authError) {
+			console.error("Supabase Auth error during login:", authError);
+			throw new Error("Credenciales inválidas o email no verificado.");
+		}
 
-        return user;
-    }
+		if (!session) {
+			throw new Error("No se pudo iniciar sesión.");
+		}
 
-    async getUserById(userId: string): Promise<User | null> {
-        // 1. Obtener el perfil
-        const profile = await this.getProfileById(userId);
+		const user = await this.getUserById(session.user.id);
+		if (!user) {
+			throw new Error("Perfil de usuario no encontrado después del login.");
+		}
 
-        if (!profile) {
-            return null;
-        }
+		return user;
+	}
 
-        // 2. Obtener la sesión para el email y los metadatos (teléfono)
-        const { data: { session } } = await supabase.auth.getSession();
+	async getUserById(userId: string): Promise<User | null> {
+		// 1. Obtener el perfil
+		const profile = await this.getProfileById(userId);
 
-        // 3. Mapear
-        return mapToUserEntity(profile, session);
-    }
+		if (!profile) {
+			return null;
+		}
+
+		// 2. Obtener la sesión para el email y los metadatos (teléfono)
+		const {
+			data: { session },
+		} = await supabase.auth.getSession();
+
+		// 3. Mapear
+		return mapToUserEntity(profile, session);
+	}
 }
