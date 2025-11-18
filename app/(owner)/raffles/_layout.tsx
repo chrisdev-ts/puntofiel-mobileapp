@@ -1,12 +1,17 @@
+// app/(owner)/raffles/_layout.tsx
 import { Stack } from "expo-router";
 
 export default function RafflesLayout() {
 	return (
 		<Stack screenOptions={{ headerShown: false }}>
+			{/* La lista principal */}
 			<Stack.Screen name="index" />
-			<Stack.Screen name="[id]" />
+
+			{/* Pantalla de creación */}
 			<Stack.Screen name="create" />
-			<Stack.Screen name="edit" />
+
+			{/* Pantalla de edición (dinámica por ID) */}
+			<Stack.Screen name="[id]" />
 		</Stack>
 	);
 }

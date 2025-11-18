@@ -1,11 +1,2 @@
-import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
-
-export default function RaffleCreateScreen() {
-	return (
-		<FeedbackScreen
-			variant="empty"
-			title="Crear Rifa"
-			description="Esta pantalla está en desarrollo."
-		/>
-	);
-}
+// app/(owner)/raffles/create.tsx
+export { default } from "@/src/presentation/screens/owner/raffles/CreateRaffleScreen";
