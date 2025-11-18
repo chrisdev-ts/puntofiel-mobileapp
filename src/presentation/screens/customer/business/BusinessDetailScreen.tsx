@@ -1,6 +1,3 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { AlertCircleIcon, GiftIcon } from "lucide-react-native";
-import { View } from "react-native";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -18,6 +15,9 @@ import {
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useBusinessDetail } from "@/src/presentation/hooks/useBusinessDetail";
 import { useReward } from "@/src/presentation/hooks/useReward";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { AlertCircleIcon, GiftIcon } from "lucide-react-native";
+import { View } from "react-native";
 
 export default function BusinessDetailScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -109,6 +109,7 @@ export default function BusinessDetailScreen() {
 			headerVariant="back"
 			showNavBar={false}
 			scrollable={true}
+			headerTitle="Detalle del negocio"
 		>
 			{/* Header con imagen del negocio */}
 			<View className="w-full h-[150px] bg-background-200 rounded-lg overflow-hidden">
