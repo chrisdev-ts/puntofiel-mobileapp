@@ -1,8 +1,8 @@
+import { useQuery } from "@tanstack/react-query";
 import type { Business } from "@/src/core/entities/Business";
 import type { CustomerLoyaltyCard } from "@/src/core/entities/Loyalty";
 import { supabase } from "@/src/infrastructure/services/supabase";
 import { useAuthStore } from "@/src/presentation/stores/authStore";
-import { useQuery } from "@tanstack/react-query";
 
 interface BusinessDetailData {
 	business: Business;

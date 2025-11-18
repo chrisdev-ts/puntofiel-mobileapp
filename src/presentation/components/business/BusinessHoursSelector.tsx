@@ -1,3 +1,7 @@
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { XCircle } from "lucide-react-native";
+import { useState } from "react";
+import { Platform } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
@@ -5,10 +9,6 @@ import { Icon } from "@/components/ui/icon";
 import { Switch } from "@/components/ui/switch";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { XCircle } from "lucide-react-native";
-import { useState } from "react";
-import { Platform } from "react-native";
 
 type DayOfWeek =
 	| "Lunes"

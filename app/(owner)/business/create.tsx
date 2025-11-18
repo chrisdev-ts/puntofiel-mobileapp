@@ -19,4 +19,3 @@ export default function BusinessCreateScreen() {
 */
 
 export { default } from "@/src/presentation/screens/owner/business/CreateBusinessFlow";
-

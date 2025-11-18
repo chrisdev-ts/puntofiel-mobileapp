@@ -1,3 +1,6 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { AlertCircleIcon, EditIcon, InfoIcon } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -23,9 +26,6 @@ import { useBusinessDetail } from "@/src/presentation/hooks/useBusinessDetail";
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
 import { useReward } from "@/src/presentation/hooks/useReward";
 import { useRewardDetail } from "@/src/presentation/hooks/useRewardDetail";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { AlertCircleIcon, EditIcon, InfoIcon } from "lucide-react-native";
-import { useEffect, useState } from "react";
 
 export default function RewardDetailScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();

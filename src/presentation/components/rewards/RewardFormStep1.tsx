@@ -1,3 +1,5 @@
+import type { Control, FieldErrors } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
 	FormControl,
@@ -9,8 +11,6 @@ import {
 import { Input, InputField } from "@/components/ui/input";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import type { CreateRewardFormValues } from "@/src/presentation/screens/owner/rewards/RewardFormSchema";
-import type { Control, FieldErrors } from "react-hook-form";
-import { Controller } from "react-hook-form";
 
 type RewardFormStep1Props = {
 	control: Control<CreateRewardFormValues>;

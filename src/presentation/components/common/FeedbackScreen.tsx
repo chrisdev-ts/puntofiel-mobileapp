@@ -4,9 +4,9 @@ import type { ReactNode } from "react";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
+import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { Spinner } from "@/components/ui/spinner";
 
 interface FeedbackScreenProps {
 	/** Tipo de estado a mostrar */

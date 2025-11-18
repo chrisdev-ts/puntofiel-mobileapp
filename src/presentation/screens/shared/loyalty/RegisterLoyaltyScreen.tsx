@@ -1,3 +1,8 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { router, useLocalSearchParams } from "expo-router";
+import { AlertCircle } from "lucide-react-native";
+import { useMemo } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { Button, ButtonText } from "@/components/ui/button";
 import {
 	FormControl,
@@ -28,11 +33,6 @@ import {
 	type RegisterLoyaltyFormValues,
 	registerLoyaltySchema,
 } from "@/src/presentation/screens/shared/loyalty/RegisterLoyaltySchema";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { router, useLocalSearchParams } from "expo-router";
-import { AlertCircle } from "lucide-react-native";
-import { useMemo } from "react";
-import { Controller, useForm } from "react-hook-form";
 
 export default function RegisterLoyaltyScreen() {
 	const { customerId } = useLocalSearchParams<{ customerId: string }>();

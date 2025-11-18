@@ -1,7 +1,7 @@
 // Hook para obtener información del cliente (customer) usando TanStack Query
 
-import { supabase } from "@/src/infrastructure/services/supabase";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/src/infrastructure/services/supabase";
 
 interface CustomerProfile {
 	fullName: string;

@@ -9,11 +9,12 @@ export default function BusinessEditScreen() {
 		/>
 	);
 }*/
-import CreateBusinessFlow from "@/src/presentation/screens/owner/business/CreateBusinessFlow";
+
 import { useLocalSearchParams } from "expo-router";
+import CreateBusinessFlow from "@/src/presentation/screens/owner/business/CreateBusinessFlow";
 
 export default function EditBusinessScreen() {
-    const { id } = useLocalSearchParams<{ id: string }>();
+	const { id } = useLocalSearchParams<{ id: string }>();
 
-    return <CreateBusinessFlow isEditMode={true} businessId={id} />;
+	return <CreateBusinessFlow isEditMode={true} businessId={id} />;
 }
