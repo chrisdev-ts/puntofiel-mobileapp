@@ -1,7 +1,6 @@
 import { useRouter } from "expo-router";
 import { AlertCircleIcon, UserIcon } from "lucide-react-native";
 import { Button, ButtonText } from "@/components/ui/button";
-import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
@@ -57,29 +56,27 @@ export default function EmployeesIndexScreen() {
 	return (
 		<AppLayout
 			showHeader={true}
-			showNavBar={true}
+			showNavBar={false}
 			scrollable={true}
-			headerVariant="default"
+			headerTitle="Gestionar empleados"
+			headerVariant="back"
 		>
 			<VStack space="lg" className="w-full">
-				{/* Encabezado */}
-				<VStack space="sm">
-					<Heading size="xl" className="text-primary-500">
-						Empleados
-					</Heading>
-					<Text className="text-typography-600">
-						Gestiona las cuentas de tus empleados
-					</Text>
-				</VStack>
-
 				{/* Botón de crear empleado */}
 				<Button
 					onPress={() => router.push("/(owner)/employees/create")}
 					action="primary"
 					size="lg"
 				>
-					<ButtonText>Registrar cuenta de empleado</ButtonText>
+					<ButtonText>Registrar empleado</ButtonText>
 				</Button>
+
+				{/* Encabezado */}
+				<VStack space="sm">
+					<Text className="text-typography-600">
+						Gestiona las cuentas de tus empleados
+					</Text>
+				</VStack>
 
 				{/* Lista de empleados o estado vacío */}
 				{employees.length === 0 ? (
