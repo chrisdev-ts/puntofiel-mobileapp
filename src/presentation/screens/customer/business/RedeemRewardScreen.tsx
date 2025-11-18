@@ -62,17 +62,19 @@ export default function RedeemRewardScreen() {
 	const { business, loyaltyCard } = businessDetail;
 	const currentPoints = loyaltyCard?.points || 0;
 
-	// Datos para el QR
+	// Datos para el QR (Actualizado con Nombres)
 	const qrValue = useMemo(() => {
 		if (!user || !reward) return "";
 		return JSON.stringify({
 			type: 'reward_redemption',
 			userId: user.id,
 			rewardId: reward.id,
+			rewardName: reward.name,      // 👈 Nuevo: Nombre de la recompensa
+			businessName: business?.name, // 👈 Nuevo: Nombre del negocio
 			pointsCost: reward.pointsRequired,
 			timestamp: new Date().toISOString()
 		});
-	}, [user?.id, reward?.id]);
+	}, [user?.id, reward?.id, business?.name]);
 
 	return (
 		<AppLayout showHeader={false} showNavBar={false} scrollable={true} backgroundColor="bg-white">
@@ -80,7 +82,6 @@ export default function RedeemRewardScreen() {
 
 				<ViewShot ref={viewShotRef} options={{ format: "png", quality: 0.9 }} style={{ backgroundColor: 'white' }}>
 
-					{/* Header del Ticket */}
 					<Box className="border border-gray-200 rounded-xl p-4 mb-6 bg-white shadow-sm">
 						<HStack space="md" className="items-center">
 							<Box className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
@@ -96,12 +97,10 @@ export default function RedeemRewardScreen() {
 						</HStack>
 					</Box>
 
-					{/* Código QR Gigante */}
 					<Box className="items-center mb-8">
 						<QRCode value={qrValue} size={250} color="#2F4858" logoBackgroundColor='transparent' />
 					</Box>
 
-					{/* Detalles Inferiores */}
 					<Box className="border border-gray-200 rounded-xl p-4 mb-4 bg-white">
 						<HStack space="md" className="items-center mb-4 border-b border-gray-100 pb-4">
 							<Box className="p-2 bg-gray-100 rounded-full"><Icon as={WalletIcon} size="md" className="text-[#2F4858]" /></Box>
@@ -110,7 +109,7 @@ export default function RedeemRewardScreen() {
 								<Text className="text-gray-500 text-xs">{currentPoints} puntos disponibles</Text>
 							</VStack>
 							<Badge className="bg-gray-600 rounded-full px-2">
-								<BadgeText className="text-white text-xs">Cobro al escanear</BadgeText>
+								<BadgeText className="text-white text-xs">Se cobrarán: {reward.pointsRequired}</BadgeText>
 							</Badge>
 						</HStack>
 
