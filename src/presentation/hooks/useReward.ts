@@ -86,18 +86,12 @@ export function useReward(businessId: string | undefined) {
 		refetchRewards,
 
 		// Crear
-		createReward: createRewardMutation.mutate,
+		createReward: createRewardMutation.mutateAsync,
 		isCreating: createRewardMutation.isPending,
-		createError: createRewardMutation.error,
-		createSuccess: createRewardMutation.isSuccess,
-		resetCreate: createRewardMutation.reset,
 
 		// Actualizar
-		updateReward: updateRewardMutation.mutate,
+		updateReward: updateRewardMutation.mutateAsync,
 		isUpdating: updateRewardMutation.isPending,
-		updateError: updateRewardMutation.error,
-		updateSuccess: updateRewardMutation.isSuccess,
-		resetUpdate: updateRewardMutation.reset,
 
 		// Eliminar
 		deleteReward: deleteRewardMutation.mutate,
