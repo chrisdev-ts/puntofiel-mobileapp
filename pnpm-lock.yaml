@@ -42,14 +42,14 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.64.0(react@19.1.0))
       '@legendapp/motion':
-        specifier: ^2.4.0
+        specifier: 2.4.0
         version: 2.4.0(nativewind@4.2.1(react-native-reanimated@4.1.2(@babel/core@7.28.4)(react-native-worklets@0.5.1(@babel/core@7.28.4)(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-safe-area-context@5.6.1(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native-svg@15.12.1(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0))(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@3.4.18(yaml@2.8.1)))(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@react-native-async-storage/async-storage':
         specifier: ^2.2.0
         version: 2.2.0(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))
       '@react-native-community/datetimepicker':
-        specifier: 8.4.4
-        version: 8.4.4(expo@54.0.20)(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+        specifier: ^8.5.0
+        version: 8.5.0(expo@54.0.20)(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       '@react-navigation/native':
         specifier: ^7.1.8
         version: 7.1.18(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -1979,8 +1979,8 @@ packages:
     peerDependencies:
       react-native: ^0.0.0-0 || >=0.65 <1.0
 
-  '@react-native-community/datetimepicker@8.4.4':
-    resolution: {integrity: sha512-bc4ZixEHxZC9/qf5gbdYvIJiLZ5CLmEsC3j+Yhe1D1KC/3QhaIfGDVdUcid0PdlSoGOSEq4VlB93AWyetEyBSQ==}
+  '@react-native-community/datetimepicker@8.5.0':
+    resolution: {integrity: sha512-RMWll1aPppMtzdJz4we4poNzVj9WUw5URHID7D2ICjGZq3KjrwwexvBnzp75EIYE/ihHXCn/OvYKe73fws9Y/g==}
     peerDependencies:
       expo: '>=52.0.0'
       react: '*'
@@ -8817,7 +8817,7 @@ snapshots:
       merge-options: 3.0.4
       react-native: 0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0)
 
-  '@react-native-community/datetimepicker@8.4.4(expo@54.0.20)(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
+  '@react-native-community/datetimepicker@8.5.0(expo@54.0.20)(react-native@0.81.5(@babel/core@7.28.4)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
     dependencies:
       invariant: 2.2.4
       react: 19.1.0

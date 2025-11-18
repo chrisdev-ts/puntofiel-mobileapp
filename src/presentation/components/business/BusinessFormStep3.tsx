@@ -3,8 +3,8 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { VStack } from "@/components/ui/vstack";
 import { ImagePicker } from "@/src/presentation/components/common";
 
-type RewardFormStep2Props = {
-	rewardImage: ImagePickerAsset | null;
+type BusinessFormStep3Props = {
+	logoImage: ImagePickerAsset | null;
 	onImageSelected: (image: ImagePickerAsset | null) => void;
 	onSubmit: () => void;
 	onBack: () => void;
@@ -13,29 +13,30 @@ type RewardFormStep2Props = {
 };
 
 /**
- * Step 2: Imagen del premio
- * - Subir imagen del premio
+ * Step 3: Logo del negocio
+ * - Subir logo usando ImagePicker
  */
-export function RewardFormStep2({
-	rewardImage,
+export function BusinessFormStep3({
+	logoImage,
 	onImageSelected,
 	onSubmit,
 	onBack,
 	isSubmitting,
 	isEditMode,
-}: RewardFormStep2Props) {
+}: BusinessFormStep3Props) {
 	return (
 		<VStack className="gap-4">
 			<ImagePicker
-				selectedImage={rewardImage}
+				selectedImage={logoImage}
 				onImageSelected={onImageSelected}
-				title="Sube una imagen del premio"
+				title="Sube el logo de tu negocio"
 				helperText="Tamaño máximo: 5MB. Formatos: JPG, PNG, WEBP"
 			/>
 
 			<VStack className="gap-3">
 				<Button
 					onPress={onSubmit}
+					className="flex-1"
 					isDisabled={isSubmitting}
 					variant="solid"
 					action="primary"
@@ -44,7 +45,7 @@ export function RewardFormStep2({
 						{isSubmitting
 							? isEditMode
 								? "Actualizando..."
-								: "Creando..."
+								: "Registrando..."
 							: isEditMode
 								? "Guardar cambios"
 								: "Finalizar"}

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import {
 	Toast,
 	ToastDescription,
@@ -254,25 +255,20 @@ export default function RegisterLoyaltyScreen() {
 						<FormControlLabel>
 							<FormControlLabelText>Notas (opcional)</FormControlLabelText>
 						</FormControlLabel>
-
 						<Controller
 							control={control}
 							name="notes"
 							render={({ field: { onChange, onBlur, value } }) => (
-								<Input variant="outline" size="sm">
-									<InputField
+								<Textarea>
+									<TextareaInput
 										placeholder="Ej: Compra en efectivo, factura #123..."
 										value={value}
 										onChangeText={onChange}
 										onBlur={onBlur}
-										multiline
-										numberOfLines={4}
-										textAlignVertical="top"
 									/>
-								</Input>
+								</Textarea>
 							)}
-						/>
-
+						/>{" "}
 						{errors.notes && (
 							<FormControlError>
 								<FormControlErrorText>

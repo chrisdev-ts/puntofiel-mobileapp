@@ -192,7 +192,8 @@ export default function RewardDetailScreen() {
 					>
 						<BadgeText>{reward.pointsRequired} puntos</BadgeText>
 					</Badge>
-				</VStack>{" "}
+				</VStack>
+
 				{/* Información de uso (solo para clientes) */}
 				{isCustomer && (
 					<Box className="border border-blue-200 bg-blue-50 rounded-lg p-4">
@@ -236,7 +237,7 @@ export default function RewardDetailScreen() {
 						)}
 					</>
 				) : isOwner ? (
-					<VStack space="md" className="mt-5">
+					<VStack space="md">
 						{/* Botón editar */}
 						<Button
 							onPress={handleEditPress}

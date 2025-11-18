@@ -6,15 +6,18 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { queryClient } from "@/src/infrastructure/config/queryClient";
 import { useAuthGuard } from "@/src/presentation/hooks/useAuthGuard";
 
+function AppContent() {
+	useAuthGuard();
+	return <Slot />;
+}
+
 export default function RootLayout() {
 	// Guard de autenticación - protege rutas según rol
-	useAuthGuard();
-
 	return (
 		<SafeAreaProvider>
 			<QueryClientProvider client={queryClient}>
 				<GluestackUIProvider>
-					<Slot />
+					<AppContent />
 				</GluestackUIProvider>
 			</QueryClientProvider>
 		</SafeAreaProvider>

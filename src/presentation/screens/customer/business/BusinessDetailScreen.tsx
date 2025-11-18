@@ -109,6 +109,7 @@ export default function BusinessDetailScreen() {
 			headerVariant="back"
 			showNavBar={false}
 			scrollable={true}
+			headerTitle="Detalle del negocio"
 		>
 			{/* Header con imagen del negocio */}
 			<View className="w-full h-[150px] bg-background-200 rounded-lg overflow-hidden">
