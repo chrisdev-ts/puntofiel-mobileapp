@@ -9,16 +9,15 @@ import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader
 import { Text } from "@/components/ui/text";
 import { Toast, ToastDescription, ToastTitle, useToast } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
-import { FeedbackScreen } from "@/src/presentation/components/common";
+import { FeedbackScreen, RewardDetailSkeleton } from "@/src/presentation/components/common"; // Podemos reusar el skeleton de reward o crear uno
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
-import { useBusinessDetail } from "@/src/presentation/hooks/useBusinessDetail";
+import { useBusinessDetail } from "@/src/presentation/hooks/useBusinessDetail"; // Vital para ver los puntos del cliente
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
 import { useRaffle } from "@/src/presentation/hooks/useRaffle";
 import { useRaffleDetail } from "@/src/presentation/hooks/useRaffleDetail";
-import { Spinner } from "@gluestack-ui/themed";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { AlertCircleIcon, BellIcon, ClockIcon, EditIcon, TicketIcon, TrashIcon, UserIcon } from "lucide-react-native";
+import { AlertCircleIcon, BellIcon, ClockIcon, EditIcon, InfoIcon, TicketIcon, TrashIcon, UserIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 
 export default function RaffleDetailScreen() {
@@ -35,11 +34,11 @@ export default function RaffleDetailScreen() {
     // 2. Cargar datos de la Rifa
     const { data: raffle, isLoading: loadingRaffle, error } = useRaffleDetail(id);
 
-    // 3. Datos del Negocio (Solo para Owner: ID para eliminar)
+    // 3. Datos del Negocio (Owner: ID para eliminar)
     const { data: ownBusinessId } = useBusinessId();
 
-    // 4. Datos del Cliente (Solo para Customer: Puntos actuales)
-    // Usamos el businessId de la rifa para cargar la wallet del usuario en ese negocio
+    // 4. Datos del Cliente (Customer: Puntos actuales)
+    // Cargamos el detalle del negocio usando el businessId de la rifa
     const businessId = raffle?.businessId || "";
     const shouldLoadBusiness = isCustomer && !!businessId;
     const { data: businessDetail, isLoading: loadingBusiness } = useBusinessDetail(shouldLoadBusiness ? businessId : "");
@@ -69,15 +68,25 @@ export default function RaffleDetailScreen() {
     if (isLoading) {
         return (
             <AppLayout showHeader={true} showNavBar={false} headerVariant="back">
+                {/* Reusamos el skeleton de detalle o un spinner simple */}
                 <Box className="flex-1 justify-center items-center bg-white">
-                    <Spinner size="large" color="#2F4858" />
+                    <RewardDetailSkeleton />
                 </Box>
             </AppLayout>
         );
     }
 
     if (error || !raffle) {
-        return <FeedbackScreen variant="error" icon={AlertCircleIcon} title="Error" description="No se encontró la rifa." />;
+        return (
+            <AppLayout showHeader={true} showNavBar={false} headerVariant="back">
+                <FeedbackScreen
+                    variant="error"
+                    icon={AlertCircleIcon}
+                    title="Rifa no encontrada"
+                    description={error?.message || "No se pudo cargar la información de la rifa."}
+                />
+            </AppLayout>
+        );
     }
 
     // Variables Calculadas
@@ -88,7 +97,7 @@ export default function RaffleDetailScreen() {
     const daysRemaining = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     const formattedEndDate = endDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
 
-    // Datos del Cliente (Puntos)
+    // Datos del Cliente (Puntos y Validación)
     const currentPoints = businessDetail?.loyaltyCard?.points || 0;
     const canBuyTicket = currentPoints >= raffle.pointsRequired;
 
@@ -100,7 +109,7 @@ export default function RaffleDetailScreen() {
     };
 
     const handleBuyTicket = () => {
-        // TODO: Implementar la lógica de compra de boleto (Mutation)
+        // TODO: Implementar la mutación real de comprar boleto
         console.log("Comprar boleto para rifa:", id);
         toast.show({
             placement: "top",
@@ -125,22 +134,51 @@ export default function RaffleDetailScreen() {
         });
     };
 
+    // --- MANEJADOR DE RETROCESO PERSONALIZADO ---
+    const handleCustomBack = () => {
+        if (isOwner) {
+            // Si es dueño, volver a SU lista de gestión
+            // Usamos replace para asegurar que la lista se recargue si es necesario y no guardar el detalle en el stack
+            router.replace("/(owner)/raffles/" as never);
+        } else {
+            // Si es cliente, volver al feed de rifas
+            router.replace("/(customer)/business/raffles/" as never);
+        }
+    };
+
     return (
-        <AppLayout showHeader={true} showNavBar={false} scrollable={true} headerVariant="back" headerTitle="Detalle de rifa">
+        <AppLayout showHeader={true} showNavBar={false} scrollable={true} headerVariant="back" headerTitle="Detalle de rifa" onBackPress={handleCustomBack}>
             <VStack space="lg" className="pb-8 px-1">
 
-                {/* --- HEADER COMÚN (Imagen, Título, Descripción) --- */}
+                {/* Header Cliente: Nombre del Negocio y Puntos */}
+                {isCustomer && businessDetail?.business && (
+                    <HStack space="md" className="items-center justify-between px-2 mb-2">
+                        <Heading size="lg" className="text-primary-500 flex-1">
+                            {businessDetail.business.name}
+                        </Heading>
+                        <VStack space="xs" className="items-end">
+                            <Text className="text-typography-500 text-xs">
+                                Tus puntos actuales
+                            </Text>
+                            <Badge action="info" variant="solid" size="lg">
+                                <BadgeText>{currentPoints} puntos</BadgeText>
+                            </Badge>
+                        </VStack>
+                    </HStack>
+                )}
 
+                {/* Imagen Principal */}
                 <Box className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
                     {raffle.imageUrl ? (
                         <Image source={{ uri: raffle.imageUrl }} alt={raffle.name} className="w-full h-full" resizeMode="cover" />
                     ) : (
                         <Box className="w-full h-full justify-center items-center">
-                            <Icon as={AlertCircleIcon} size="xl" className="text-gray-300" />
+                            <Text className="text-gray-400">Sin imagen</Text>
                         </Box>
                     )}
                 </Box>
 
+                {/* Info Básica */}
                 <VStack space="xs">
                     <Heading size="xl" className="text-[#2F4858]">{raffle.name}</Heading>
                     <Text className="text-gray-600 leading-6">{raffle.description}</Text>
@@ -158,10 +196,13 @@ export default function RaffleDetailScreen() {
                     <Text className="text-gray-500 text-sm">{formattedEndDate}</Text>
                 </HStack>
 
+                {/* Datos Técnicos */}
                 <VStack space="md" className="mt-2">
                     <VStack space="xs">
                         <Text className="font-bold text-[#2F4858]">Puntos para entrar</Text>
-                        <Text className="text-gray-600">{raffle.pointsRequired} Puntos</Text>
+                        <Badge action="success" variant="solid" size="lg" className="self-start">
+                            <BadgeText>{raffle.pointsRequired} puntos</BadgeText>
+                        </Badge>
                     </VStack>
                     <VStack space="xs">
                         <Text className="font-bold text-[#2F4858]">Máximo de boletos por cliente</Text>
@@ -171,29 +212,40 @@ export default function RaffleDetailScreen() {
 
                 {/* --- VISTA DE CLIENTE (CUSTOMER) --- */}
                 {isCustomer && (
-                    <Box className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                        <HStack className="justify-between items-center mb-4">
-                            <Text className="text-[#2F4858] font-medium">Tus puntos disponibles:</Text>
-                            <Badge action="info" variant="solid">
-                                <BadgeText>{currentPoints} pts</BadgeText>
-                            </Badge>
-                        </HStack>
+                    <Box className="mt-4">
+                        <Box className="border border-blue-200 bg-blue-50 rounded-lg p-4 mb-6">
+                            <HStack space="sm" className="items-start">
+                                <Icon as={InfoIcon} size="md" className="text-info-800 mt-0.5" />
+                                <Text className="text-info-800 text-sm flex-1">
+                                    Los puntos gastados en boletos no son reembolsables. Al comprar, aceptas las condiciones de la rifa.
+                                </Text>
+                            </HStack>
+                        </Box>
 
                         {!isFinished ? (
-                            <Button
-                                onPress={handleBuyTicket}
-                                isDisabled={!canBuyTicket}
-                                className={`w-full rounded-lg ${!canBuyTicket ? 'opacity-50' : ''}`}
-                                action={canBuyTicket ? "primary" : "secondary"}
-                            >
-                                <ButtonIcon as={TicketIcon} className="mr-2 text-white" />
-                                <ButtonText>
-                                    {canBuyTicket ? `Comprar boleto (-${raffle.pointsRequired} pts)` : "Puntos insuficientes"}
-                                </ButtonText>
-                            </Button>
+                            <>
+                                <Button
+                                    onPress={handleBuyTicket}
+                                    isDisabled={!canBuyTicket}
+                                    className="w-full rounded-lg"
+                                    action={canBuyTicket ? "primary" : "secondary"}
+                                    size="lg"
+                                >
+                                    <ButtonIcon as={TicketIcon} className="mr-2 text-white" />
+                                    <ButtonText>
+                                        {canBuyTicket ? "Comprar boleto" : "Puntos insuficientes"}
+                                    </ButtonText>
+                                </Button>
+
+                                {!canBuyTicket && (
+                                    <Text className="text-gray-500 text-sm text-center mt-2">
+                                        Te faltan {raffle.pointsRequired - currentPoints} puntos.
+                                    </Text>
+                                )}
+                            </>
                         ) : (
-                            <Box className="bg-gray-200 p-3 rounded-lg items-center">
-                                <Text className="text-gray-600">Esta rifa ha finalizado</Text>
+                            <Box className="bg-gray-200 p-4 rounded-lg items-center">
+                                <Text className="text-gray-600 font-bold">Esta rifa ha finalizado</Text>
                             </Box>
                         )}
                     </Box>
@@ -202,7 +254,7 @@ export default function RaffleDetailScreen() {
                 {/* --- VISTA DE DUEÑO (OWNER) --- */}
                 {isOwner && (
                     <>
-                        {/* Sección de Ganador (Si finalizó) */}
+                        {/* Ganador (Si finalizó) */}
                         {isFinished && (
                             <Box className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                                 {hasWinner ? (
@@ -233,16 +285,16 @@ export default function RaffleDetailScreen() {
                             </Box>
                         )}
 
-                        {/* Botones de Gestión (Solo si no ha finalizado) */}
+                        {/* Gestión (Si no ha finalizado) */}
                         {!isFinished && (
                             <VStack space="md" className="mt-4">
-                                <Button variant="outline" className="border-[#2F4858] rounded-lg" onPress={() => router.push(`/(owner)/raffles/edit/${id}` as never)}>
-                                    <ButtonIcon as={EditIcon} className="text-[#2F4858] mr-2" />
-                                    <ButtonText className="text-[#2F4858]">Editar rifa anual</ButtonText>
+                                <Button variant="outline" className="rounded-lg" size="lg" onPress={() => router.push(`/(owner)/raffles/edit/${id}` as never)}>
+                                    <ButtonIcon as={EditIcon} className="text-primary-500 mr-2" />
+                                    <ButtonText className="text-primary-500">Editar rifa anual</ButtonText>
                                 </Button>
-                                <Button variant="outline" className="border-red-500 rounded-lg" onPress={() => setShowDeleteModal(true)}>
-                                    <ButtonIcon as={TrashIcon} className="text-red-500 mr-2" />
-                                    <ButtonText className="text-red-500">Eliminar rifa anual</ButtonText>
+                                <Button variant="outline" className="rounded-lg border-error-500" size="lg" onPress={() => setShowDeleteModal(true)}>
+                                    <ButtonIcon as={TrashIcon} className="text-error-500 mr-2" />
+                                    <ButtonText className="text-error-500">Eliminar rifa anual</ButtonText>
                                 </Button>
                             </VStack>
                         )}
@@ -258,7 +310,9 @@ export default function RaffleDetailScreen() {
                     <ModalContent>
                         <ModalHeader><Heading size="lg">¿Estás seguro?</Heading></ModalHeader>
                         <ModalBody>
-                            <Text className="text-gray-600 mb-2">Eliminar la rifa es permanente.</Text>
+                            <Text className="text-gray-600 mb-2">
+                                Eliminar la rifa es permanente y se devolverán los puntos a los participantes (simulado).
+                            </Text>
                         </ModalBody>
                         <ModalFooter>
                             <Button variant="outline" onPress={() => setShowDeleteModal(false)} className="mr-2"><ButtonText>Cancelar</ButtonText></Button>

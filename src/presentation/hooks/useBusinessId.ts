@@ -1,15 +1,15 @@
 // Hook para obtener el ID del negocio del usuario autenticado usando TanStack Query
 
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/src/infrastructure/services/supabase";
 import { useAuthStore } from "@/src/presentation/stores/authStore";
+import { useQuery } from "@tanstack/react-query";
 
 async function fetchBusinessId(userId: string): Promise<string> {
 	const { data, error } = await supabase
 		.from("businesses")
 		.select("id")
 		.eq("owner_id", userId)
-		.single();
+		.maybeSingle();
 
 	if (error) {
 		console.error("useBusinessId: Error fetching business", {

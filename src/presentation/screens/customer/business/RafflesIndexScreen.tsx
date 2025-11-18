@@ -101,7 +101,7 @@ export default function RafflesIndexScreen() {
 	// Skeleton de carga real
 	if (isLoadingRaffles) {
 		return (
-			<AppLayout showHeader={true} headerVariant="back" showNavBar={true}>
+			<AppLayout showHeader={true} headerVariant="default" headerRightElement={<></>} showNavBar={true}>
 				<RafflesListSkeleton />
 			</AppLayout>
 		);
@@ -110,7 +110,7 @@ export default function RafflesIndexScreen() {
 	const hasRaffles = processedRaffles.length > 0;
 
 	return (
-		<AppLayout showHeader={true} headerVariant="back" headerTitle="" showNavBar={true} scrollable={true}>
+		<AppLayout showHeader={true} headerVariant="default" headerRightElement={<></>} headerTitle="" showNavBar={true} scrollable={true}>
 
 			{/* Header */}
 			<HStack className="justify-between items-center mb-6 mt-2 px-1">
