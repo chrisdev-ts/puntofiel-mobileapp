@@ -2,7 +2,7 @@
 -- PUNTOFIEL - SCRIPT COMPLETO DE BASE DE DATOS Y CONFIGURACIÓN (VERSION FINAL)
 -- Descripción: Creación de esquema completo (tablas, funciones, triggers, RLS)
 --              para el sistema de lealtad PuntoFiel, con lógica RPC.
--- Ultima modificación: 07 de noviembre de 2025 a las 11:25 PM
+-- Ultima modificación: 17 de noviembre de 2025 a las 8:00 PM
 -- ============================================================================
 
 ---------------------------------------------------------------------------
@@ -10,6 +10,7 @@
 ---------------------------------------------------------------------------
 
 -- 1. Eliminar objetos dependientes de las tablas
+DROP TABLE IF EXISTS public.raffle_tickets CASCADE;
 DROP TABLE IF EXISTS public.employees CASCADE;
 DROP TABLE IF EXISTS public.annual_raffles CASCADE;
 DROP TABLE IF EXISTS public.promotions CASCADE;
@@ -46,7 +47,7 @@ CREATE OR REPLACE FUNCTION public.check_email_exists(email_param TEXT)
     RETURNS BOOLEAN AS $$
     BEGIN
       RETURN EXISTS (
-        SELECT 1 FROM auth.users 
+        SELECT 1 FROM auth.users
         WHERE email = email_param
       );
     END;
@@ -82,7 +83,7 @@ BEGIN
 
     -- 2. Validar que el cliente existe y es un customer
     IF NOT EXISTS (
-        SELECT 1 FROM public.profiles 
+        SELECT 1 FROM public.profiles
         WHERE id = p_customer_id AND role = 'customer'
     ) THEN
         RETURN QUERY SELECT FALSE, 'Cliente no encontrado o rol inválido'::TEXT, NULL::INTEGER;
@@ -108,7 +109,7 @@ BEGIN
         INSERT INTO public.loyalty_cards (customer_id, business_id, points)
         VALUES (p_customer_id, p_business_id, v_points_earned)
         RETURNING id INTO v_card_id;
-        
+
         v_new_balance := v_points_earned;
     ELSE
         -- Actualizar puntos en la loyalty_card existente
@@ -134,9 +135,9 @@ BEGIN
     );
 
     -- 7. Retornar resultado exitoso
-    RETURN QUERY SELECT 
-        TRUE, 
-        'Transacción registrada exitosamente. Puntos otorgados: ' || v_points_earned::TEXT, 
+    RETURN QUERY SELECT
+        TRUE,
+        'Transacción registrada exitosamente. Puntos otorgados: ' || v_points_earned::TEXT,
         v_new_balance;
 
 EXCEPTION
@@ -186,7 +187,7 @@ BEGIN
       WHERE
           r_sub.business_id = lc.business_id
           AND r_sub.is_active = TRUE
-          AND r_sub.points_required > lc.points 
+          AND r_sub.points_required > lc.points
       ORDER BY
           r_sub.points_required ASC
       LIMIT 1
@@ -252,7 +253,7 @@ BEGIN
     -- Actualizar la contraseña usando Supabase Auth
     -- La encriptación se hace automáticamente con crypt
     UPDATE auth.users
-    SET 
+    SET
         raw_app_meta_data = jsonb_set(
             COALESCE(raw_app_meta_data, '{}'::jsonb),
             '{password_reset_required}',
@@ -283,7 +284,7 @@ EXCEPTION
 END;
 $$;
 
-COMMENT ON FUNCTION public.update_employee_password(UUID, TEXT) IS 
+COMMENT ON FUNCTION public.update_employee_password(UUID, TEXT) IS
 'Actualiza la contraseña de un empleado. Solo el owner del negocio puede ejecutar esta función.';
 
 -- PERMISOS: Permitir ejecución a usuarios autenticados (la función valida internamente)
@@ -391,7 +392,7 @@ DROP POLICY IF EXISTS "Authenticated users can view all businesses." ON public.b
 DROP POLICY IF EXISTS "Authenticated users can view businesses" ON public.businesses;
 CREATE POLICY "Authenticated users can view businesses"
     ON public.businesses FOR SELECT
-    USING ( auth.role() = 'authenticated' ); 
+    USING ( auth.role() = 'authenticated' );
 
 
 ---------------------------------------------------------------------------
@@ -503,7 +504,7 @@ CREATE POLICY "Customers can view their transactions."
 DROP POLICY IF EXISTS "Business staff can insert purchases for their business." ON public.transactions;
 CREATE POLICY "Business staff can insert purchases for their business."
     ON public.transactions FOR INSERT
-    WITH CHECK ( 
+    WITH CHECK (
         (SELECT business_id FROM public.loyalty_cards WHERE id = card_id) IN (
             SELECT id FROM public.businesses WHERE owner_id = auth.uid()
             UNION
@@ -619,69 +620,175 @@ CREATE POLICY "Authenticated users can view active promotions."
 
 CREATE TABLE IF NOT EXISTS public.annual_raffles (
     id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-    raffle_year INT NOT NULL UNIQUE,
-    raffle_date DATE NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    business_id UUID NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    prize TEXT NOT NULL,
+    description TEXT,
+    points_required INTEGER NOT NULL CHECK (points_required > 0),
+    max_tickets_per_user INTEGER NOT NULL DEFAULT 1 CHECK (max_tickets_per_user > 0),
+    start_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    end_date TIMESTAMPTZ NOT NULL,
+    image_url TEXT,
     winner_customer_id UUID REFERENCES public.profiles(id),
-    is_completed BOOLEAN NOT NULL DEFAULT FALSE
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT valid_date_range CHECK (end_date > start_date)
 );
 
 -- Comentarios en la tabla
-COMMENT ON TABLE public.annual_raffles IS 'Rifas anuales de la plataforma PuntoFiel.';
+COMMENT ON TABLE public.annual_raffles IS 'Rifas creadas por los negocios en la plataforma PuntoFiel.';
+COMMENT ON COLUMN public.annual_raffles.business_id IS 'Negocio que organiza la rifa';
+COMMENT ON COLUMN public.annual_raffles.points_required IS 'Puntos necesarios para participar en la rifa';
+COMMENT ON COLUMN public.annual_raffles.max_tickets_per_user IS 'Máximo de boletos que puede obtener un usuario';
+COMMENT ON COLUMN public.annual_raffles.winner_customer_id IS 'Cliente ganador (NULL hasta que se complete la rifa)';
+
+-- Índices para optimizar consultas
+CREATE INDEX IF NOT EXISTS idx_raffles_business_id ON public.annual_raffles(business_id);
+CREATE INDEX IF NOT EXISTS idx_raffles_is_completed ON public.annual_raffles(is_completed);
+CREATE INDEX IF NOT EXISTS idx_raffles_end_date ON public.annual_raffles(end_date DESC);
+
+-- Aplicar trigger de updated_at
+DROP TRIGGER IF EXISTS on_raffles_updated ON public.annual_raffles;
+CREATE TRIGGER on_raffles_updated
+    BEFORE UPDATE ON public.annual_raffles
+    FOR EACH ROW EXECUTE PROCEDURE public.handle_updated_at();
 
 -- Activar RLS y definir políticas para rifas
 ALTER TABLE public.annual_raffles ENABLE ROW LEVEL SECURITY;
 
--- Política para usuarios autenticados (ver rifas)
+-- Política para Staff (Owners y Employees pueden gestionar rifas de su negocio)
+DROP POLICY IF EXISTS "Business staff can manage their raffles." ON public.annual_raffles;
+CREATE POLICY "Business staff can manage their raffles."
+    ON public.annual_raffles FOR ALL
+    USING (
+        business_id IN (
+            SELECT id FROM public.businesses WHERE owner_id = auth.uid()
+            UNION
+            SELECT business_id FROM public.employees WHERE profile_id = auth.uid()
+        )
+    );
+
+-- Política para usuarios autenticados (ver rifas activas)
 DROP POLICY IF EXISTS "Authenticated users can view raffles." ON public.annual_raffles;
-CREATE POLICY "Authenticated users can view raffles."
+DROP POLICY IF EXISTS "Authenticated users can view active raffles" ON public.annual_raffles;
+CREATE POLICY "Authenticated users can view active raffles"
     ON public.annual_raffles FOR SELECT
-    USING ( auth.role() = 'authenticated' );
+    USING ( end_date > NOW() OR is_completed = TRUE );
 
 
 ---------------------------------------------------------------------------
--- 10. STORAGE BUCKETS Y POLÍTICAS (SUPABASE)
+-- 10. BOLETOS DE RIFAS (RAFFLE_TICKETS)
 ---------------------------------------------------------------------------
 
--- Insertar bucket para recompensas
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('rewards', 'rewards', true)
-ON CONFLICT (id) DO NOTHING;
+CREATE TABLE IF NOT EXISTS public.raffle_tickets (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    raffle_id BIGINT NOT NULL REFERENCES public.annual_raffles(id) ON DELETE CASCADE,
+    customer_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE
+);
 
--- Políticas de Storage para rewards (MODO PRODUCCIÓN)
-DROP POLICY IF EXISTS "Los usuarios autenticados pueden subir imágenes" ON storage.objects;
-CREATE POLICY "Los usuarios autenticados pueden subir imágenes"
-    ON storage.objects
-    FOR INSERT
-    TO authenticated
-    WITH CHECK (bucket_id = 'rewards');
+-- Comentarios en la tabla
+COMMENT ON TABLE public.raffle_tickets IS 'Boletos de participación de clientes en rifas.';
+COMMENT ON COLUMN public.raffle_tickets.raffle_id IS 'Rifa a la que pertenece el boleto';
+COMMENT ON COLUMN public.raffle_tickets.customer_id IS 'Cliente que posee el boleto';
 
-DROP POLICY IF EXISTS "Las imágenes son públicamente accesibles" ON storage.objects;
-CREATE POLICY "Las imágenes son públicamente accesibles"
-    ON storage.objects
-    FOR SELECT
-    TO public
-    USING (bucket_id = 'rewards');
+-- Índices para optimizar consultas
+CREATE INDEX IF NOT EXISTS idx_raffle_tickets_raffle_id ON public.raffle_tickets(raffle_id);
+CREATE INDEX IF NOT EXISTS idx_raffle_tickets_customer_id ON public.raffle_tickets(customer_id);
 
-DROP POLICY IF EXISTS "Los dueños pueden actualizar sus imágenes" ON storage.objects;
-CREATE POLICY "Los dueños pueden actualizar sus imágenes"
-    ON storage.objects
-    FOR UPDATE
-    TO authenticated
-    USING (bucket_id = 'rewards');
+-- Activar RLS y definir políticas para boletos de rifas
+ALTER TABLE public.raffle_tickets ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Los dueños pueden eliminar sus imágenes" ON storage.objects;
-CREATE POLICY "Los dueños pueden eliminar sus imágenes"
-    ON storage.objects
-    FOR DELETE
-    TO authenticated
-    USING (bucket_id = 'rewards');
+-- Política para Customers (ver sus propios boletos)
+DROP POLICY IF EXISTS "Customers can view their own raffle tickets." ON public.raffle_tickets;
+CREATE POLICY "Customers can view their own raffle tickets."
+    ON public.raffle_tickets FOR SELECT
+    USING ( auth.uid() = customer_id );
+
+-- Política para Customers (participar en rifas)
+DROP POLICY IF EXISTS "Customers can participate in raffles." ON public.raffle_tickets;
+CREATE POLICY "Customers can participate in raffles."
+    ON public.raffle_tickets FOR INSERT
+    WITH CHECK ( auth.uid() = customer_id );
+
+-- Política para Staff (ver boletos de rifas de su negocio)
+DROP POLICY IF EXISTS "Business staff can view tickets for their raffles." ON public.raffle_tickets;
+CREATE POLICY "Business staff can view tickets for their raffles."
+    ON public.raffle_tickets FOR SELECT
+    USING (
+        raffle_id IN (
+            SELECT id FROM public.annual_raffles WHERE business_id IN (
+                SELECT id FROM public.businesses WHERE owner_id = auth.uid()
+                UNION
+                SELECT business_id FROM public.employees WHERE profile_id = auth.uid()
+            )
+        )
+    );
 
 
 ---------------------------------------------------------------------------
--- 11. DATOS DE PRUEBA (INSERCIÓN)
+-- 11. STORAGE BUCKETS Y POLÍTICAS (SUPABASE) - BUCKET ÚNICO
+---------------------------------------------------------------------------
+
+-- Crear bucket único para todos los assets de PuntoFiel
+INSERT INTO storage.buckets (
+  id,
+  name,
+  public,
+  file_size_limit,
+  allowed_mime_types
+)
+VALUES (
+  'puntofiel-assets',
+  'puntofiel-assets',
+  true,
+  5242880, -- 5MB en bytes
+  ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+)
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = 5242880,
+  allowed_mime_types = ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+-- ============================================================================
+-- POLÍTICAS RLS PARA BUCKET puntofiel-assets (MODO PRODUCCIÓN)
+-- ============================================================================
+
+-- Política: Usuarios autenticados pueden subir imágenes
+DROP POLICY IF EXISTS "Authenticated users can upload images" ON storage.objects;
+CREATE POLICY "Authenticated users can upload images"
+  ON storage.objects FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'puntofiel-assets');
+
+-- Política: Cualquiera puede ver las imágenes (bucket público)
+DROP POLICY IF EXISTS "Public can view images" ON storage.objects;
+CREATE POLICY "Public can view images"
+  ON storage.objects FOR SELECT
+  TO public
+  USING (bucket_id = 'puntofiel-assets');
+
+-- Política: Usuarios autenticados pueden actualizar imágenes
+DROP POLICY IF EXISTS "Authenticated users can update images" ON storage.objects;
+CREATE POLICY "Authenticated users can update images"
+  ON storage.objects FOR UPDATE
+  TO authenticated
+  USING (bucket_id = 'puntofiel-assets');
+
+-- Política: Usuarios autenticados pueden eliminar imágenes
+DROP POLICY IF EXISTS "Authenticated users can delete images" ON storage.objects;
+CREATE POLICY "Authenticated users can delete images"
+  ON storage.objects FOR DELETE
+  TO authenticated
+  USING (bucket_id = 'puntofiel-assets');
+
+
+---------------------------------------------------------------------------
+-- 12. DATOS DE PRUEBA (INSERCIÓN)
 ---------------------------------------------------------------------------
 
 -- Borrar datos existentes (para idempotencia)
+DELETE FROM public.raffle_tickets;
 DELETE FROM public.annual_raffles;
 DELETE FROM public.promotions;
 DELETE FROM public.rewards;
@@ -701,7 +808,7 @@ DELETE FROM public.profiles;
 -- Cliente: Jorge Christian Serrano Puertos (customer.chris@email.com)
 -- Empleado: Erick Ernesto López Valdés (employee.erick@gmail.com)
 INSERT INTO public.profiles (id, first_name, last_name, second_last_name, role)
-VALUES 
+VALUES
     ('02c05bc0-afeb-439b-8841-049176d8eab6', 'Amairany', 'Meza', 'Vilorio', 'owner'),
     ('22f3022e-8402-4592-a87f-895f8a78b699', 'Ismael', 'Flores', 'Luna', 'owner'),
     ('63664654-44dc-476a-b79c-ce9680440f74', 'Juan de Dios', 'Madrid', 'Ortiz', 'owner'),
@@ -738,11 +845,11 @@ BEGIN
 
     -- Recompensas para Café El Portal
     INSERT INTO public.rewards (
-        business_id, 
-        name, 
-        description, 
-        points_required, 
-        image_url, 
+        business_id,
+        name,
+        description,
+        points_required,
+        image_url,
         is_active
     )
     VALUES
@@ -789,36 +896,36 @@ BEGIN
 
     -- Promociones para Café El Portal
     INSERT INTO public.promotions (
-        business_id, 
-        title, 
-        content, 
-        start_date, 
-        end_date, 
+        business_id,
+        title,
+        content,
+        start_date,
+        end_date,
         is_active
     )
     VALUES
         (
-            cafe_el_portal_id, 
-            '¡Jueves de Doble Punto!', 
-            'Todos los jueves, cada compra que realices te dará el doble de puntos. ¡No te lo pierdas!', 
-            NOW(), 
-            NOW() + INTERVAL '3 months', 
+            cafe_el_portal_id,
+            '¡Jueves de Doble Punto!',
+            'Todos los jueves, cada compra que realices te dará el doble de puntos. ¡No te lo pierdas!',
+            NOW(),
+            NOW() + INTERVAL '3 months',
             true
         ),
         (
-            cafe_el_portal_id, 
-            'Happy Hour: 20% de Descuento', 
-            'De 3:00 PM a 5:00 PM todos los días, obtén 20% de descuento en bebidas frías.', 
-            NOW(), 
-            NOW() + INTERVAL '1 month', 
+            cafe_el_portal_id,
+            'Happy Hour: 20% de Descuento',
+            'De 3:00 PM a 5:00 PM todos los días, obtén 20% de descuento en bebidas frías.',
+            NOW(),
+            NOW() + INTERVAL '1 month',
             true
         ),
         (
-            cafe_el_portal_id, 
-            'Mes del Pastel', 
-            'Durante todo el mes, llévate una rebanada de pastel gratis en la compra de 2 bebidas.', 
-            NOW(), 
-            NOW() + INTERVAL '30 days', 
+            cafe_el_portal_id,
+            'Mes del Pastel',
+            'Durante todo el mes, llévate una rebanada de pastel gratis en la compra de 2 bebidas.',
+            NOW(),
+            NOW() + INTERVAL '30 days',
             true
         );
 
@@ -841,11 +948,11 @@ BEGIN
 
     -- Recompensas para GymZone Fitness
     INSERT INTO public.rewards (
-        business_id, 
-        name, 
-        description, 
-        points_required, 
-        image_url, 
+        business_id,
+        name,
+        description,
+        points_required,
+        image_url,
         is_active
     )
     VALUES
@@ -897,11 +1004,11 @@ BEGIN
 
     -- Recompensas para Tacos El Rey
     INSERT INTO public.rewards (
-        business_id, 
-        name, 
-        description, 
-        points_required, 
-        image_url, 
+        business_id,
+        name,
+        description,
+        points_required,
+        image_url,
         is_active
     )
     VALUES
@@ -961,11 +1068,11 @@ BEGIN
 
     -- Recompensas para Pizzería Napoli
     INSERT INTO public.rewards (
-        business_id, 
-        name, 
-        description, 
-        points_required, 
-        image_url, 
+        business_id,
+        name,
+        description,
+        points_required,
+        image_url,
         is_active
     )
     VALUES
@@ -1009,7 +1116,7 @@ BEGIN
             'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&h=600&fit=crop',
             true
         );
-        
+
 END $$;
 
 
@@ -1048,7 +1155,7 @@ BEGIN
     INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
     VALUES (tarjeta_cafe, 'purchase_earn', 300.00, 3, 'CAFE-002');
     UPDATE public.loyalty_cards SET points = points + 3 WHERE id = tarjeta_cafe;
-    
+
     -- Transacción 3: Gana 2 puntos (Total: 10)
     INSERT INTO public.transactions (card_id, transaction_type, purchase_amount, points_change, invoice_ref)
     VALUES (tarjeta_cafe, 'purchase_earn', 200.00, 2, 'CAFE-003');
@@ -1133,13 +1240,162 @@ BEGIN
 END $$;
 
 
--- 4. Insertar rifa anual
-INSERT INTO public.annual_raffles (raffle_year, raffle_date, is_completed)
-VALUES (EXTRACT(YEAR FROM NOW()), (EXTRACT(YEAR FROM NOW()) || '-12-31')::DATE, FALSE);
+-- 4. Insertar rifas de ejemplo
+DO $$
+DECLARE
+    cliente_chris_id UUID := '3234cb32-b89f-4bd4-932b-6d3b1d72935c';
+    cafe_portal_id UUID;
+    gym_id UUID;
+    tacos_id UUID;
+    pizzeria_id UUID;
+    rifa_cafe_id BIGINT;
+    rifa_gym_id BIGINT;
+    rifa_tacos_id BIGINT;
+BEGIN
+    -- Obtener IDs de los negocios
+    SELECT id INTO cafe_portal_id FROM public.businesses WHERE name = 'Café El Portal';
+    SELECT id INTO gym_id FROM public.businesses WHERE name = 'GymZone Fitness';
+    SELECT id INTO tacos_id FROM public.businesses WHERE name = 'Tacos El Rey';
+    SELECT id INTO pizzeria_id FROM public.businesses WHERE name = 'Pizzería Napoli';
+
+    -- ========================================================================
+    -- RIFA 1: Café El Portal - Cafetera Italiana
+    -- ========================================================================
+    INSERT INTO public.annual_raffles (
+        business_id,
+        name,
+        prize,
+        description,
+        points_required,
+        max_tickets_per_user,
+        start_date,
+        end_date,
+        image_url,
+        is_completed
+    )
+    VALUES (
+        cafe_portal_id,
+        'Rifa Mensual de Diciembre',
+        'Cafetera Italiana de Aluminio + 1kg de Café Premium',
+        'Participa con solo 50 puntos y gana una elegante cafetera italiana de aluminio de 6 tazas más 1 kilogramo de nuestro café premium recién tostado. ¡Prepara el mejor café en casa!',
+        50,
+        3,
+        NOW(),
+        NOW() + INTERVAL '30 days',
+        'https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=400&h=400&fit=crop',
+        false
+    )
+    RETURNING id INTO rifa_cafe_id;
+
+    -- Christian participa 2 veces en la rifa del café
+    INSERT INTO public.raffle_tickets (raffle_id, customer_id)
+    VALUES
+        (rifa_cafe_id, cliente_chris_id),
+        (rifa_cafe_id, cliente_chris_id);
+
+    -- ========================================================================
+    -- RIFA 2: GymZone Fitness - Membresía Premium
+    -- ========================================================================
+    INSERT INTO public.annual_raffles (
+        business_id,
+        name,
+        prize,
+        description,
+        points_required,
+        max_tickets_per_user,
+        start_date,
+        end_date,
+        image_url,
+        is_completed
+    )
+    VALUES (
+        gym_id,
+        'Gran Rifa de Año Nuevo',
+        'Membresía Premium de 3 Meses + Sesión con Nutriólogo',
+        'Inicia el año de la mejor manera. Participa con 100 puntos y gana 3 meses de membresía premium que incluye acceso a todas las clases grupales, zona de pesas y cardio, más una sesión personalizada con nuestro nutriólogo certificado.',
+        100,
+        5,
+        NOW(),
+        NOW() + INTERVAL '45 days',
+        'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=400&h=400&fit=crop',
+        false
+    )
+    RETURNING id INTO rifa_gym_id;
+
+    -- Christian participa 1 vez en la rifa del gym
+    INSERT INTO public.raffle_tickets (raffle_id, customer_id)
+    VALUES (rifa_gym_id, cliente_chris_id);
+
+    -- ========================================================================
+    -- RIFA 3: Tacos El Rey - Paquete Familiar
+    -- ========================================================================
+    INSERT INTO public.annual_raffles (
+        business_id,
+        name,
+        prize,
+        description,
+        points_required,
+        max_tickets_per_user,
+        start_date,
+        end_date,
+        image_url,
+        is_completed
+    )
+    VALUES (
+        tacos_id,
+        'Rifa Semanal de Tacos',
+        'Paquete Familiar: 30 Tacos + 4 Bebidas + 2 Órdenes de Guacamole',
+        '¡Disfruta con toda tu familia! Gana un paquete que incluye 30 tacos de tu elección (pastor, asada, suadero o mixtos), 4 bebidas grandes y 2 órdenes de guacamole casero. Válido para consumo en restaurante o para llevar.',
+        30,
+        2,
+        NOW(),
+        NOW() + INTERVAL '7 days',
+        'https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=400&h=400&fit=crop',
+        false
+    )
+    RETURNING id INTO rifa_tacos_id;
+
+    -- Christian participa 2 veces (máximo permitido)
+    INSERT INTO public.raffle_tickets (raffle_id, customer_id)
+    VALUES
+        (rifa_tacos_id, cliente_chris_id),
+        (rifa_tacos_id, cliente_chris_id);
+
+    -- ========================================================================
+    -- RIFA 4: Pizzería Napoli - Cena para 4 personas (COMPLETADA)
+    -- ========================================================================
+    INSERT INTO public.annual_raffles (
+        business_id,
+        name,
+        prize,
+        description,
+        points_required,
+        max_tickets_per_user,
+        start_date,
+        end_date,
+        image_url,
+        winner_customer_id,
+        is_completed
+    )
+    VALUES (
+        pizzeria_id,
+        'Rifa Especial de Octubre',
+        'Cena Completa para 4 Personas',
+        'Una experiencia gastronómica italiana completa: 2 pizzas familiares, 1 entrada (bruschetta o ensalada caprese), 4 bebidas y 1 tiramisú para compartir. ¡La noche italiana perfecta!',
+        40,
+        3,
+        NOW() - INTERVAL '60 days',
+        NOW() - INTERVAL '30 days',
+        'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=400&fit=crop',
+        cliente_chris_id,
+        true
+    );
+
+END $$;
 
 
 ---------------------------------------------------------------------------
--- 12. MODO DESARROLLO (DESACTIVACIÓN TEMPORAL DE RLS Y BYPASS DE STORAGE)
+-- 13. MODO DESARROLLO (DESACTIVACIÓN TEMPORAL DE RLS Y BYPASS DE STORAGE)
 ---------------------------------------------------------------------------
 
 -- Desactivar RLS en tablas (para desarrollo)
@@ -1151,12 +1407,17 @@ ALTER TABLE public.transactions DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rewards DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.promotions DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.annual_raffles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.raffle_tickets DISABLE ROW LEVEL SECURITY;
 
 
 -- BYPASS TEMPORAL DE RLS PARA STORAGE (Permite operaciones sin autenticación)
 -- ----------------------------------------------------------------
 
 -- 1. Eliminar POLÍTICAS DE PRODUCCIÓN existentes
+DROP POLICY IF EXISTS "Authenticated users can upload images" ON storage.objects;
+DROP POLICY IF EXISTS "Public can view images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can update images" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can delete images" ON storage.objects;
 DROP POLICY IF EXISTS "Business owners can upload reward images" ON storage.objects;
 DROP POLICY IF EXISTS "Business owners can update their reward images" ON storage.objects;
 DROP POLICY IF EXISTS "Business owners can delete their reward images" ON storage.objects;
@@ -1166,33 +1427,19 @@ DROP POLICY IF EXISTS "Los dueños pueden actualizar sus imágenes" ON storage.o
 DROP POLICY IF EXISTS "Los dueños pueden eliminar sus imágenes" ON storage.objects;
 DROP POLICY IF EXISTS "Las imágenes son públicamente accesibles" ON storage.objects;
 
--- 2. Eliminar POLÍTICAS DE DESARROLLO existentes (SOLUCIÓN DEL ERROR)
+-- 2. Eliminar POLÍTICAS DE DESARROLLO existentes
+DROP POLICY IF EXISTS "DEV: Allow all operations on puntofiel-assets" ON storage.objects;
 DROP POLICY IF EXISTS "DEV: Allow all uploads to rewards bucket" ON storage.objects;
 DROP POLICY IF EXISTS "DEV: Allow all reads from rewards bucket" ON storage.objects;
 DROP POLICY IF EXISTS "DEV: Allow all updates to rewards bucket" ON storage.objects;
 DROP POLICY IF EXISTS "DEV: Allow all deletes from rewards bucket" ON storage.objects;
 
--- 3. Crear políticas permisivas para desarrollo
-CREATE POLICY "DEV: Allow all uploads to rewards bucket"
-    ON storage.objects FOR INSERT
-    TO public
-    WITH CHECK (bucket_id = 'rewards');
-
-CREATE POLICY "DEV: Allow all reads from rewards bucket"
-    ON storage.objects FOR SELECT
-    TO public
-    USING (bucket_id = 'rewards');
-
-CREATE POLICY "DEV: Allow all updates to rewards bucket"
-    ON storage.objects FOR UPDATE
-    TO public
-    USING (bucket_id = 'rewards')
-    WITH CHECK (bucket_id = 'rewards');
-
-CREATE POLICY "DEV: Allow all deletes from rewards bucket"
-    ON storage.objects FOR DELETE
-    TO public
-    USING (bucket_id = 'rewards');
+-- 3. Crear política permisiva única para desarrollo
+CREATE POLICY "DEV: Allow all operations on puntofiel-assets"
+  ON storage.objects FOR ALL
+  TO public
+  USING (bucket_id = 'puntofiel-assets')
+  WITH CHECK (bucket_id = 'puntofiel-assets');
 
 
 -- ----------------------------------------------------------------
@@ -1209,8 +1456,9 @@ ALTER TABLE public.transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.rewards ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.promotions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.annual_raffles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.raffle_tickets ENABLE ROW LEVEL SECURITY;
 
--- RESTAURAR POLÍTICAS RLS DE STORAGE (Ver Sección 10 para restaurar)
+-- RESTAURAR POLÍTICAS RLS DE STORAGE (Ver Sección 11 para restaurar)
 -- Eliminar las políticas DEV y recrear las de producción.
 */
 
