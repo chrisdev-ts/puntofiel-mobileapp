@@ -5,8 +5,10 @@ import type {
 	LoginUserDTO,
 	User,
 } from "@/src/core/entities/User";
+import type { UpdateUserDTO } from "../entities/UpdateUserDTO";
 
 export interface IUserRepository {
+	updateUser(userId: string, data: UpdateUserDTO): unknown;
 	/**
 	 * Crea un nuevo usuario en el sistema.
 	 * Supabase Auth valida automáticamente emails duplicados.
@@ -35,6 +37,17 @@ export interface IUserRepository {
 	 * @returns Usuario encontrado o null si no existe
 	 * @throws Error si hay problemas de conexión
 	 */
-
 	getUserById(userId: string): Promise<User | null>;
+
+	/**
+	 * Actualiza la información del perfil del usuario autenticado.
+	 *
+	 * @param userId - ID del usuario a actualizar.
+	 * @param updatedData - Campos a actualizar.
+	 * @returns El usuario con los datos actualizados.
+	 */
+	updateProfile(
+		userId: string,
+		updatedData: Partial<Omit<User, "id" | "role" | "createdAt" | "updatedAt">>,
+	): Promise<User>;
 }

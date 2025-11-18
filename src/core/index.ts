@@ -1,7 +1,12 @@
 // Barrel exports para la capa core (dominio)
 
 // Entities
-export type { Business, BusinessCategory, CreateBusinessDTO, UpdateBusinessDTO } from "./entities/Business";
+export type {
+	Business,
+	BusinessCategory,
+	CreateBusinessDTO,
+	UpdateBusinessDTO,
+} from "./entities/Business";
 export type { User } from "./entities/User";
 
 // Repositories

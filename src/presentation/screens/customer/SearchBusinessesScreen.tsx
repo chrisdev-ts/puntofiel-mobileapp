@@ -319,7 +319,7 @@ export default function SearchBusinessesScreen() {
 							</ScrollView>
 						)}
 					</VStack>
-				)}{" "}
+				)}
 				{/* Secciones cuando NO hay búsqueda activa */}
 				{!isSearching && (
 					<>

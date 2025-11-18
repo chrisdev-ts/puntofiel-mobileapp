@@ -14,9 +14,9 @@ export const createRewardSchema = z.object({
 		}),
 
 	description: z
-		.string({ required_error: "La descripción de la recompensa es requerida" })
+		.string()
 		.trim()
-		.min(1, "La descripción es requerida")
+		.optional()
 		.refine(
 			(val) => {
 				if (!val) return true;

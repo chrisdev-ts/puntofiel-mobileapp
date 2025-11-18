@@ -1,4 +1,3 @@
-import { Textarea, TextareaInput } from "@gluestack-ui/themed";
 import type { Control, FieldErrors } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -10,8 +9,8 @@ import {
 	FormControlLabelText,
 } from "@/components/ui/form-control";
 import { Input, InputField } from "@/components/ui/input";
-import { VStack } from "@/components/ui/vstack";
-import type { CreateRewardFormValues } from "./RewardSchema";
+import { Textarea, TextareaInput } from "@/components/ui/textarea";
+import type { CreateRewardFormValues } from "@/src/presentation/screens/owner/rewards/RewardFormSchema";
 
 type RewardFormStep1Props = {
 	control: Control<CreateRewardFormValues>;
@@ -27,26 +26,18 @@ export function RewardFormStep1({
 	isEditMode: _isEditMode,
 }: RewardFormStep1Props) {
 	return (
-		<VStack space="lg">
-			{/* Campo Nombre */}
-			<FormControl isInvalid={!!errors.name} isRequired={true}>
-				<FormControlLabel className="mb-2">
-					<FormControlLabelText className="text-base font-medium text-primary-500">
-						Nombre de la recompensa
-					</FormControlLabelText>
+		<>
+			<FormControl isInvalid={!!errors.name} isRequired>
+				<FormControlLabel>
+					<FormControlLabelText>Nombre de la recompensa</FormControlLabelText>
 				</FormControlLabel>
 				<Controller
 					control={control}
 					name="name"
 					render={({ field: { onChange, onBlur, value } }) => (
-						<Input
-							variant="outline"
-							size="lg"
-							className="bg-[#FFFFFF] border border-[#CCCCCC] rounded-lg"
-						>
+						<Input>
 							<InputField
-								placeholder="Nombre de la recompensa"
-								placeholderTextColor="#888888"
+								placeholder="Ej: Café gratis"
 								value={value}
 								onChangeText={onChange}
 								onBlur={onBlur}
@@ -55,65 +46,50 @@ export function RewardFormStep1({
 					)}
 				/>
 				{errors.name && (
-					<FormControlError className="mt-1">
-						<FormControlErrorText className="text-xs text-[#F44336]">
-							{errors.name.message}
-						</FormControlErrorText>
+					<FormControlError>
+						<FormControlErrorText>{errors.name.message}</FormControlErrorText>
 					</FormControlError>
 				)}
 			</FormControl>
 
-			{/* Campo Detalles */}
-			<FormControl isInvalid={!!errors.description} isRequired={true}>
-				<FormControlLabel className="mb-2">
-					<FormControlLabelText className="text-base font-medium text-primary-500">
-						Detalles
-					</FormControlLabelText>
+			<FormControl isInvalid={!!errors.description}>
+				<FormControlLabel>
+					<FormControlLabelText>Descripción (opcional)</FormControlLabelText>
 				</FormControlLabel>
 				<Controller
 					control={control}
 					name="description"
 					render={({ field: { onChange, onBlur, value } }) => (
-						<Textarea className="bg-[#FFFFFF] border border-[#CCCCCC] rounded-lg min-h-[150px]">
+						<Textarea>
 							<TextareaInput
 								placeholder="Descripción de la recompensa..."
-								placeholderTextColor="#888888"
 								value={value || ""}
 								onChangeText={onChange}
 								onBlur={onBlur}
-								className="text-base text-[#333333] p-3"
 							/>
 						</Textarea>
 					)}
 				/>
 				{errors.description && (
-					<FormControlError className="mt-1">
-						<FormControlErrorText className="text-xs text-[#F44336]">
+					<FormControlError>
+						<FormControlErrorText>
 							{errors.description.message}
 						</FormControlErrorText>
 					</FormControlError>
 				)}
 			</FormControl>
 
-			{/* Campo Puntos */}
-			<FormControl isInvalid={!!errors.points_required} isRequired={true}>
-				<FormControlLabel className="mb-2">
-					<FormControlLabelText className="text-base font-medium text-primary-500">
-						Puntos necesarios
-					</FormControlLabelText>
+			<FormControl isInvalid={!!errors.points_required} isRequired>
+				<FormControlLabel>
+					<FormControlLabelText>Puntos necesarios</FormControlLabelText>
 				</FormControlLabel>
 				<Controller
 					control={control}
 					name="points_required"
 					render={({ field: { onChange, onBlur, value } }) => (
-						<Input
-							variant="outline"
-							size="lg"
-							className="bg-[#FFFFFF] border border-[#CCCCCC] rounded-lg"
-						>
+						<Input>
 							<InputField
-								placeholder="000"
-								placeholderTextColor="#888888"
+								placeholder="Ej: 100"
 								value={value === 0 ? "" : String(value)}
 								onChangeText={onChange}
 								onBlur={onBlur}
@@ -123,24 +99,17 @@ export function RewardFormStep1({
 					)}
 				/>
 				{errors.points_required && (
-					<FormControlError className="mt-1">
-						<FormControlErrorText className="text-xs text-[#F44336]">
+					<FormControlError>
+						<FormControlErrorText>
 							{errors.points_required.message}
 						</FormControlErrorText>
 					</FormControlError>
 				)}
 			</FormControl>
 
-			{/* Botón Continuar */}
-			<Button
-				onPress={onNext}
-				size="lg"
-				className="bg-[#2F4858] active:bg-[#1A2830] rounded-lg mt-6"
-			>
-				<ButtonText className="text-[#FFFFFF] font-medium text-base">
-					Continuar
-				</ButtonText>
+			<Button onPress={onNext} variant="solid" action="primary">
+				<ButtonText>Continuar</ButtonText>
 			</Button>
-		</VStack>
+		</>
 	);
 }

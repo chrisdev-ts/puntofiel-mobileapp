@@ -6,4 +6,3 @@ export { SupabaseBusinessRepository } from "./repositories/SupabaseBusinessRepos
 export { SupabaseLoyaltyRepository } from "./repositories/SupabaseLoyaltyRepository";
 export { SupabaseUserRepository } from "./repositories/SupabaseUserRepository";
 export { supabase, supabaseConfig } from "./services/supabase";
-

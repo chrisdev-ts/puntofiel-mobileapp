@@ -439,21 +439,21 @@ export function RegisterScreen() {
 								<CheckboxIcon as={CheckIcon} />
 							</CheckboxIndicator>
 							<CheckboxLabel>
-									<Text size="sm" className="leading-5">
-										He leído y acepto los{" "}
-										<Text
-											size="sm"
-											className="font-bold underline text-primary-600 leading-5"
-											onPress={handleTermsPress}
-											// Estas props hacen que el Text se comporte como un link
-											accessible={true}
-											accessibilityRole="link"
-										>
-											{isBusinessOwner
-												? "Términos y condiciones para comercios"
-												: "Términos y condiciones"}
-										</Text>
+								<Text size="sm" className="leading-5">
+									He leído y acepto los{" "}
+									<Text
+										size="sm"
+										className="font-bold underline text-primary-600 leading-5"
+										onPress={handleTermsPress}
+										// Estas props hacen que el Text se comporte como un link
+										accessible={true}
+										accessibilityRole="link"
+									>
+										{isBusinessOwner
+											? "Términos y condiciones para comercios"
+											: "Términos y condiciones"}
 									</Text>
+								</Text>
 							</CheckboxLabel>
 						</Checkbox>
 					)}

@@ -104,14 +104,14 @@ NativeWind nos permite usar la sintaxis de Tailwind CSS directamente en los comp
 Este es el patrón que **debes** seguir. Importas el componente de `gluestack-ui` y lo estilizas *exclusivamente* con `className`.
 
 ```tsx
-import { Box, Heading, Button, Text } from '@gluestack-ui/themed';
+import { Box, Heading, Button, Text } from '@/components/ui';
 import { Link } from 'expo-router';
 
 export function MiPantalla() {
   return (
     // Box de gluestack, estilizado con NativeWind
     <Box className="flex-1 bg-white p-6 justify-center">
-      
+
       <Heading className="text-3xl font-bold text-center text-gray-900 mb-4">
         Bienvenido
       </Heading>

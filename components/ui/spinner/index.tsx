@@ -1,8 +1,8 @@
 'use client';
-import { ActivityIndicator } from 'react-native';
-import React from 'react';
 import { tva } from '@gluestack-ui/utils/nativewind-utils';
 import { cssInterop } from 'nativewind';
+import React from 'react';
+import { ActivityIndicator } from 'react-native';
 
 cssInterop(ActivityIndicator, {
   className: { target: 'style', nativeStyleToProp: { color: true } },
@@ -38,3 +38,4 @@ const Spinner = React.forwardRef<
 Spinner.displayName = 'Spinner';
 
 export { Spinner };
+

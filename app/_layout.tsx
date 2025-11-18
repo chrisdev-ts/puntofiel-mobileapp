@@ -1,12 +1,12 @@
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import "@/global.css";
-import { queryClient } from "@/src/infrastructure/config/queryClient";
-import { useAuthGuard } from "@/src/presentation/hooks/useAuthGuard";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Slot } from "expo-router";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { queryClient } from "@/src/infrastructure/config/queryClient";
+import { useAuthGuard } from "@/src/presentation/hooks/useAuthGuard";
 
-function AppContent(){
+function AppContent() {
 	useAuthGuard();
 	return <Slot />;
 }
@@ -17,7 +17,7 @@ export default function RootLayout() {
 		<SafeAreaProvider>
 			<QueryClientProvider client={queryClient}>
 				<GluestackUIProvider>
-					<AppContent/>
+					<AppContent />
 				</GluestackUIProvider>
 			</QueryClientProvider>
 		</SafeAreaProvider>
