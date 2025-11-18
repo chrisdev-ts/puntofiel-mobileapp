@@ -65,15 +65,23 @@ export default function RaffleForm({
         handleSubmit,
         formState: { errors },
         trigger,
+        setValue, // 👈 AQUÍ ESTÁ LO NUEVO
+        watch     // 👈 AQUÍ ESTÁ LO NUEVO
     } = useForm<CreateRaffleFormValues>({
         resolver: zodResolver(createRaffleSchema),
-        defaultValues: initialData || {
+        defaultValues: initialData ? {
+            ...initialData,
+            // Aseguramos objetos Date
+            start_date: typeof initialData.start_date === 'string' ? new Date(initialData.start_date) : initialData.start_date,
+            end_date: typeof initialData.end_date === 'string' ? new Date(initialData.end_date) : initialData.end_date,
+            points_required: initialData.points_required,
+            max_tickets_per_user: initialData.max_tickets_per_user,
+        } : {
             name: "",
             prize: "",
             description: "",
             points_required: 0,
-            max_tickets_per_user: 0,
-            // Fechas por defecto: Inicio hoy, fin en 1 año
+            max_tickets_per_user: 1, // Default 1 ticket
             start_date: new Date(),
             end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
         },
@@ -123,7 +131,6 @@ export default function RaffleForm({
             "prize",
             "description",
             "points_required",
-            "max_tickets_per_user",
             "start_date",
             "end_date"
         ]);
@@ -142,7 +149,7 @@ export default function RaffleForm({
             prize: data.prize,
             description: data.description,
             pointsRequired: data.points_required,
-            maxTicketsPerUser: data.max_tickets_per_user,
+            maxTicketsPerUser: data.max_tickets_per_user || 1,
             startDate: data.start_date,
             endDate: data.end_date,
         };
@@ -150,7 +157,7 @@ export default function RaffleForm({
         if (isEditMode && raffleId) {
             updateRaffle({
                 raffleId,
-                dto: commonData, // UpdateDTO es parcial, así que esto es compatible
+                dto: commonData,
                 imageUri: image?.uri,
             });
         } else {
@@ -206,6 +213,9 @@ export default function RaffleForm({
                     errors={errors}
                     onNext={handleNextStep}
                     isEditMode={isEditMode}
+                    // 👇 Pasamos las props nuevas
+                    setValue={setValue}
+                    watch={watch}
                 />
             ) : (
                 <RaffleFormStep2

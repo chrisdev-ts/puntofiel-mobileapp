@@ -11,7 +11,7 @@ import { VStack } from "@/components/ui/vstack";
 import { Textarea, TextareaInput } from "@gluestack-ui/themed";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from "react";
-import type { Control, FieldErrors } from "react-hook-form";
+import type { Control, FieldErrors, UseFormSetValue, UseFormWatch } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { Keyboard, Platform, Pressable } from "react-native";
 import type { CreateRaffleFormValues } from "./RaffleSchema";
@@ -21,18 +21,22 @@ type RaffleFormStep1Props = {
     errors: FieldErrors<CreateRaffleFormValues>;
     onNext: () => void;
     isEditMode: boolean;
+    // 👇 Nuevas props para la lógica de fechas
+    setValue: UseFormSetValue<CreateRaffleFormValues>;
+    watch: UseFormWatch<CreateRaffleFormValues>;
 };
 
 export function RaffleFormStep1({
     control,
     errors,
     onNext,
-    isEditMode: _isEditMode,
+    isEditMode,
+    setValue,
+    watch,
 }: RaffleFormStep1Props) {
-    // Estado para el DatePicker
     const [showPicker, setShowPicker] = useState<{ show: boolean; mode: 'start' | 'end' }>({ show: false, mode: 'start' });
 
-    // Formatear fecha para visualización (DD / MM / AAAA)
+    // Helper para formatear fecha
     const formatDate = (date: Date) => {
         return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
     };
@@ -41,162 +45,123 @@ export function RaffleFormStep1({
         <VStack space="lg">
             {/* Nombre */}
             <FormControl isInvalid={!!errors.name} isRequired>
-                <FormControlLabel className="mb-1">
-                    <FormControlLabelText className="text-primary-500 font-medium">Nombre de la rifa anual</FormControlLabelText>
-                </FormControlLabel>
-                <Controller
-                    control={control}
-                    name="name"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input variant="outline" size="lg" className="bg-white border-gray-300 rounded-lg">
-                            <InputField placeholder="Ej. Gran Rifa Navideña" value={value} onChangeText={onChange} onBlur={onBlur} />
-                        </Input>
-                    )}
-                />
+                <FormControlLabel className="mb-1"><FormControlLabelText className="text-primary-500 font-medium">Nombre de la rifa anual</FormControlLabelText></FormControlLabel>
+                <Controller control={control} name="name" render={({ field: { onChange, onBlur, value } }) => (
+                    <Input variant="outline" size="lg" className="bg-white border-gray-300 rounded-lg"><InputField placeholder="Ej. Gran Rifa 2025" value={value} onChangeText={onChange} onBlur={onBlur} /></Input>
+                )} />
                 <FormControlError><FormControlErrorText>{errors.name?.message}</FormControlErrorText></FormControlError>
             </FormControl>
 
-            {/* Premio Principal */}
+            {/* Premio */}
             <FormControl isInvalid={!!errors.prize} isRequired>
-                <FormControlLabel className="mb-1">
-                    <FormControlLabelText className="text-primary-500 font-medium">Premio principal</FormControlLabelText>
-                </FormControlLabel>
-                <Controller
-                    control={control}
-                    name="prize"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input variant="outline" size="lg" className="bg-white border-gray-300 rounded-lg">
-                            <InputField placeholder="Ej. Motocicleta 2025" value={value} onChangeText={onChange} onBlur={onBlur} />
-                        </Input>
-                    )}
-                />
+                <FormControlLabel className="mb-1"><FormControlLabelText className="text-primary-500 font-medium">Premio principal</FormControlLabelText></FormControlLabel>
+                <Controller control={control} name="prize" render={({ field: { onChange, onBlur, value } }) => (
+                    <Input variant="outline" size="lg" className="bg-white border-gray-300 rounded-lg"><InputField placeholder="Ej. Motocicleta 2025" value={value} onChangeText={onChange} onBlur={onBlur} /></Input>
+                )} />
                 <FormControlError><FormControlErrorText>{errors.prize?.message}</FormControlErrorText></FormControlError>
             </FormControl>
 
             {/* Detalles */}
             <FormControl isInvalid={!!errors.description} isRequired>
-                <FormControlLabel className="mb-1">
-                    <FormControlLabelText className="text-primary-500 font-medium">Detalles</FormControlLabelText>
-                </FormControlLabel>
-                <Controller
-                    control={control}
-                    name="description"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Textarea className="bg-white border border-gray-300 rounded-lg min-h-[100px]">
-                            <TextareaInput
-                                placeholder="Describe las bases, condiciones y detalles del premio..."
-                                value={value}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                                className="text-base text-typography-900 p-3"
-                            />
-                        </Textarea>
-                    )}
-                />
+                <FormControlLabel className="mb-1"><FormControlLabelText className="text-primary-500 font-medium">Detalles</FormControlLabelText></FormControlLabel>
+                <Controller control={control} name="description" render={({ field: { onChange, onBlur, value } }) => (
+                    <Textarea className="bg-white border border-gray-300 rounded-lg min-h-[100px]"><TextareaInput placeholder="Describe las bases..." value={value} onChangeText={onChange} onBlur={onBlur} /></Textarea>
+                )} />
                 <FormControlError><FormControlErrorText>{errors.description?.message}</FormControlErrorText></FormControlError>
             </FormControl>
 
-            {/* Puntos Necesarios */}
+            {/* Puntos */}
             <FormControl isInvalid={!!errors.points_required} isRequired>
-                <FormControlLabel className="mb-1">
-                    <FormControlLabelText className="text-primary-500 font-medium">Puntos necesarios para participar</FormControlLabelText>
-                </FormControlLabel>
-                <Controller
-                    control={control}
-                    name="points_required"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input variant="outline" size="lg" className="bg-white border-gray-300 rounded-lg">
-                            <InputField
-                                placeholder="000"
-                                keyboardType="numeric"
-                                value={value === 0 ? "" : value?.toString()}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                            />
-                        </Input>
-                    )}
-                />
+                <FormControlLabel className="mb-1"><FormControlLabelText className="text-primary-500 font-medium">Puntos necesarios</FormControlLabelText></FormControlLabel>
+                <Controller control={control} name="points_required" render={({ field: { onChange, onBlur, value } }) => (
+                    <Input variant="outline" size="lg" className="bg-white border-gray-300 rounded-lg"><InputField placeholder="000" keyboardType="numeric" value={value === 0 ? "" : value?.toString()} onChangeText={onChange} onBlur={onBlur} /></Input>
+                )} />
                 <FormControlError><FormControlErrorText>{errors.points_required?.message}</FormControlErrorText></FormControlError>
             </FormControl>
 
-            {/* Máximo de Boletos */}
-            <FormControl isInvalid={!!errors.max_tickets_per_user} isRequired>
-                <FormControlLabel className="mb-1">
-                    <FormControlLabelText className="text-primary-500 font-medium">Máximo de boletos por cliente</FormControlLabelText>
-                </FormControlLabel>
-                <Controller
-                    control={control}
-                    name="max_tickets_per_user"
-                    render={({ field: { onChange, onBlur, value } }) => (
-                        <Input variant="outline" size="lg" className="bg-white border-gray-300 rounded-lg">
-                            <InputField
-                                placeholder="000"
-                                keyboardType="numeric"
-                                value={value === 0 ? "" : value?.toString()}
-                                onChangeText={onChange}
-                                onBlur={onBlur}
-                            />
-                        </Input>
-                    )}
-                />
-                <FormControlError><FormControlErrorText>{errors.max_tickets_per_user?.message}</FormControlErrorText></FormControlError>
-            </FormControl>
+            {/* Máximo Boletos (Oculto si es 1 fijo, pero lo dejo por si acaso) */}
+            {/* <FormControl ... /> */}
 
-            {/* Fechas de Inicio y Fin */}
-            {['start_date', 'end_date'].map((fieldName) => (
+            {/* --- FECHA INICIO --- */}
+            <FormControl isInvalid={!!errors.start_date} isRequired>
+                <FormControlLabel className="mb-1"><FormControlLabelText className="text-primary-500 font-medium">Fecha de inicio</FormControlLabelText></FormControlLabel>
                 <Controller
-                    key={fieldName}
                     control={control}
-                    name={fieldName as 'start_date' | 'end_date'}
+                    name="start_date"
                     render={({ field: { value, onChange } }) => (
-                        <FormControl isInvalid={!!errors[fieldName as keyof CreateRaffleFormValues]} isRequired>
-                            <FormControlLabel className="mb-1">
-                                <FormControlLabelText className="text-primary-500 font-medium">
-                                    {fieldName === 'start_date' ? 'Fecha de inicio' : 'Fecha de finalización'}
-                                </FormControlLabelText>
-                            </FormControlLabel>
-
-                            <Pressable onPress={() => {
-                                Keyboard.dismiss(); // Cerrar teclado si está abierto
-                                setShowPicker({ show: true, mode: fieldName === 'start_date' ? 'start' : 'end' });
-                            }}>
-                                <Input variant="outline" size="lg" className="bg-white border-gray-300 rounded-lg" isReadOnly>
+                        <>
+                            <Pressable onPress={() => { Keyboard.dismiss(); setShowPicker({ show: true, mode: 'start' }); }}>
+                                {/* pointerEvents="none" asegura que el click pase al Pressable */}
+                                <Input variant="outline" size="lg" className="bg-white border-gray-300 rounded-lg" isReadOnly pointerEvents="none">
                                     <InputField
                                         placeholder="DD / MM / AAAA"
                                         value={value ? formatDate(value) : ''}
                                         editable={false}
-                                        onPressIn={() => {
-                                            Keyboard.dismiss();
-                                            setShowPicker({ show: true, mode: fieldName === 'start_date' ? 'start' : 'end' });
-                                        }}
                                     />
                                 </Input>
                             </Pressable>
+                            <FormControlError><FormControlErrorText>{errors.start_date?.message}</FormControlErrorText></FormControlError>
 
-                            <FormControlError><FormControlErrorText>{errors[fieldName as keyof CreateRaffleFormValues]?.message}</FormControlErrorText></FormControlError>
-
-                            {/* Componente DatePicker */}
-                            {showPicker.show && showPicker.mode === (fieldName === 'start_date' ? 'start' : 'end') && (
+                            {showPicker.show && showPicker.mode === 'start' && (
                                 <DateTimePicker
                                     value={value || new Date()}
                                     mode="date"
                                     display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    // 👇 SIN minimumDate para permitir pruebas en el pasado
                                     onChange={(event, selectedDate) => {
-                                        // En Android el picker se cierra solo al seleccionar
-                                        if (Platform.OS === 'android') {
-                                            setShowPicker({ ...showPicker, show: false });
-                                        }
+                                        if (Platform.OS === 'android') setShowPicker({ ...showPicker, show: false });
                                         if (selectedDate) {
                                             onChange(selectedDate);
+
+                                            // 🤖 LÓGICA DE AUTO-LLENADO (Comenta esto si quieres manual total)
+                                            const nextYear = new Date(selectedDate);
+                                            nextYear.setFullYear(nextYear.getFullYear() + 1);
+                                            setValue('end_date', nextYear);
                                         }
                                     }}
-                                    minimumDate={new Date()} // No permitir fechas pasadas
                                 />
                             )}
-                        </FormControl>
+                        </>
                     )}
                 />
-            ))}
+            </FormControl>
+
+            {/* --- FECHA FIN --- */}
+            <FormControl isInvalid={!!errors.end_date} isRequired>
+                <FormControlLabel className="mb-1"><FormControlLabelText className="text-primary-500 font-medium">Fecha de finalización</FormControlLabelText></FormControlLabel>
+                <Controller
+                    control={control}
+                    name="end_date"
+                    render={({ field: { value, onChange } }) => (
+                        <>
+                            <Pressable onPress={() => { Keyboard.dismiss(); setShowPicker({ show: true, mode: 'end' }); }}>
+                                {/* bg-gray-100 para indicar visualmente que es automático/deshabilitado */}
+                                <Input variant="outline" size="lg" className="bg-gray-100 border-gray-300 rounded-lg" isReadOnly pointerEvents="none">
+                                    <InputField
+                                        placeholder="DD / MM / AAAA"
+                                        value={value ? formatDate(value) : ''}
+                                        editable={false}
+                                    />
+                                </Input>
+                            </Pressable>
+                            <FormControlError><FormControlErrorText>{errors.end_date?.message}</FormControlErrorText></FormControlError>
+
+                            {showPicker.show && showPicker.mode === 'end' && (
+                                <DateTimePicker
+                                    value={value || new Date()}
+                                    mode="date"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    // 👇 SIN minimumDate para permitir pruebas
+                                    onChange={(event, selectedDate) => {
+                                        if (Platform.OS === 'android') setShowPicker({ ...showPicker, show: false });
+                                        if (selectedDate) onChange(selectedDate);
+                                    }}
+                                />
+                            )}
+                        </>
+                    )}
+                />
+            </FormControl>
 
             <Button onPress={onNext} size="lg" className="bg-[#2F4858] active:bg-[#1A2830] rounded-lg mt-4 mb-6">
                 <ButtonText className="text-white font-medium">Continuar</ButtonText>

@@ -139,10 +139,10 @@ export default function RaffleDetailScreen() {
         if (isOwner) {
             // Si es dueño, volver a SU lista de gestión
             // Usamos replace para asegurar que la lista se recargue si es necesario y no guardar el detalle en el stack
-            router.replace("/(owner)/raffles/" as never);
+            router.replace("/(owner)/(tabs)/raffles/" as never);
         } else {
             // Si es cliente, volver al feed de rifas
-            router.replace("/(customer)/business/raffles/" as never);
+            router.replace("/(customer)/(tabs)/raffles/" as never);
         }
     };
 
