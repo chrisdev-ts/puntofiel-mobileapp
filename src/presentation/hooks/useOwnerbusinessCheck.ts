@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRouter, useSegments } from "expo-router";
+import { useRootNavigationState, useRouter, useSegments } from "expo-router";
 import { useEffect, useRef } from "react";
 import { SupabaseBusinessRepository } from "@/src/infrastructure/repositories/SupabaseBusinessRepository";
 import { useAuthStore } from "@/src/presentation/stores/authStore";
@@ -16,6 +16,7 @@ export function useOwnerBusinessCheck() {
 	const { user, isLoading: isAuthLoading } = useAuthStore();
 	const router = useRouter();
 	const segments = useSegments();
+	const navigationState = useRootNavigationState();
 	const hasRedirected = useRef(false);
 
 	// Solo ejecutar para owners y NO en la ruta de creación de negocio
@@ -33,6 +34,14 @@ export function useOwnerBusinessCheck() {
 	});
 
 	useEffect(() => {
+		// Esperar a que el Root Layout esté montado y la navegación esté lista
+		if (!navigationState?.key) return;
+		if (
+			typeof navigationState.key === "string" &&
+			navigationState.key.length === 0
+		)
+			return;
+
 		// No ejecutar si no debe verificar
 		if (!shouldCheck) return;
 
@@ -50,7 +59,14 @@ export function useOwnerBusinessCheck() {
 			hasRedirected.current = true;
 			router.replace("/(owner)/business/create");
 		}
-	}, [shouldCheck, businesses, isAuthLoading, isBusinessesLoading, router]);
+	}, [
+		navigationState?.key,
+		shouldCheck,
+		businesses,
+		isAuthLoading,
+		isBusinessesLoading,
+		router,
+	]);
 
 	return {
 		hasBusinesses: businesses && businesses.length > 0,
