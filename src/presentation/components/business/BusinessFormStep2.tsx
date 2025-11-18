@@ -1,11 +1,10 @@
-import type { Control } from "react-hook-form";
-import { Controller } from "react-hook-form";
 import { Button, ButtonText } from "@/components/ui/button";
-import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { BusinessHoursSelector } from "@/src/presentation/components/business/BusinessHoursSelector";
 import type { BusinessFormData } from "@/src/presentation/screens/owner/business/BusinessFormSchema";
+import type { Control } from "react-hook-form";
+import { Controller } from "react-hook-form";
 
 type BusinessFormStep2Props = {
 	control: Control<BusinessFormData>;
@@ -36,19 +35,14 @@ export function BusinessFormStep2({
 				)}
 			/>
 
-			<HStack className="gap-3">
-				<Button variant="outline" onPress={onBack} className="flex-1">
-					<ButtonText>Atrás</ButtonText>
-				</Button>
-				<Button
-					onPress={onNext}
-					className="flex-1"
-					variant="solid"
-					action="primary"
-				>
+			<VStack className="gap-3">
+				<Button onPress={onNext} variant="solid" action="primary">
 					<ButtonText>Continuar</ButtonText>
 				</Button>
-			</HStack>
+				<Button variant="outline" onPress={onBack}>
+					<ButtonText>Atrás</ButtonText>
+				</Button>
+			</VStack>
 		</VStack>
 	);
 }

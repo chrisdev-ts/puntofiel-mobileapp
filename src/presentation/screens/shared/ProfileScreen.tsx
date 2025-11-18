@@ -260,7 +260,6 @@ export default function ProfileScreen() {
 							<Button
 								variant="outline"
 								action="secondary"
-								className="flex-1"
 								onPress={() => setShowLogoutModal(false)}
 								isDisabled={isLoggingOut}
 							>
@@ -268,7 +267,6 @@ export default function ProfileScreen() {
 							</Button>
 							<Button
 								action="negative"
-								className="flex-1"
 								onPress={handleLogoutConfirm}
 								isDisabled={isLoggingOut}
 							>
