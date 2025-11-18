@@ -1,4 +1,3 @@
-import { Spinner } from "@gluestack-ui/themed";
 import { usePathname, useRouter } from "expo-router";
 import type { LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
@@ -7,6 +6,7 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { Spinner } from "@/components/ui/spinner";
 
 interface FeedbackScreenProps {
 	/** Tipo de estado a mostrar */
