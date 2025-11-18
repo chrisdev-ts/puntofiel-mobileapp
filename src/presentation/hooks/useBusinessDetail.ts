@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
 import type { Business } from "@/src/core/entities/Business";
 import type { CustomerLoyaltyCard } from "@/src/core/entities/Loyalty";
 import { supabase } from "@/src/infrastructure/services/supabase";
 import { useAuthStore } from "@/src/presentation/stores/authStore";
+import { useQuery } from "@tanstack/react-query";
 
 interface BusinessDetailData {
 	business: Business;
@@ -18,7 +18,7 @@ async function fetchBusinessDetail(
 		.from("businesses")
 		.select("*")
 		.eq("id", businessId)
-		.single();
+		.maybeSingle();
 
 	if (businessError) {
 		console.error("useBusinessDetail: Error fetching business", {
@@ -26,6 +26,10 @@ async function fetchBusinessDetail(
 			code: businessError.code,
 		});
 		throw new Error(`Error al obtener negocio: ${businessError.message}`);
+	}
+
+	if (!businessData) {
+		throw new Error("No se encontró el negocio");
 	}
 
 	// 2. Obtener la loyalty card del cliente para este negocio

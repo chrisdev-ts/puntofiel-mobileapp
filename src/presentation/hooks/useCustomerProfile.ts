@@ -1,7 +1,7 @@
 // Hook para obtener información del cliente (customer) usando TanStack Query
 
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/src/infrastructure/services/supabase";
+import { useQuery } from "@tanstack/react-query";
 
 interface CustomerProfile {
 	fullName: string;
@@ -15,7 +15,7 @@ async function fetchCustomerProfile(
 		.from("profiles")
 		.select("first_name, last_name, second_last_name, role")
 		.eq("id", customerId)
-		.single();
+		.maybeSingle();
 
 	if (error) {
 		console.error("useCustomerProfile: Error fetching profile", {
