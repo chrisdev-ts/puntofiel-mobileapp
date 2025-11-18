@@ -33,6 +33,10 @@ export function useRaffleActions() {
             // Invalidar para refrescar UI: Boletos comprados y Puntos restantes
             queryClient.invalidateQueries({ queryKey: ["user_tickets", vars.raffleId] });
             queryClient.invalidateQueries({ queryKey: ["business_detail"] }); 
+            // Asegurar que la lista de rifas del cliente se actualice inmediatamente
+            queryClient.invalidateQueries({ queryKey: ["customer_raffles", user?.id] });
+            // También invalidar el detalle de la rifa si está abierto
+            queryClient.invalidateQueries({ queryKey: ["raffle", vars.raffleId] });
         }
     });
 
