@@ -35,16 +35,15 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
                 reader.readAsArrayBuffer(blob);
             });
 
-            // Nombre único: raffle-{id}-{timestamp}.jpg
-            const fileName = `raffle-${raffleId}-${Date.now()}.jpg`;
-            const filePath = fileName;
+            // 👇 CAMBIO 1: Agregamos la carpeta 'rewards/' al inicio del nombre
+            const fileName = `rewards/raffle-${raffleId}-${Date.now()}.jpg`;
 
-            console.log("Subiendo a:", filePath);
+            console.log("Subiendo a:", fileName);
 
-            // Subir a Storage (Usamos el bucket 'rewards' que ya tienes configurado)
+            // 👇 CAMBIO 2: Usamos el nombre REAL del bucket 'puntofiel-assets'
             const { data, error } = await supabase.storage
-                .from("rewards")
-                .upload(filePath, arrayBuffer, {
+                .from("puntofiel-assets")
+                .upload(fileName, arrayBuffer, {
                     contentType: "image/jpeg",
                     upsert: true,
                 });
@@ -54,9 +53,9 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
                 throw new Error(`Error al subir la imagen: ${error.message}`);
             }
 
-            // Obtener URL pública
+            // 👇 CAMBIO 3: Obtener URL pública del mismo bucket
             const { data: publicUrlData } = supabase.storage
-                .from("rewards")
+                .from("puntofiel-assets")
                 .getPublicUrl(data.path);
 
             console.log("URL pública:", publicUrlData.publicUrl);
@@ -71,7 +70,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
     async getRafflesByBusiness(businessId: string): Promise<Raffle[]> {
         const { data, error } = await supabase
             .from("annual_raffles")
-            .select("*")
+            .select("*, winner:profiles!winner_customer_id(first_name, last_name)")
             .eq("business_id", businessId)
             .order("created_at", { ascending: false });
 
@@ -93,6 +92,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
                 endDate: new Date(row.end_date),
                 imageUrl: row.image_url || undefined,
                 winnerCustomerId: row.winner_customer_id,
+                winnerName: row.winner ? `${row.winner.first_name} ${row.winner.last_name || ''}`.trim() : undefined,
                 isCompleted: row.is_completed,
                 // Calculamos si está activa en base a la fecha y si no ha terminado
                 isActive: new Date(row.end_date) > new Date() && !row.is_completed,
@@ -105,8 +105,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
     async getRaffleById(raffleId: string): Promise<Raffle | null> {
         const { data, error } = await supabase
             .from("annual_raffles")
-            .select("*")
-            .eq("id", raffleId)
+            .select("*, winner:profiles!winner_customer_id(first_name, last_name)").eq("id", raffleId)
             .single();
 
         if (error) {
@@ -115,6 +114,24 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
         }
 
         if (!data) return null;
+        // Si la relación no trajo el perfil del ganador, hacemos una consulta adicional
+        let winnerName: string | undefined = data.winner ? `${data.winner.first_name} ${data.winner.last_name || ''}`.trim() : undefined;
+        if (!winnerName && data.winner_customer_id) {
+            try {
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('first_name, last_name')
+                    .eq('id', data.winner_customer_id)
+                    .single();
+
+                if (profileData) {
+                    winnerName = `${profileData.first_name} ${profileData.last_name || ''}`.trim();
+                }
+            } catch (err) {
+                // No bloqueamos la respuesta por este fallo; simplemente no tendremos el nombre.
+                console.warn('No se pudo obtener nombre del ganador:', err);
+            }
+        }
 
         return {
             id: data.id.toString(),
@@ -128,6 +145,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
             endDate: new Date(data.end_date),
             imageUrl: data.image_url || undefined,
             winnerCustomerId: data.winner_customer_id,
+            winnerName,
             isCompleted: data.is_completed,
             isActive: new Date(data.end_date) > new Date() && !data.is_completed,
             createdAt: new Date(data.created_at),
@@ -355,8 +373,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
             // 2. Obtener las rifas de ESOS negocios (código existente)
             const { data: raffleRows, error } = await supabase
                 .from("annual_raffles")
-                .select("*")
-                .in('business_id', businessIds)
+                .select("*, winner:profiles!winner_customer_id(first_name, last_name)").in('business_id', businessIds)
                 .order("end_date", { ascending: true });
             if (error) throw new Error(`Error al obtener rifas: ${error.message}`);
             if (!raffleRows || raffleRows.length === 0) return [];
@@ -364,7 +381,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
             // 🔥 3. CONSULTA CONCURRENTE DE PARTICIPACIÓN
             const rafflesWithParticipationPromises = raffleRows.map(async (row) => {
                 const raffleId = row.id.toString();
-                
+
                 // Usamos el método existente para contar tickets
                 const ticketCount = await this.getUserTicketCount(raffleId, customerId);
 
@@ -383,6 +400,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
                     endDate: new Date(row.end_date),
                     imageUrl: row.image_url || undefined,
                     winnerCustomerId: row.winner_customer_id,
+                    winnerName: row.winner ? `${row.winner.first_name} ${row.winner.last_name || ''}`.trim() : undefined,
                     isCompleted: row.is_completed,
                     isActive: new Date(row.end_date) > new Date() && !row.is_completed,
                     createdAt: new Date(row.created_at),
@@ -427,11 +445,11 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
             if (updateError) throw new Error("Error al descontar puntos");
 
             // 4. Crear ticket (Incluyendo points_spent si agregaste la columna)
-            const { error: insertError } = await supabase.from('raffle_tickets').insert({ 
-                raffle_id: parseInt(raffleId), 
+            const { error: insertError } = await supabase.from('raffle_tickets').insert({
+                raffle_id: parseInt(raffleId),
                 customer_id: userId
             });
-            
+
             // Rollback básico
             if (insertError) {
                 await supabase.from('loyalty_cards').update({ points: card.points }).eq('id', card.id);

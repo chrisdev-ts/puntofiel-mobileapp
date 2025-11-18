@@ -88,7 +88,7 @@ export default function RaffleDetailScreen() {
     // Lógica de Navegación Back
     const handleCustomBack = () => {
         if (isOwner) router.replace("/(owner)/(tabs)/raffles/" as never);
-        else router.replace("/(customer)/business/raffles/" as never);
+        else router.replace("/(customer)/(tabs)/raffles/" as never);
     };
 
     // Loading & Error States
@@ -247,8 +247,10 @@ export default function RaffleDetailScreen() {
                                         <HStack space="md" className="items-center">
                                             <Box className="p-2 bg-gray-200 rounded-full"><Icon as={UserIcon} size="md" className="text-gray-600" /></Box>
                                             <VStack>
-                                                <Text className="font-bold text-lg">Cliente Ganador</Text>
-                                                <Text className="text-gray-500 text-sm">ID: {raffle.winnerCustomerId?.slice(0, 8)}...</Text>
+                                                <Text className="font-bold text-lg">{raffle.winnerName ? raffle.winnerName : 'Cliente Ganador'}</Text>
+                                                {raffle.winnerCustomerId && (
+                                                    <Text className="text-gray-500 text-sm">ID: {raffle.winnerCustomerId.slice(0, 8)}...</Text>
+                                                )}
                                             </VStack>
                                         </HStack>
                                     </VStack>
@@ -318,7 +320,7 @@ export default function RaffleDetailScreen() {
                     <Heading size="2xl" className="text-[#2F4858] text-center mb-4 font-extrabold">¡ERES EL GANADOR!</Heading>
 
                     <Text className="text-center font-bold text-lg text-[#2F4858] mb-2">
-                        ¡Felicidades, {(user as any)?.user_metadata?.first_name || "Usuario"}!                    </Text>
+                        ¡Felicidades, {(raffle.winnerName ?? ((user as any)?.user_metadata?.first_name)) || "Usuario"}!</Text>
                     <Text className="text-center text-gray-600 mb-6 px-2">
                         Has ganado la rifa <Text className="font-bold">{raffle.name}</Text> de {businessDetail?.business.name}. ¡Te lo has ganado con tu fidelidad!
                     </Text>

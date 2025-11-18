@@ -15,7 +15,8 @@ export interface Raffle {
     endDate: Date;
     imageUrl?: string;
     // 👇 Agregados
-    winnerCustomerId?: string | null; 
+    winnerCustomerId?: string | null;
+    winnerName?: string; 
     isCompleted: boolean; 
     // 👆
     isActive: boolean;
