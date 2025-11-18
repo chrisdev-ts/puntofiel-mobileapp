@@ -69,7 +69,18 @@ export interface IRaffleRepository {
      * Obtiene las rifas de TODOS los negocios donde el cliente tiene una tarjeta de lealtad.
      */
     getRafflesForCustomer(customerId: string): Promise<Raffle[]>;
-    
+
     getParticipants(raffleId: string): Promise<RaffleParticipant[]>;
     selectWinner(raffleId: string, customerId: string): Promise<void>;
+
+    // --- TRANSACCIONES DE TICKETS (Cliente) ---
+
+    /** Cuenta cuántos boletos tiene un usuario en una rifa. */
+    getUserTicketCount(raffleId: string, userId: string): Promise<number>;
+
+    /** Compra un boleto (Resta puntos y crea ticket). */
+    buyTicket(raffleId: string, userId: string, cost: number): Promise<void>;
+
+    /** Devuelve todos los tickets de una rifa y reembolsa los puntos. */
+    returnTickets(raffleId: string, userId: string): Promise<void>;
 }

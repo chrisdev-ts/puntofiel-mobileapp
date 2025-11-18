@@ -97,6 +97,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
                 // Calculamos si está activa en base a la fecha y si no ha terminado
                 isActive: new Date(row.end_date) > new Date() && !row.is_completed,
                 createdAt: new Date(row.created_at),
+                isParticipating: false,
             })) || []
         );
     }
@@ -130,6 +131,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
             isCompleted: data.is_completed,
             isActive: new Date(data.end_date) > new Date() && !data.is_completed,
             createdAt: new Date(data.created_at),
+            isParticipating: false,
         };
     }
 
@@ -245,6 +247,7 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
                 isCompleted: data.is_completed,
                 isActive: new Date(data.end_date) > new Date() && !data.is_completed,
                 createdAt: new Date(data.created_at),
+                isParticipating: false,
             };
 
         } catch (error) {
@@ -342,51 +345,153 @@ export class SupabaseRaffleRepository implements IRaffleRepository {
 
     async getRafflesForCustomer(customerId: string): Promise<Raffle[]> {
         try {
-            // 1. Obtener los IDs de negocios donde el usuario tiene tarjeta (está vinculado)
+            // 1. Obtener IDs de negocios vinculados (código existente)
             const { data: loyaltyCards, error: loyaltyError } = await supabase
-                .from('loyalty_cards')
-                .select('business_id')
-                .eq('customer_id', customerId);
-
+                .from('loyalty_cards').select('business_id').eq('customer_id', customerId);
             if (loyaltyError) throw new Error(loyaltyError.message);
-
-            // Si no tiene negocios vinculados, retornamos vacío
             if (!loyaltyCards || loyaltyCards.length === 0) return [];
-
             const businessIds = loyaltyCards.map(card => card.business_id);
 
-            // 2. Obtener las rifas de ESOS negocios
-            const { data, error } = await supabase
+            // 2. Obtener las rifas de ESOS negocios (código existente)
+            const { data: raffleRows, error } = await supabase
                 .from("annual_raffles")
                 .select("*")
-                .in('business_id', businessIds) // <--- EL FILTRO MÁGICO
-                .order("end_date", { ascending: true }); // Ordenar por las que terminan pronto
+                .in('business_id', businessIds)
+                .order("end_date", { ascending: true });
+            if (error) throw new Error(`Error al obtener rifas: ${error.message}`);
+            if (!raffleRows || raffleRows.length === 0) return [];
 
-            if (error) {
-                console.error("Error obteniendo rifas del cliente:", error);
-                throw new Error(`Error al obtener rifas: ${error.message}`);
-            }
+            // 🔥 3. CONSULTA CONCURRENTE DE PARTICIPACIÓN
+            const rafflesWithParticipationPromises = raffleRows.map(async (row) => {
+                const raffleId = row.id.toString();
+                
+                // Usamos el método existente para contar tickets
+                const ticketCount = await this.getUserTicketCount(raffleId, customerId);
 
-            // Mapear a entidad
-            return (data || []).map((row) => ({
-                id: row.id.toString(),
-                businessId: row.business_id,
-                name: row.name,
-                prize: row.prize,
-                description: row.description || "",
-                pointsRequired: row.points_required,
-                maxTicketsPerUser: row.max_tickets_per_user,
-                startDate: new Date(row.start_date),
-                endDate: new Date(row.end_date),
-                imageUrl: row.image_url || undefined,
-                winnerCustomerId: row.winner_customer_id,
-                isCompleted: row.is_completed,
-                isActive: new Date(row.end_date) > new Date() && !row.is_completed,
-                createdAt: new Date(row.created_at),
-            }));
+                const isParticipating = ticketCount > 0; // Se calcula aquí.
+
+                // Mapear a entidad Raffle
+                return {
+                    id: raffleId,
+                    businessId: row.business_id,
+                    name: row.name,
+                    prize: row.prize,
+                    description: row.description || "",
+                    pointsRequired: row.points_required,
+                    maxTicketsPerUser: row.max_tickets_per_user,
+                    startDate: new Date(row.start_date),
+                    endDate: new Date(row.end_date),
+                    imageUrl: row.image_url || undefined,
+                    winnerCustomerId: row.winner_customer_id,
+                    isCompleted: row.is_completed,
+                    isActive: new Date(row.end_date) > new Date() && !row.is_completed,
+                    createdAt: new Date(row.created_at),
+                    isParticipating: isParticipating, // 🔥 Se asigna el valor calculado.
+                } as Raffle;
+            });
+
+            // Esperar a que todas las verificaciones terminen
+            return await Promise.all(rafflesWithParticipationPromises);
 
         } catch (error) {
             console.error("Error en getRafflesForCustomer:", error);
+            throw error;
+        }
+    }
+
+    // --- LÓGICA TRANSACCIONAL (CLIENTE) ---
+
+    async getUserTicketCount(raffleId: string, userId: string): Promise<number> {
+        const { count, error } = await supabase
+            .from('raffle_tickets')
+            .select('*', { count: 'exact', head: true })
+            .eq('raffle_id', raffleId)
+            .eq('customer_id', userId);
+        if (error) throw error;
+        return count || 0;
+    }
+
+    async buyTicket(raffleId: string, userId: string, cost: number): Promise<void> {
+        try {
+            // 1. Datos de la rifa (para saber el negocio)
+            const { data: raffle } = await supabase.from('annual_raffles').select('business_id').eq('id', raffleId).single();
+            if (!raffle) throw new Error("Rifa no encontrada");
+
+            // 2. Tarjeta del usuario
+            const { data: card } = await supabase.from('loyalty_cards').select('id, points').eq('customer_id', userId).eq('business_id', raffle.business_id).single();
+            if (!card) throw new Error("No tienes tarjeta en este negocio");
+            if (card.points < cost) throw new Error("Puntos insuficientes");
+
+            // 3. Restar puntos
+            const { error: updateError } = await supabase.from('loyalty_cards').update({ points: card.points - cost }).eq('id', card.id);
+            if (updateError) throw new Error("Error al descontar puntos");
+
+            // 4. Crear ticket (Incluyendo points_spent si agregaste la columna)
+            const { error: insertError } = await supabase.from('raffle_tickets').insert({ 
+                raffle_id: parseInt(raffleId), 
+                customer_id: userId
+            });
+            
+            // Rollback básico
+            if (insertError) {
+                await supabase.from('loyalty_cards').update({ points: card.points }).eq('id', card.id);
+                throw new Error("Error al generar ticket");
+            }
+        } catch (error: any) {
+            console.error("Error en buyTicket:", error);
+            throw error;
+        }
+    }
+
+    async returnTickets(raffleId: string, userId: string): Promise<void> {
+        try {
+            // 1. Obtener datos rifa (necesitamos el precio actual)
+            const { data: raffle } = await supabase
+                .from('annual_raffles')
+                .select('business_id, points_required') // Traemos points_required
+                .eq('id', raffleId)
+                .single();
+
+            if (!raffle) throw new Error("Rifa no encontrada");
+
+            // 2. Contar tickets (ya no sumamos points_spent, solo contamos filas)
+            const { count, error: countError } = await supabase
+                .from('raffle_tickets')
+                .select('*', { count: 'exact', head: true })
+                .eq('raffle_id', raffleId)
+                .eq('customer_id', userId);
+
+            if (countError) throw countError;
+            if (!count || count === 0) throw new Error("No tienes tickets para devolver.");
+
+            // CALCULO: Cantidad de tickets * Precio actual
+            const totalRefund = count * raffle.points_required;
+
+            // 3. BORRAR TICKETS
+            const { error: deleteError } = await supabase
+                .from('raffle_tickets')
+                .delete()
+                .eq('raffle_id', raffleId)
+                .eq('customer_id', userId);
+
+            if (deleteError) throw new Error("Error al borrar tickets");
+
+            // 4. DEVOLVER PUNTOS
+            const { data: card } = await supabase
+                .from('loyalty_cards')
+                .select('id, points')
+                .eq('customer_id', userId)
+                .eq('business_id', raffle.business_id)
+                .single();
+
+            if (card) {
+                await supabase
+                    .from('loyalty_cards')
+                    .update({ points: card.points + totalRefund })
+                    .eq('id', card.id);
+            }
+        } catch (error: any) {
+            console.error("Error en returnTickets:", error.message);
             throw error;
         }
     }

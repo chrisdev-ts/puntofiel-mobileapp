@@ -81,7 +81,7 @@ export default function RaffleForm({
             prize: "",
             description: "",
             points_required: 0,
-            max_tickets_per_user: 1, // Default 1 ticket
+            max_tickets_per_user: 0, // Default 1 ticket
             start_date: new Date(),
             end_date: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
         },

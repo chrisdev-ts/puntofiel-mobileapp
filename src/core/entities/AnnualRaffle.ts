@@ -20,6 +20,7 @@ export interface Raffle {
     // 👆
     isActive: boolean;
     createdAt: Date;
+    isParticipating: boolean;
 }
 
 /**

@@ -79,8 +79,29 @@ export function RaffleFormStep1({
                 <FormControlError><FormControlErrorText>{errors.points_required?.message}</FormControlErrorText></FormControlError>
             </FormControl>
 
-            {/* Máximo Boletos (Oculto si es 1 fijo, pero lo dejo por si acaso) */}
-            {/* <FormControl ... /> */}
+            <FormControl isInvalid={!!errors.max_tickets_per_user} isRequired>
+                <FormControlLabel className="mb-1">
+                    <FormControlLabelText className="text-primary-500 font-medium">Máximo de boletos por cliente</FormControlLabelText>
+                </FormControlLabel>
+                <Controller
+                    control={control}
+                    name="max_tickets_per_user"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                        <Input variant="outline" size="lg" className="bg-white border-gray-300 rounded-lg">
+                            <InputField
+                                placeholder="Ej. 5"
+                                keyboardType="numeric"
+                                value={value === 0 ? "" : value?.toString()}
+                                onChangeText={onChange}
+                                onBlur={onBlur}
+                            />
+                        </Input>
+                    )}
+                />
+                <FormControlError>
+                    <FormControlErrorText>{errors.max_tickets_per_user?.message}</FormControlErrorText>
+                </FormControlError>
+            </FormControl>
 
             {/* --- FECHA INICIO --- */}
             <FormControl isInvalid={!!errors.start_date} isRequired>

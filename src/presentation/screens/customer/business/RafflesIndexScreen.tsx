@@ -79,10 +79,14 @@ export default function RafflesIndexScreen() {
 
 			// --- B. Lógica de Usuario (Real) ---
 			if (raffle.winnerCustomerId === user?.id) {
-				statusIcon = 'won'; // 🏆 Ganó (Esto viene directo de la BD)
+				statusIcon = 'won'; // 🏆 Ganó (Si el usuario es el ganador)
+			} else if (raffle.isParticipating) { // 🔥 ESTA ES LA LÍNEA CLAVE
+				statusIcon = 'participating'; // ✅ Participa (Check Verde/Gris)
+				// El color (verde/gris) se decide en RaffleCard basado en badgeVariant
+			} else {
+				// Si no ha ganado y no tiene boletos
+				statusIcon = 'not_participating';
 			}
-			// Nota: Para el check verde de "participating", necesitamos consultar la tabla raffle_tickets.
-			// Por ahora se mostrará como 'not_participating' (X o Gris) hasta que el usuario gane.
 
 			return {
 				...raffle,
