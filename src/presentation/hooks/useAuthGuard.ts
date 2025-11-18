@@ -1,8 +1,7 @@
-import { useRouter, useSegments } from "expo-router";
+import { useRootNavigationState, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { useAuthStore } from "@/src/presentation/stores/authStore";
 import { useOwnerBusinessCheck } from "./useOwnerbusinessCheck";
-/**
 
 /**
  * Hook que protege rutas según el estado de autenticación y el rol del usuario
@@ -23,11 +22,21 @@ import { useOwnerBusinessCheck } from "./useOwnerbusinessCheck";
 export function useAuthGuard() {
 	const segments = useSegments();
 	const router = useRouter();
+	const navigationState = useRootNavigationState();
 	const { user, isLoading } = useAuthStore();
+
 	// Verificar si el owner tiene negocios registrados
 	useOwnerBusinessCheck();
 
 	useEffect(() => {
+		// Esperar a que el Root Layout esté montado y la navegación esté lista
+		if (!navigationState?.key) return;
+		if (
+			typeof navigationState.key === "string" &&
+			navigationState.key.length === 0
+		)
+			return;
+
 		if (isLoading) return; // No hacer nada mientras se carga la sesión
 
 		const inAuthGroup = segments[0] === "(public)";
@@ -90,5 +99,5 @@ export function useAuthGuard() {
 					break;
 			}
 		}
-	}, [user, isLoading, segments, router]);
+	}, [navigationState?.key, user, isLoading, segments, router]);
 }

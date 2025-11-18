@@ -1,8 +1,16 @@
 import { router } from "expo-router";
 import { useState } from "react";
+import { View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
-import { HStack } from "@/components/ui/hstack";
+import {
+	BellIcon,
+	CalendarDaysIcon,
+	EditIcon,
+	HelpCircleIcon,
+	InfoIcon,
+	LockIcon,
+} from "@/components/ui/icon";
 import {
 	Modal,
 	ModalBackdrop,
@@ -15,31 +23,60 @@ import {
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
+import { MenuItem, MenuSection } from "@/src/presentation/components/profile";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
+import { useLoyalty } from "@/src/presentation/hooks/useLoyalty";
+import EditProfileScreen from "./EditProfileScreen";
+
+/**
+ * Pantalla de perfil del usuario
+ *
+ * Responsabilidades (siguiendo Clean Architecture):
+ * - Orquestar componentes de UI (ProfileHeader, MenuSections, ProfileActions)
+ * - Gestionar estado local de UI (modales, modo edición)
+ * - Delegar navegación al hook useProfileNavigation
+ * - Delegar autenticación al hook useAuth
+ */
 
 export default function ProfileScreen() {
-	const { user, logout } = useAuth();
+	const { user, logout, updateProfileAsync } = useAuth();
+
 	const [showLogoutModal, setShowLogoutModal] = useState(false);
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
+	const [isEditing, setIsEditing] = useState(false);
+
+	// Hook para obtener tarjetas de lealtad y sumar puntos
+	const { data: loyaltyCards, isLoading: isLoadingLoyalty } = useLoyalty();
+	const currentBalance = loyaltyCards
+		? loyaltyCards.reduce((acc, card) => acc + (card.points || 0), 0)
+		: 0;
+
+	// Datos del usuario con valores por defecto
+	const userData = {
+		firstName: user?.firstName ?? "Nombre de usuario",
+		lastName: user?.lastName ?? "",
+		email: user?.email ?? "correo.usuario@email.com",
+		phone: user?.phone ?? "+00 000-000-0000",
+		role: user?.role ?? "user",
+		currentBalance,
+	};
 
 	const handleLogoutConfirm = async () => {
-		console.log("[ProfileScreen] Confirmado logout, ejecutando...");
 		setIsLoggingOut(true);
 		try {
-			console.log("[ProfileScreen] Llamando a logout()...");
 			await logout();
-			console.log("[ProfileScreen] Logout exitoso");
 			setShowLogoutModal(false);
-			// No redirigir manualmente, el guard se encargará
+			// Opcional: router.replace('/(public)/login');
 		} catch (error) {
 			console.error("[ProfileScreen] Error al cerrar sesión:", error);
+		} finally {
 			setIsLoggingOut(false);
 		}
 	};
 
 	if (!user) {
 		return (
-			<AppLayout headerVariant="default">
+			<AppLayout showHeader={false} showNavBar={false} centerContent>
 				<Text className="text-center text-typography-500">
 					No hay usuario autenticado
 				</Text>
@@ -47,43 +84,163 @@ export default function ProfileScreen() {
 		);
 	}
 
+	if (isEditing) {
+		return (
+			<EditProfileScreen
+				userData={userData}
+				onCancel={() => setIsEditing(false)}
+				onSave={() => setIsEditing(false)}
+				updateProfileAsync={updateProfileAsync}
+			/>
+		);
+	}
+
 	return (
-		<AppLayout headerVariant="default" contentSpacing="xs">
-			{/* TEMPORAL: Información básica del usuario */}
-			<Text className="text-center text-typography-900 text-xl font-semibold">
-				{user.firstName} {user.lastName}
-			</Text>
-			<Text className="text-center text-typography-500">{user.email}</Text>
+		<AppLayout>
+			{/* Header inline (React Native) */}
+			<View className="items-center">
+				<Text className="text-xl font-bold text-center">
+					{userData.firstName} {userData.lastName}
+				</Text>
+				<Text className="text-base text-typography-500 text-center">
+					{userData.email}
+				</Text>
+				<Text className="text-base text-typography-400 text-center">
+					{userData.phone}
+				</Text>
+			</View>
 
-			<VStack space="md" className="mt-6">
-				{/* TEMPORAL: Botón de acceso a empleados solo para owners */}
-				{user.role === "owner" && (
-					<Button
-						size="lg"
-						action="primary"
+			{/* Sección administración - Customer/User */}
+			{(userData.role === "customer" || userData.role === "user") && (
+				<MenuSection title="Administración">
+					<MenuItem
+						icon={CalendarDaysIcon}
+						label="Saldo actual"
+						value={
+							isLoadingLoyalty
+								? "Cargando..."
+								: `${userData.currentBalance} puntos`
+						}
+					/>
+					<MenuItem
+						icon={EditIcon}
+						label="Historial de movimientos"
 						onPress={() => {
-							console.log("[ProfileScreen] Navegando a lista de empleados");
-							router.push("/(owner)/employees");
+							// TODO: Navegar a historial
+							console.log("Navegar a historial");
 						}}
-					>
-						<ButtonText>Gestionar empleados</ButtonText>
-					</Button>
-				)}
+					/>
+					<MenuItem
+						icon={InfoIcon}
+						label="Administrar locales vinculados"
+						onPress={() => {
+							// TODO: Navegar a locales vinculados
+							console.log("Navegar a locales vinculados");
+						}}
+						showDivider={false}
+					/>
+				</MenuSection>
+			)}
 
-				{/* TEMPORAL: Botón de cerrar sesión */}
-				<Button
-					size="lg"
-					action="negative"
+			{/* Sección administración - Owner */}
+			{userData.role === "owner" && (
+				<MenuSection title="Administración">
+					<MenuItem
+						icon={EditIcon}
+						label="Gestionar empleados"
+						onPress={() => router.push("/(owner)/employees")}
+					/>
+					<MenuItem
+						icon={EditIcon}
+						label="Clientes vinculados"
+						onPress={() => {
+							// TODO: Navegar a clientes vinculados
+							console.log("Navegar a clientes vinculados");
+						}}
+					/>
+					<MenuItem
+						icon={CalendarDaysIcon}
+						label="Historial de puntos otorgados"
+						onPress={() => {
+							// TODO: Navegar a historial de puntos
+							console.log("Navegar a historial de puntos");
+						}}
+					/>
+					<MenuItem
+						icon={CalendarDaysIcon}
+						label="Historial de recompensas canjeadas"
+						onPress={() => {
+							// TODO: Navegar a historial de recompensas
+							console.log("Navegar a historial de recompensas");
+						}}
+						showDivider={false}
+					/>
+				</MenuSection>
+			)}
+
+			{/* Preferencias */}
+			<MenuSection title="Preferencias">
+				<MenuItem
+					icon={BellIcon}
+					label="Notificaciones"
 					onPress={() => {
-						console.log("[ProfileScreen] Abriendo modal de logout");
-						setShowLogoutModal(true);
+						// TODO: Navegar a notificaciones
+						console.log("Navegar a notificaciones");
 					}}
+				/>
+				<MenuItem
+					icon={LockIcon}
+					label="Seguridad"
+					onPress={() => {
+						// TODO: Navegar a seguridad
+						console.log("Navegar a seguridad");
+					}}
+					showDivider={false}
+				/>
+			</MenuSection>
+
+			{/* Soporte */}
+			<MenuSection title="Soporte">
+				<MenuItem
+					icon={HelpCircleIcon}
+					label="Ayuda"
+					onPress={() => {
+						// TODO: Navegar a ayuda
+						console.log("Navegar a ayuda");
+					}}
+				/>
+				<MenuItem
+					icon={InfoIcon}
+					label="Términos y condiciones"
+					onPress={() => {
+						// TODO: Navegar a T&C
+						console.log("Navegar a T&C");
+					}}
+					showDivider={false}
+				/>
+			</MenuSection>
+
+			{/* Acciones */}
+			<VStack>
+				<Button
+					variant="solid"
+					action="primary"
+					className="mb-2"
+					onPress={() => setIsEditing(true)}
+				>
+					<ButtonText>Editar perfil</ButtonText>
+				</Button>
+				<Button
+					variant="solid"
+					action="negative"
+					className="mb-2"
+					onPress={() => setShowLogoutModal(true)}
 				>
 					<ButtonText>Cerrar sesión</ButtonText>
 				</Button>
 			</VStack>
 
-			{/* Modal de confirmación */}
+			{/* Modal de confirmación para cerrar sesión */}
 			<Modal
 				isOpen={showLogoutModal}
 				onClose={() => setShowLogoutModal(false)}
@@ -99,16 +256,13 @@ export default function ProfileScreen() {
 						<Text>¿Estás seguro de que deseas cerrar sesión?</Text>
 					</ModalBody>
 					<ModalFooter>
-						<HStack space="md" className="w-full">
+						<VStack className="gap-2 w-full">
 							<Button
 								variant="outline"
 								action="secondary"
 								className="flex-1"
-								onPress={() => {
-									console.log("[ProfileScreen] Logout cancelado");
-									setShowLogoutModal(false);
-								}}
-								disabled={isLoggingOut}
+								onPress={() => setShowLogoutModal(false)}
+								isDisabled={isLoggingOut}
 							>
 								<ButtonText>Cancelar</ButtonText>
 							</Button>
@@ -116,13 +270,13 @@ export default function ProfileScreen() {
 								action="negative"
 								className="flex-1"
 								onPress={handleLogoutConfirm}
-								disabled={isLoggingOut}
+								isDisabled={isLoggingOut}
 							>
 								<ButtonText>
 									{isLoggingOut ? "Cerrando..." : "Cerrar sesión"}
 								</ButtonText>
 							</Button>
-						</HStack>
+						</VStack>
 					</ModalFooter>
 				</ModalContent>
 			</Modal>

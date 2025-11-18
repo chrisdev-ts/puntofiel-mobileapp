@@ -62,7 +62,7 @@ export const EmployeeForm = forwardRef<any, EmployeeFormProps>(
 				: "Creando cuenta..."
 			: isEditMode
 				? "Guardar cambios"
-				: "Registrar cuenta de empleado";
+				: "Registrar empleado";
 
 		return (
 			<VStack space="lg" className="w-full" ref={ref}>
