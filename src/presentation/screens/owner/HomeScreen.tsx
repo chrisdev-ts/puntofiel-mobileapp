@@ -1,7 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "expo-router";
-import { Edit3Icon } from "lucide-react-native";
-import { View } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -14,6 +10,10 @@ import { SupabaseBusinessRepository } from "@/src/infrastructure/repositories/Su
 import { OwnerHomeScreenSkeleton } from "@/src/presentation/components/common/skeletons";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useAuthStore } from "@/src/presentation/stores/authStore";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { Edit3Icon } from "lucide-react-native";
+import { View } from "react-native";
 
 const businessRepository = new SupabaseBusinessRepository();
 
