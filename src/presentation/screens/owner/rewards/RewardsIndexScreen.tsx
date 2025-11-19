@@ -1,17 +1,6 @@
-import { useRouter } from "expo-router";
-import { AlertCircleIcon, GiftIcon } from "lucide-react-native";
-import React from "react";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
-import {
-	Modal,
-	ModalBackdrop,
-	ModalBody,
-	ModalContent,
-	ModalFooter,
-	ModalHeader,
-} from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
 import {
 	FeedbackScreen,
@@ -22,12 +11,12 @@ import {
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
 import { useReward } from "@/src/presentation/hooks/useReward";
+import { useRouter } from "expo-router";
+import { AlertCircleIcon, GiftIcon } from "lucide-react-native";
+import React from "react";
 
 export default function RewardsIndexScreen() {
 	const router = useRouter();
-
-	//  Hook al inicio (antes de cualquier return condicional)
-	const [showModal, setShowModal] = React.useState(false);
 
 	// Obtener businessId del usuario autenticado
 	const {
@@ -98,30 +87,10 @@ export default function RewardsIndexScreen() {
 				<ButtonText>Crear recompensa</ButtonText>
 			</Button>
 
-			{/* Botón para promociones - Próximamente */}
-			<Button onPress={() => setShowModal(true)} variant="outline" size="md">
-				<ButtonText>Promociones</ButtonText>
-			</Button>
-
-			{/* Modal de próximamente */}
-			<Modal isOpen={showModal} onClose={() => setShowModal(false)} size="lg">
-				<ModalBackdrop />
-				<ModalContent>
-					<ModalHeader>
-						<Heading size="lg">Próximamente</Heading>
-					</ModalHeader>
-					<ModalBody>
-						<Text>Esta funcionalidad estará disponible pronto.</Text>
-					</ModalBody>
-					<ModalFooter>
-						<Button onPress={() => setShowModal(false)}>
-							<ButtonText>Aceptar</ButtonText>
-						</Button>
-					</ModalFooter>
-				</ModalContent>
-			</Modal>
-
-			{/* Estado Vacío */}
+		{/* Botón para promociones */}
+		<Button onPress={() => router.push("/(owner)/promotions")} variant="outline" size="md">
+			<ButtonText>Promociones</ButtonText>
+		</Button>			{/* Estado Vacío */}
 			{!hasRewards && (
 				<FeedbackScreen
 					variant="empty"
