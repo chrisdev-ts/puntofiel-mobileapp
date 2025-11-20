@@ -55,4 +55,15 @@ export interface IRewardRepository {
 	 * @param businessId - ID del negocio (para validar propiedad)
 	 */
 	deleteReward(rewardId: string, businessId: string): Promise<void>;
+
+	/**
+     * Procesa el canje de una recompensa:
+     * 1. Valida saldo del usuario.
+     * 2. Resta los puntos de su tarjeta.
+     * 3. Registra la transacción en el historial.
+     * * @param rewardId - ID de la recompensa
+     * @param userId - ID del usuario que canjea
+     * @param pointsCost - Costo en puntos
+     */
+    redeemReward(rewardId: string, userId: string, pointsCost: number): Promise<void>;
 }

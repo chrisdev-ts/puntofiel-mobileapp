@@ -1,11 +1,2 @@
-import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
-
-export default function RaffleDetailScreen() {
-	return (
-		<FeedbackScreen
-			variant="empty"
-			title="Detalle de Rifa"
-			description="Esta pantalla está en desarrollo."
-		/>
-	);
-}
+// Apuntar a la carpeta shared
+export { default } from "@/src/presentation/screens/shared/RaffleDetailScreen";

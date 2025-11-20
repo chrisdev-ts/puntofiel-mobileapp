@@ -305,4 +305,62 @@ export class SupabaseRewardRepository implements IRewardRepository {
 			throw error;
 		}
 	}
+
+	async redeemReward(rewardId: string, userId: string, pointsCost: number): Promise<void> {
+        try {
+            console.log(`Procesando canje: Reward ${rewardId} - Costo ${pointsCost}`);
+
+            // 1. Obtener el Business ID de esta recompensa
+            const { data: reward, error: rewardError } = await supabase
+                .from('rewards')
+                .select('business_id')
+                .eq('id', rewardId)
+                .single();
+
+            if (rewardError || !reward) throw new Error("Recompensa no encontrada");
+
+            // 2. Obtener la tarjeta del cliente para ese negocio
+            const { data: card, error: cardError } = await supabase
+                .from('loyalty_cards')
+                .select('id, points')
+                .eq('customer_id', userId)
+                .eq('business_id', reward.business_id)
+                .single();
+
+            if (cardError || !card) throw new Error("No tienes tarjeta en este negocio");
+
+            // 3. Validar saldo
+            if (card.points < pointsCost) {
+                throw new Error(`Saldo insuficiente. Tienes ${card.points} puntos.`);
+            }
+
+            // 4. RESTAR PUNTOS (Update)
+            const { error: updateError } = await supabase
+                .from('loyalty_cards')
+                .update({ points: card.points - pointsCost })
+                .eq('id', card.id);
+
+            if (updateError) throw new Error("Error al descontar puntos");
+
+            // 5. REGISTRAR TRANSACCIÓN (Historial)
+            // Esto es importante para que el dueño vea en qué se gastaron los puntos
+            const { error: txError } = await supabase
+                .from('transactions')
+                .insert({
+                    card_id: card.id,
+                    transaction_type: 'redeem',
+                    points_change: -pointsCost, // Negativo porque es un gasto
+                    purchase_amount: 0,
+                    invoice_ref: `Canje Recompensa: ${rewardId}`
+                });
+
+            if (txError) {
+                console.error("Error guardando transacción (puntos ya descontados):", txError);
+            }
+
+        } catch (error: any) {
+            console.error("Error en redeemReward:", error);
+            throw error;
+        }
+    }
 }

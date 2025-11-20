@@ -1,11 +1,2 @@
-import { FeedbackScreen } from "@/src/presentation/components/common/FeedbackScreen";
-
-export default function RaffleEditScreen() {
-	return (
-		<FeedbackScreen
-			variant="empty"
-			title="Editar Rifa"
-			description="Esta pantalla está en desarrollo."
-		/>
-	);
-}
+// Conectamos con la pantalla lógica que ya creamos en presentation
+export { default } from "@/src/presentation/screens/owner/raffles/EditRaffleScreen";
