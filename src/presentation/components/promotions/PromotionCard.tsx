@@ -11,10 +11,11 @@ import { VStack } from '@/components/ui/vstack';
 import type { Promotion } from '@/src/core/entities/Promotion';
 
 interface PromotionCardProps {
-  promotion: Promotion;
+  promotion: Promotion & { businessName?: string };
   onPress: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  showBusinessName?: boolean;
 }
 
 export const PromotionCard: React.FC<PromotionCardProps> = ({
@@ -22,6 +23,7 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
   onPress,
   onEdit,
   onDelete,
+  showBusinessName = false,
 }) => {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -104,6 +106,13 @@ export const PromotionCard: React.FC<PromotionCardProps> = ({
 
         {/* Contenido */}
         <VStack className="p-4 gap-3">
+          {/* Nombre del negocio (opcional) */}
+          {showBusinessName && promotion.businessName && (
+            <Text className="text-xs text-typography-500 font-medium">
+              {promotion.businessName}
+            </Text>
+          )}
+
           {/* Encabezado con título y estado */}
           <HStack className="justify-between items-start gap-2">
             <VStack className="flex-1 gap-1">
