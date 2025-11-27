@@ -1,46 +1,55 @@
 {
-	"expo": {
-		"name": "puntofiel-mobileapp",
-		"slug": "puntofiel-mobileapp",
-		"version": "1.0.0",
-		"orientation": "portrait",
-		"icon": "./assets/logos/logo-dark.png",
-		"scheme": "puntofielmobileapp",
-		"userInterfaceStyle": "automatic",
-		"newArchEnabled": true,
-		"splash": {
-			"image": "./assets/logos/isotipo-dark.png",
-			"resizeMode": "contain",
-			"backgroundColor": "#ffffff"
-		},
-		"ios": {
-			"supportsTablet": true
-		},
-		"android": {
-			"adaptiveIcon": {
-				"foregroundImage": "./assets/logos/isotipo-dark.png",
-				"backgroundColor": "#ffffff"
-			},
-			"edgeToEdgeEnabled": true,
-			"predictiveBackGestureEnabled": false
-		},
-		"web": {
-			"bundler": "metro",
-			"output": "static",
-			"favicon": "./assets/logos/logo-white.png"
-		},
-		"plugins": [
-			"expo-router",
-			[
-				"expo-image-picker",
-				{
-					"photosPermission": "La app necesita acceso a tu galería para seleccionar la foto de la recompensa.",
-					"cameraPermission": "La app necesita acceso a tu cámara para tomar la foto de la recompensa."
-				}
-			]
-		],
-		"experiments": {
-			"typedRoutes": true
-		}
-	}
+  "expo": {
+    "name": "puntofiel-mobileapp",
+    "slug": "puntofiel-mobileapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logos/logo-dark.png",
+    "scheme": "puntofielmobileapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/logos/isotipo-dark.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logos/isotipo-dark.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.puntofiel.utcv"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/logos/logo-white.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "La app necesita acceso a tu galería para seleccionar la foto de la recompensa.",
+          "cameraPermission": "La app necesita acceso a tu cámara para tomar la foto de la recompensa."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "90e30a29-5fbb-455a-8992-f49649edb541"
+      }
+    }
+  }
 }
