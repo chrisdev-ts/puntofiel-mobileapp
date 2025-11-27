@@ -1,6 +1,3 @@
-import { router } from "expo-router";
-import { useState } from "react";
-import { View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -26,6 +23,9 @@ import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { MenuItem, MenuSection } from "@/src/presentation/components/profile";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
 import { useLoyalty } from "@/src/presentation/hooks/useLoyalty";
+import { router } from "expo-router";
+import { useState } from "react";
+import { View } from "react-native";
 import EditProfileScreen from "./EditProfileScreen";
 
 /**
@@ -44,6 +44,11 @@ export default function ProfileScreen() {
 	const [showLogoutModal, setShowLogoutModal] = useState(false);
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
+
+	const goUnder = (label: string) => {
+		console.log(`[ProfileScreen] navigate -> under-construction (${label})`);
+		router.push("/under-construction");
+	};
 
 	// Hook para obtener tarjetas de lealtad y sumar puntos
 	const { data: loyaltyCards, isLoading: isLoadingLoyalty } = useLoyalty();
@@ -125,18 +130,12 @@ export default function ProfileScreen() {
 					<MenuItem
 						icon={EditIcon}
 						label="Historial de movimientos"
-						onPress={() => {
-							// TODO: Navegar a historial
-							console.log("Navegar a historial");
-						}}
+						onPress={() => goUnder("Historial de movimientos")}
 					/>
 					<MenuItem
 						icon={InfoIcon}
 						label="Administrar locales vinculados"
-						onPress={() => {
-							// TODO: Navegar a locales vinculados
-							console.log("Navegar a locales vinculados");
-						}}
+						onPress={() => goUnder("Administrar locales vinculados")}
 						showDivider={false}
 					/>
 				</MenuSection>
@@ -153,26 +152,17 @@ export default function ProfileScreen() {
 					<MenuItem
 						icon={EditIcon}
 						label="Clientes vinculados"
-						onPress={() => {
-							// TODO: Navegar a clientes vinculados
-							console.log("Navegar a clientes vinculados");
-						}}
+						onPress={() => goUnder("Clientes vinculados")}
 					/>
 					<MenuItem
 						icon={CalendarDaysIcon}
 						label="Historial de puntos otorgados"
-						onPress={() => {
-							// TODO: Navegar a historial de puntos
-							console.log("Navegar a historial de puntos");
-						}}
+						onPress={() => goUnder("Historial de puntos otorgados")}
 					/>
 					<MenuItem
 						icon={CalendarDaysIcon}
 						label="Historial de recompensas canjeadas"
-						onPress={() => {
-							// TODO: Navegar a historial de recompensas
-							console.log("Navegar a historial de recompensas");
-						}}
+						onPress={() => goUnder("Historial de recompensas canjeadas")}
 						showDivider={false}
 					/>
 				</MenuSection>
@@ -183,18 +173,12 @@ export default function ProfileScreen() {
 				<MenuItem
 					icon={BellIcon}
 					label="Notificaciones"
-					onPress={() => {
-						// TODO: Navegar a notificaciones
-						console.log("Navegar a notificaciones");
-					}}
+					onPress={() => goUnder("Notificaciones")}
 				/>
 				<MenuItem
 					icon={LockIcon}
 					label="Seguridad"
-					onPress={() => {
-						// TODO: Navegar a seguridad
-						console.log("Navegar a seguridad");
-					}}
+					onPress={() => goUnder("Seguridad")}
 					showDivider={false}
 				/>
 			</MenuSection>
@@ -204,18 +188,12 @@ export default function ProfileScreen() {
 				<MenuItem
 					icon={HelpCircleIcon}
 					label="Ayuda"
-					onPress={() => {
-						// TODO: Navegar a ayuda
-						console.log("Navegar a ayuda");
-					}}
+					onPress={() => goUnder("Ayuda")}
 				/>
 				<MenuItem
 					icon={InfoIcon}
 					label="Términos y condiciones"
-					onPress={() => {
-						// TODO: Navegar a T&C
-						console.log("Navegar a T&C");
-					}}
+					onPress={() => goUnder("Términos y condiciones")}
 					showDivider={false}
 				/>
 			</MenuSection>

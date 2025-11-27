@@ -1,6 +1,6 @@
+import { useAuthStore } from "@/src/presentation/stores/authStore";
 import { useRootNavigationState, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
-import { useAuthStore } from "@/src/presentation/stores/authStore";
 import { useOwnerBusinessCheck } from "./useOwnerbusinessCheck";
 
 /**
@@ -46,6 +46,14 @@ export function useAuthGuard() {
 
 		console.log("[AuthGuard] Segmentos:", segments);
 		console.log("[AuthGuard] Usuario:", user?.id, "Rol:", user?.role);
+
+		if (
+			segments &&
+			(segments as unknown as string[]).includes("under-construction")
+		) {
+			console.log("[AuthGuard] Ruta under-construction detectada — permitida");
+			return;
+		}
 
 		// Usuario no autenticado
 		if (!user) {
