@@ -1,15 +1,3 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-	AlertCircleIcon,
-	CheckSquare,
-	ClockIcon,
-	EditIcon,
-	TrashIcon,
-	Trophy,
-	UserIcon,
-	XSquare,
-} from "lucide-react-native";
-import { useEffect, useState } from "react";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
@@ -33,6 +21,18 @@ import {
 	useToast,
 } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+	AlertCircleIcon,
+	CheckSquare,
+	ClockIcon,
+	EditIcon,
+	TrashIcon,
+	Trophy,
+	UserIcon,
+	XSquare,
+} from "lucide-react-native";
+import { useEffect, useState } from "react";
 
 // Shared Components
 import {
@@ -111,8 +111,16 @@ export default function RaffleDetailScreen() {
 
 	// Lógica de Navegación Back
 	const handleCustomBack = () => {
-		if (isOwner) router.replace("/(owner)/(tabs)/raffles/" as never);
-		else router.replace("/(customer)/(tabs)/raffles/" as never);
+		if (isOwner) {
+			router.replace("/(owner)/(tabs)/raffles/" as never);
+		} else if (raffle?.businessId) {
+			router.replace({
+				pathname: "/(customer)/business/[id]",
+				params: { id: raffle.businessId },
+			} as never);
+		} else {
+			router.replace("/(customer)/home" as never);
+		}
 	};
 
 	// Loading & Error States
@@ -179,14 +187,15 @@ export default function RaffleDetailScreen() {
 					</Toast>
 				),
 			});
-		} catch (e: any) {
+		} catch (e) {
 			setShowBuyModal(false);
+			const errorMsg = e instanceof Error ? e.message : "Ocurrió un error";
 			toast.show({
 				placement: "top",
 				render: ({ id }) => (
 					<Toast nativeID={`toast-${id}`} action="error">
 						<ToastTitle>Error</ToastTitle>
-						<ToastDescription>{e.message}</ToastDescription>
+						<ToastDescription>{errorMsg}</ToastDescription>
 					</Toast>
 				),
 			});
@@ -206,14 +215,15 @@ export default function RaffleDetailScreen() {
 					</Toast>
 				),
 			});
-		} catch (e: any) {
+		} catch (e) {
 			setShowLeaveModal(false);
+			const errorMsg = e instanceof Error ? e.message : "Ocurrió un error";
 			toast.show({
 				placement: "top",
 				render: ({ id }) => (
 					<Toast nativeID={`toast-${id}`} action="error">
 						<ToastTitle>Error</ToastTitle>
-						<ToastDescription>{e.message}</ToastDescription>
+						<ToastDescription>{errorMsg}</ToastDescription>
 					</Toast>
 				),
 			});
@@ -523,7 +533,7 @@ export default function RaffleDetailScreen() {
 					<Icon
 						as={Trophy}
 						size="xl"
-						className="text-yellow-500 mb-4 w-32 h-32"
+						className="text-yellow-500 mb-4 w-32 5-32"
 					/>
 					<Heading
 						size="2xl"
@@ -533,10 +543,7 @@ export default function RaffleDetailScreen() {
 					</Heading>
 
 					<Text className="text-center font-bold text-lg text-[#2F4858] mb-2">
-						¡Felicidades,{" "}
-						{(raffle.winnerName ?? (user as any)?.user_metadata?.first_name) ||
-							"Usuario"}
-						!
+						¡Felicidades, {raffle.winnerName || user?.firstName || "Usuario"}!
 					</Text>
 					<Text className="text-center text-gray-600 mb-6 px-2">
 						Has ganado la rifa <Text className="font-bold">{raffle.name}</Text>{" "}

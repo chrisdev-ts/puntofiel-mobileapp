@@ -1,11 +1,11 @@
-import type { ReactNode } from "react";
-import { Pressable } from "react-native";
 import { Box } from "@/components/ui/box";
 import { HStack } from "@/components/ui/hstack";
 import { ArrowRightIcon, Icon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import type { ReactNode } from "react";
+import { Pressable } from "react-native";
 
 interface ListItemProps {
 	/** ID único del elemento */
@@ -18,8 +18,10 @@ interface ListItemProps {
 	title: string;
 	/** Contenido del badge (opcional) */
 	badge?: ReactNode;
-	/** Acción personalizada en lugar de la flecha (opcional) */
+	/** Acción personalizada debajo del contenido (opcional) */
 	customAction?: ReactNode;
+	/** Badge personalizado (ej: estado de rifa) */
+	customBadge?: ReactNode;
 	/** Función que se ejecuta al presionar el item */
 	onPress?: (id: string) => void;
 	/** Variante de layout: horizontal (default) o vertical (card) */
@@ -70,12 +72,13 @@ export function ListItem({
 	title,
 	badge,
 	customAction,
+	customBadge,
 	onPress,
 	variant = "horizontal",
 }: ListItemProps) {
 	// Layout vertical (card)
 	if (variant === "vertical") {
-		const cardContent = (
+		return (
 			<VStack
 				className="bg-background-0 border border-background-300 rounded-lg overflow-hidden flex-1"
 				space="sm"
@@ -97,6 +100,10 @@ export function ListItem({
 									</Text>
 								</Box>
 							)}
+							{/* Badge personalizado (ej: estado de rifa) */}
+							{customBadge && (
+								<Box className="absolute top-2 right-2 z-10">{customBadge}</Box>
+							)}
 						</Box>
 					</Pressable>
 				) : (
@@ -113,6 +120,10 @@ export function ListItem({
 									Sin imagen
 								</Text>
 							</Box>
+						)}
+						{/* Badge personalizado (ej: estado de rifa) */}
+						{customBadge && (
+							<Box className="absolute top-2 right-2 z-10">{customBadge}</Box>
 						)}
 					</Box>
 				)}
@@ -135,8 +146,6 @@ export function ListItem({
 				</VStack>
 			</VStack>
 		);
-
-		return cardContent;
 	}
 	// Si hay customAction, usar layout vertical
 	if (customAction) {

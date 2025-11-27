@@ -1,43 +1,16 @@
-import { Stack } from 'expo-router';
+import { Stack } from "expo-router";
 
 export default function PromotionsLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: '#ffffff',
-        },
-        headerTintColor: '#1f2937',
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-      }}
-    >
-      <Stack.Screen
-        name="index"
-        options={{
-          title: 'Mis Promociones',
-        }}
-      />
-      <Stack.Screen
-        name="create"
-        options={{
-          title: 'Crear Promoción',
-        }}
-      />
-      <Stack.Screen
-        name="[id]"
-        options={{
-          title: 'Detalles',
-        }}
-      />
-      <Stack.Screen
-        name="edit/[id]"
-        options={{
-          title: 'Editar Promoción',
-        }}
-      />
-    </Stack>
-  );
+	return (
+		<Stack
+			screenOptions={{
+				headerShown: false,
+			}}
+		>
+			<Stack.Screen name="index" />
+			<Stack.Screen name="create" />
+			<Stack.Screen name="[id]" />
+			<Stack.Screen name="edit/[id]" />
+		</Stack>
+	);
 }

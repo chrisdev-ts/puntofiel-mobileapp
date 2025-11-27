@@ -1,6 +1,3 @@
-import { useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
-import type { UpdateUserDTO } from "@/src/core/entities/UpdateUserDTO";
 import type {
 	CreateUserDTO,
 	LoginUserDTO,
@@ -9,6 +6,8 @@ import type {
 import { LoginUserUseCase } from "@/src/core/usecases/auth/loginUser";
 import { RegisterUserUseCase } from "@/src/core/usecases/auth/registerUser";
 import { UpdateUserUseCase } from "@/src/core/usecases/auth/updateUser";
+import { useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
 // Importamos la clase sin llaves {} porque es export default
 import SupabaseUserRepository from "@/src/infrastructure/repositories/SupabaseUserRepository";
 import { supabase } from "@/src/infrastructure/services/supabase";
@@ -111,7 +110,7 @@ export const useAuth = () => {
 	});
 
 	const updateProfileMutation = useMutation({
-		mutationFn: async (data: UpdateUserDTO) => {
+		mutationFn: async (data: Partial<User>) => {
 			if (!user) {
 				throw new Error("No hay usuario autenticado para actualizar.");
 			}
@@ -126,7 +125,7 @@ export const useAuth = () => {
 		},
 	});
 
-	const updateProfileAsync = async (data: UpdateUserDTO) => {
+	const updateProfileAsync = async (data: Partial<User>) => {
 		return updateProfileMutation.mutateAsync(data);
 	};
 

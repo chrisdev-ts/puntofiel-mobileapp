@@ -2,10 +2,10 @@ import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-    FeedbackScreen,
-    HomeScreenSkeleton,
-    ListContainer,
-    ListItem,
+	FeedbackScreen,
+	HomeScreenSkeleton,
+	ListContainer,
+	ListItem,
 } from "@/src/presentation/components/common";
 import { useLoyalty } from "@/src/presentation/hooks/useLoyalty";
 import { useRouter } from "expo-router";
@@ -63,13 +63,6 @@ export default function HomeScreen() {
 				onPress={() => router.push("/(customer)/business/search")}
 			>
 				<ButtonText>Buscar negocios</ButtonText>
-			</Button>
-			<Button
-				variant="solid"
-				action="primary"
-				onPress={() => router.push("/(customer)/promotions")}
-			>
-				<ButtonText>Ver promociones</ButtonText>
 			</Button>
 			{/* Estado vacío */}
 			{!cards || cards.length === 0 ? (
