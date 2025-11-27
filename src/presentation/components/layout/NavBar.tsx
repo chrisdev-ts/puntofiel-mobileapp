@@ -70,7 +70,7 @@ export function NavBar() {
 				},
 				{
 					IconComponent: GiftIcon,
-					label: "Recompensas",
+					label: "Regalos",
 					route: "/(owner)/(tabs)/rewards",
 				},
 				{
@@ -105,11 +105,6 @@ export function NavBar() {
 						route: "/(customer)/(tabs)/show-qr",
 					},
 					{
-						IconComponent: MedalIcon,
-						label: "Rifas",
-						route: "/(customer)/(tabs)/raffles",
-					},
-					{
 						IconComponent: User,
 						label: "Perfil",
 						route: "/(customer)/(tabs)/profile",
@@ -125,7 +120,7 @@ export function NavBar() {
 					},
 					{
 						IconComponent: GiftIcon,
-						label: "Recompensas",
+						label: "Regalos",
 						route: "/(owner)/(tabs)/rewards",
 					},
 					{
