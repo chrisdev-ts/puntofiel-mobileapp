@@ -81,16 +81,19 @@ export default function RewardsIndexScreen() {
 			<Heading size="xl" className="text-primary-500">
 				Mis recompensas
 			</Heading>
-
 			{/* Botón para crear recompensa */}
 			<Button onPress={handleCreatePress} size="md" action="primary">
 				<ButtonText>Crear recompensa</ButtonText>
 			</Button>
-
-		{/* Botón para promociones */}
-		<Button onPress={() => router.push("/(owner)/promotions")} variant="outline" size="md">
-			<ButtonText>Promociones</ButtonText>
-		</Button>			{/* Estado Vacío */}
+			{/* Botón para promociones */}
+			<Button
+				onPress={() => router.push("/(owner)/promotions")}
+				variant="outline"
+				size="md"
+			>
+				<ButtonText>Promociones</ButtonText>
+			</Button>
+			{/* Estado Vacío */}
 			{!hasRewards && (
 				<FeedbackScreen
 					variant="empty"
@@ -99,7 +102,6 @@ export default function RewardsIndexScreen() {
 					description="Crea ofertas exclusivas para ellos y haz que sigan volviendo a tu negocio. Una recompensa es la forma perfecta de agradecer su lealtad. ¿Qué esperas? ¡Crea tu primera recompensa ahora!"
 				/>
 			)}
-
 			{/* Lista de Recompensas */}
 			{hasRewards && (
 				<ListContainer
@@ -107,10 +109,10 @@ export default function RewardsIndexScreen() {
 					footerContent={
 						<Text className="text-center text-typography-400">
 							¿Tienes otra recompensa que agregar?{"\n"}
-							Toca el botón de{" "}
+							Toca el botón de
 							<Text bold className="text-typography-400">
 								Crear recompensa
-							</Text>{" "}
+							</Text>
 							para crear una nueva.
 						</Text>
 					}
