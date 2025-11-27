@@ -1,6 +1,3 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { AlertCircleIcon, GiftIcon } from "lucide-react-native";
-import { View } from "react-native";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -10,112 +7,54 @@ import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import {
-	BusinessDetailSkeleton,
 	FeedbackScreen,
 	ListContainer,
 	ListItem,
 } from "@/src/presentation/components/common";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useBusinessDetail } from "@/src/presentation/hooks/useBusinessDetail";
+import { useBusinessRaffles } from "@/src/presentation/hooks/useBusinessRaffles";
+import { usePromotions } from "@/src/presentation/hooks/usePromotions";
 import { useReward } from "@/src/presentation/hooks/useReward";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { CheckSquare, ClockIcon, GiftIcon } from "lucide-react-native";
+import { View } from "react-native";
 
 export default function BusinessDetailScreen() {
-	const { id } = useLocalSearchParams<{ id: string }>();
 	const router = useRouter();
+	const { id: businessId } = useLocalSearchParams<{ id: string }>();
 
-	// Normalizar el ID (puede venir como string o array)
-	const businessId = Array.isArray(id) ? id[0] : id;
+	// Datos del negocio y puntos del usuario
+	const { data: businessDetail } = useBusinessDetail(businessId);
+	const loyaltyCard = businessDetail?.loyaltyCard;
+	const currentPoints = loyaltyCard?.points ?? 0;
 
-	console.log("[BusinessDetailScreen] ID recibido:", id);
-	console.log("[BusinessDetailScreen] ID normalizado:", businessId);
+	// Recompensas
+	const { rewards } = useReward(businessId);
+	const hasRewards = rewards && rewards.length > 0;
 
-	// Obtener datos del negocio y loyalty card
-	const {
-		data: businessDetail,
-		isLoading: loadingBusiness,
-		error: businessError,
-	} = useBusinessDetail(businessId);
+	// Promociones
+	const { data: promotions = [], isLoading: isLoadingPromotions } =
+		usePromotions(businessId ?? null);
 
-	// Obtener recompensas del negocio
-	const { rewards, isLoadingRewards, rewardsError } = useReward(businessId);
-
-	// Estado de carga inicial
-	if (loadingBusiness || isLoadingRewards) {
-		return (
-			<AppLayout showHeader={true} headerVariant="back" showNavBar={false}>
-				<BusinessDetailSkeleton />
-			</AppLayout>
-		);
-	}
-
-	// Manejo de errores
-	if (businessError) {
-		return (
-			<AppLayout showHeader={true} headerVariant="back" showNavBar={false}>
-				<FeedbackScreen
-					variant="error"
-					icon={AlertCircleIcon}
-					title="Error al cargar el negocio"
-					description={businessError.message}
-				/>
-			</AppLayout>
-		);
-	}
-
-	if (rewardsError) {
-		return (
-			<AppLayout showHeader={true} headerVariant="back" showNavBar={false}>
-				<FeedbackScreen
-					variant="error"
-					icon={AlertCircleIcon}
-					title="Error al cargar recompensas"
-					description={rewardsError.message}
-				/>
-			</AppLayout>
-		);
-	}
-
-	if (!businessDetail) {
-		return (
-			<AppLayout showHeader={true} headerVariant="back" showNavBar={false}>
-				<FeedbackScreen
-					variant="empty"
-					icon={AlertCircleIcon}
-					title="Negocio no encontrado"
-					description="No se pudo encontrar la información del negocio"
-				/>
-			</AppLayout>
-		);
-	}
-
-	const { business, loyaltyCard } = businessDetail;
-	const currentPoints = loyaltyCard?.points || 0;
-	const nextRewardPoints = loyaltyCard?.nextRewardPoints || null;
-	const nextRewardName = loyaltyCard?.nextRewardName || null;
-
-	const hasRewards = rewards.length > 0;
-
-	const handleRewardPress = (rewardId: string) => {
-		console.log(
-			"[BusinessDetailScreen] Navegando a detalle de recompensa:",
-			rewardId,
-		);
-		router.push(`/(customer)/business/rewards/${rewardId}` as never);
-	};
+	// Rifas
+	const { raffles, isLoading: isLoadingRaffles } = useBusinessRaffles(
+		businessId as string,
+	);
 
 	return (
 		<AppLayout
-			showHeader={true}
+			showHeader
 			headerVariant="back"
 			showNavBar={false}
-			scrollable={true}
+			scrollable
 			headerTitle="Detalle del negocio"
 		>
 			{/* Header con imagen del negocio */}
 			<View className="w-full h-[150px] bg-background-200 rounded-lg overflow-hidden">
-				{business.logoUrl ? (
+				{businessDetail?.business?.logoUrl ? (
 					<Image
-						source={{ uri: business.logoUrl }}
+						source={{ uri: businessDetail.business.logoUrl }}
 						className="w-full h-full"
 						resizeMode="cover"
 					/>
@@ -128,7 +67,7 @@ export default function BusinessDetailScreen() {
 
 			{/* Nombre del negocio */}
 			<Heading size="xl" className="text-primary-500">
-				{business.name}
+				{businessDetail?.business?.name}
 			</Heading>
 
 			{/* Card de puntos y próxima recompensa */}
@@ -146,99 +85,238 @@ export default function BusinessDetailScreen() {
 						</VStack>
 
 						{/* Próxima recompensa */}
-						{nextRewardName && nextRewardPoints && (
-							<VStack space="xs" className="items-end flex-1">
-								<Text className="text-typography-500 text-sm">
-									Próxima recompensa
-								</Text>
-								<Text className="text-typography-900 font-semibold text-right">
-									{nextRewardName}
-								</Text>
-								<Text className="text-primary-600 text-xs font-medium">
-									{nextRewardPoints} puntos
-								</Text>
-							</VStack>
-						)}
+						{(() => {
+							if (!rewards || rewards.length === 0) return null;
+							// Buscar la siguiente recompensa a la que el usuario puede aspirar
+							const next = rewards
+								.filter((r) => r.pointsRequired > currentPoints)
+								.sort((a, b) => a.pointsRequired - b.pointsRequired)[0];
+							if (!next) return null;
+							return (
+								<VStack space="xs" className="items-end flex-1">
+									<Text className="text-typography-500 text-sm">
+										Próxima recompensa
+									</Text>
+									<Text className="text-typography-900 font-semibold text-right">
+										{next.name}
+									</Text>
+									<Text className="text-primary-600 text-xs font-medium">
+										{next.pointsRequired} puntos
+									</Text>
+								</VStack>
+							);
+						})()}
 					</HStack>
 				</Box>
 			)}
 
 			{/* Información de ubicación */}
-			{business.locationAddress && (
+			{businessDetail?.business?.locationAddress && (
 				<VStack space="xs">
 					<Heading size="sm" className="text-typography-900">
 						Ubicación
 					</Heading>
 					<Text className="text-typography-700">
-						{business.locationAddress}
+						{businessDetail.business.locationAddress}
 					</Text>
 				</VStack>
 			)}
 
 			{/* Horarios */}
-			{business.openingHours && (
+			{businessDetail?.business?.openingHours && (
 				<VStack space="xs">
 					<Heading size="sm" className="text-typography-900">
 						Horarios de atención
 					</Heading>
-					<Text className="text-typography-700">{business.openingHours}</Text>
+					<Text className="text-typography-700">
+						{businessDetail.business.openingHours}
+					</Text>
 				</VStack>
 			)}
 
 			{/* Sección de Recompensas */}
 			<View>
-				<Heading size="lg" className="text-typography-900">
+				<Heading size="lg" className="text-typography-900 mb-2">
 					Recompensas disponibles
 				</Heading>
+				{!hasRewards ? (
+					<FeedbackScreen
+						variant="empty"
+						icon={GiftIcon}
+						title="Este negocio aún no tiene recompensas"
+						description="Vuelve pronto para ver las ofertas exclusivas que tendrán para ti."
+					/>
+				) : (
+					<ListContainer variant="grid">
+						{rewards.map((reward) => {
+							const canRedeem = currentPoints >= reward.pointsRequired;
+							return (
+								<ListItem
+									key={reward.id}
+									variant="vertical"
+									id={reward.id}
+									imageUrl={reward.imageUrl}
+									imageAlt={reward.name}
+									title={reward.name}
+									badge={
+										<Badge action="success" variant="solid" size="md">
+											<BadgeText>{reward.pointsRequired} puntos</BadgeText>
+										</Badge>
+									}
+									onPress={() =>
+										router.push({
+											pathname: "/(customer)/business/rewards/[id]",
+											params: { id: reward.id },
+										})
+									}
+									customAction={
+										<Button
+											size="md"
+											action="primary"
+											isDisabled={!canRedeem}
+											className={`w-full ${!canRedeem ? "opacity-40" : ""}`}
+										>
+											<ButtonText size="sm">
+												{canRedeem ? "Canjear" : "Insuficientes"}
+											</ButtonText>
+										</Button>
+									}
+								/>
+							);
+						})}
+					</ListContainer>
+				)}
 			</View>
 
-			{/* Estado Vacío de Recompensas */}
-			{!hasRewards && (
-				<FeedbackScreen
-					variant="empty"
-					icon={GiftIcon}
-					title="Este negocio aún no tiene recompensas"
-					description="Vuelve pronto para ver las ofertas exclusivas que tendrán para ti."
-				/>
-			)}
-
-			{/* Lista de Recompensas */}
-			{hasRewards && (
-				<ListContainer variant="grid">
-					{rewards.map((reward) => {
-						const canRedeem = currentPoints >= reward.pointsRequired;
-
-						return (
+			{/* Sección de Promociones */}
+			<View>
+				<Heading size="lg" className="text-typography-900 mb-2">
+					Promociones activas
+				</Heading>
+				{isLoadingPromotions ? (
+					<Text className="text-gray-500">Cargando promociones...</Text>
+				) : promotions.length === 0 ? (
+					<FeedbackScreen
+						variant="empty"
+						icon={GiftIcon}
+						title="Este negocio aún no tiene promociones activas"
+						description="Vuelve pronto para ver las promociones que tendrán para ti."
+					/>
+				) : (
+					<ListContainer variant="grid">
+						{promotions.map((promotion) => (
 							<ListItem
-								key={reward.id}
-								variant="vertical"
-								id={reward.id}
-								imageUrl={reward.imageUrl}
-								imageAlt={reward.name}
-								title={reward.name}
+								key={promotion.id}
+								id={promotion.id}
+								imageUrl={promotion.imageUrl ?? undefined}
+								imageAlt={promotion.title}
+								title={promotion.title}
 								badge={
-									<Badge action="success" variant="solid" size="md">
-										<BadgeText>{reward.pointsRequired} puntos</BadgeText>
+									<Badge action="info" variant="solid" size="md">
+										<BadgeText>
+											{(() => {
+												const startDate = new Date(promotion.startDate);
+												const endDate = promotion.endDate
+													? new Date(promotion.endDate)
+													: null;
+												const now = new Date();
+												if (endDate && endDate < now) return "Expirada";
+												if (startDate > now) return "Próxima";
+												return "Activa";
+											})()}
+										</BadgeText>
 									</Badge>
 								}
-								onPress={handleRewardPress}
-								customAction={
-									<Button
-										size="md"
-										action="primary"
-										isDisabled={!canRedeem}
-										className={`w-full ${!canRedeem ? "opacity-40" : ""}`}
-									>
-										<ButtonText size="sm">
-											{canRedeem ? "Canjear" : "Insuficientes"}
-										</ButtonText>
-									</Button>
+								onPress={() =>
+									router.push({
+										pathname: "/(customer)/business/promotions/[id]",
+										params: { id: promotion.id },
+									})
 								}
+								variant="vertical"
 							/>
-						);
-					})}
-				</ListContainer>
-			)}
+						))}
+					</ListContainer>
+				)}
+			</View>
+
+			{/* Sección de Rifas */}
+			<View>
+				<Heading size="lg" className="text-typography-900 mb-2">
+					Rifas activas
+				</Heading>
+				{isLoadingRaffles ? (
+					<Text className="text-gray-500">Cargando rifas...</Text>
+				) : raffles.length === 0 ? (
+					<FeedbackScreen
+						variant="empty"
+						icon={GiftIcon}
+						title="Este negocio aún no tiene rifas activas"
+						description="Vuelve pronto para ver los sorteos que tendrán para ti."
+					/>
+				) : (
+					<ListContainer variant="grid">
+						{raffles.map((raffle) => {
+							const now = new Date();
+							const endDate = new Date(raffle.endDate);
+							const isActive = !raffle.isCompleted && endDate > now;
+							const badgeText = raffle.isCompleted
+								? "Finalizada"
+								: (() => {
+										const diff = Math.ceil(
+											(endDate.getTime() - now.getTime()) /
+												(1000 * 60 * 60 * 24),
+										);
+										return diff > 0
+											? `Termina en ${diff} días`
+											: "Finaliza hoy";
+									})();
+							const status = raffle.isCompleted
+								? "not_participating"
+								: raffle.isParticipating
+									? "participating"
+									: "not_participating";
+							return (
+								<ListItem
+									key={raffle.id}
+									id={raffle.id}
+									imageUrl={raffle.imageUrl}
+									imageAlt={raffle.name}
+									title={raffle.name}
+									badge={
+										<Badge
+											action="muted"
+											variant="solid"
+											className={`rounded-full self-start px-3 py-1 ${isActive ? "bg-[#2F4858]" : "bg-gray-600"}`}
+										>
+											<Box className="flex-row items-center gap-1">
+												<ClockIcon size={16} color="#fff" />
+												<BadgeText className="text-white text-xs font-bold ml-1">
+													{badgeText}
+												</BadgeText>
+											</Box>
+										</Badge>
+									}
+									customBadge={
+										<Box
+											className={`p-2 rounded-lg shadow-sm ${status === "participating" ? (isActive ? "bg-green-500" : "bg-gray-500") : isActive ? "bg-red-500" : "bg-gray-500"}`}
+										>
+											<CheckSquare size={20} color="#fff" />
+										</Box>
+									}
+									onPress={() =>
+										router.push({
+											pathname: "/(customer)/business/raffles/[id]",
+											params: { id: raffle.id },
+										})
+									}
+									variant="vertical"
+								/>
+							);
+						})}
+					</ListContainer>
+				)}
+			</View>
 		</AppLayout>
 	);
 }

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Gift, HelpCircle } from "lucide-react-native";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Pressable } from "react-native";
 
 // UI Components
@@ -26,73 +26,61 @@ import { RafflesListSkeleton } from "@/src/presentation/components/common/skelet
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 
 // Hooks Reales
-import { useAuth } from "@/src/presentation/hooks/useAuth";
-import { useCustomerRaffles } from "@/src/presentation/hooks/useCustomerRaffles";
+import { useBusinessRaffles } from "@/src/presentation/hooks/useBusinessRaffles";
 
 export default function RafflesIndexScreen() {
 	const router = useRouter();
-	// Obtenemos el ID del negocio desde la navegación anterior
-	const { id: businessIdParam } = useLocalSearchParams<{ id: string }>();
+	// Obtenemos el ID del negocio desde la navegación
+	const { id: businessId } = useLocalSearchParams<{ id: string }>();
 	const [showInfoModal, setShowInfoModal] = useState(false);
 
-	const { user } = useAuth();
+	// Hook para obtener rifas del negocio
+	const { raffles, isLoading: isLoadingRaffles } =
+		useBusinessRaffles(businessId);
 
-	// 1. CONEXIÓN REAL A LA BD
-	// Trae las rifas reales creadas por el dueño de este negocio
-	const { raffles, isLoading: isLoadingRaffles } = useCustomerRaffles();
-
-	// 2. Procesar datos reales para la vista
+	// Procesar datos para la vista
 	const processedRaffles = useMemo(() => {
 		if (!raffles) return [];
-
 		const now = new Date();
-
 		return raffles
 			.map((raffle) => {
 				const start = new Date(raffle.startDate);
 				const end = new Date(raffle.endDate);
-
-				// Variables visuales por defecto
 				let statusType: "active" | "finished" | "upcoming";
 				let badgeText = "";
 				let badgeVariant: "active" | "inactive" = "inactive";
-				let statusIcon: "won" | "participating" | "not_participating" =
-					"not_participating";
-
-				// --- A. Lógica de Tiempo (Real) ---
+				// --- Lógica de Tiempo ---
 				if (raffle.isCompleted || now > end) {
-					// FINALIZADA
 					statusType = "finished";
 					badgeText = "Finalizada";
-					badgeVariant = "inactive"; // Gris
+					badgeVariant = "inactive";
 				} else if (now < start) {
-					// FUTURA
 					statusType = "upcoming";
 					const diffDays = Math.ceil(
 						(start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
 					);
 					badgeText = `Empieza en ${diffDays} días`;
-					badgeVariant = "inactive"; // Gris
+					badgeVariant = "inactive";
 				} else {
-					// VIGENTE
 					statusType = "active";
 					const diffDays = Math.ceil(
 						(end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
 					);
 					badgeText = `Termina en ${diffDays} días`;
-					badgeVariant = "active"; // Azul
+					badgeVariant = "active";
 				}
 
-				// --- B. Lógica de Usuario (Real) ---
-				if (raffle.winnerCustomerId === user?.id) {
-					statusIcon = "won"; // 🏆 Ganó (Si el usuario es el ganador)
+				// Mapear a status para el RaffleCard
+				let status: "won" | "participating" | "not_participating" =
+					"not_participating";
+				if (raffle.winnerCustomerId) {
+					// Si el usuario es el ganador
+					status =
+						raffle.isParticipating && raffle.winnerCustomerId
+							? "won"
+							: "not_participating";
 				} else if (raffle.isParticipating) {
-					// 🔥 ESTA ES LA LÍNEA CLAVE
-					statusIcon = "participating"; // ✅ Participa (Check Verde/Gris)
-					// El color (verde/gris) se decide en RaffleCard basado en badgeVariant
-				} else {
-					// Si no ha ganado y no tiene boletos
-					statusIcon = "not_participating";
+					status = "participating";
 				}
 
 				return {
@@ -100,15 +88,14 @@ export default function RafflesIndexScreen() {
 					statusType,
 					badgeText,
 					badgeVariant,
-					statusIcon,
+					status,
 				};
 			})
 			.sort((a, b) => {
-				// ORDENAMIENTO: 1. Activas -> 2. Finalizadas -> 3. Futuras
 				const priority = { active: 1, finished: 2, upcoming: 3 };
 				return priority[a.statusType] - priority[b.statusType];
 			});
-	}, [raffles, user?.id]);
+	}, [raffles]);
 
 	// Skeleton de carga real
 	if (isLoadingRaffles) {
@@ -159,10 +146,9 @@ export default function RafflesIndexScreen() {
 								imageUrl={raffle.imageUrl}
 								imageAlt={raffle.name}
 								title={raffle.name}
-								// Props calculados dinámicamente
 								badgeText={raffle.badgeText}
 								badgeVariant={raffle.badgeVariant}
-								status={raffle.statusIcon}
+								status={raffle.status}
 								onPress={(id) =>
 									router.push(`/(customer)/business/raffles/${id}` as never)
 								}
@@ -170,7 +156,7 @@ export default function RafflesIndexScreen() {
 						))}
 
 						{/* Pie de página de la lista */}
-						<VStack className="mt-6 mb-4 items-center">
+						<VStack className="items-center">
 							<Text className="text-center font-bold text-gray-600 mb-2 text-base">
 								¡Has visto todas las rifas por ahora!
 							</Text>
