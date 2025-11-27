@@ -13,7 +13,6 @@ export default function CustomerTabsLayout() {
 		>
 			<Stack.Screen name="home" />
 			<Stack.Screen name="profile" />
-			<Stack.Screen name="raffles" />
 			<Stack.Screen name="show-qr" />
 		</Stack>
 	);
