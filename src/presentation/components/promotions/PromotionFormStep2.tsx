@@ -1,15 +1,12 @@
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Image as RNImage, View } from "react-native";
-
-import { imageUploadService } from "@/src/infrastructure/services/imageUploadService";
-import { useImageUpload } from "@/src/presentation/hooks/useImageUpload";
-
+import type React from "react";
+import { useState } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Heading } from "@/components/ui/heading";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { imageUploadService } from "@/src/infrastructure/services/imageUploadService";
+import { ImagePicker } from "@/src/presentation/components/common/ImagePicker";
 
 interface PromotionFormStep2Props {
 	businessId: string;
@@ -30,66 +27,44 @@ export const PromotionFormStep2: React.FC<PromotionFormStep2Props> = ({
 	onSkipImage,
 	onBack,
 	isLoading = false,
-	initialImageUrl, // ✅ Agregado
+	initialImageUrl,
 }) => {
-	const {
-		imageUri,
-		isLoading: imageLoading,
-		error,
-		takePhoto,
-		pickImage,
-		clearImage,
-	} = useImageUpload();
+	const [selectedImage, setSelectedImage] = useState<
+		import("expo-image-picker").ImagePickerAsset | null
+	>(
+		initialImageUrl
+			? ({
+					uri: initialImageUrl,
+					width: 0,
+					height: 0,
+				} as import("expo-image-picker").ImagePickerAsset)
+			: null,
+	);
 	const [uploading, setUploading] = useState(false);
 	const [uploadError, setUploadError] = useState<string | null>(null);
-	const [displayImage, setDisplayImage] = useState<string | null>(
-		initialImageUrl || null,
-	); // ✅ Agregado
-
-	// ✅ Actualizar displayImage cuando se selecciona una nueva imagen
-	useEffect(() => {
-		if (imageUri) {
-			setDisplayImage(imageUri);
-		}
-	}, [imageUri]);
 
 	const handleUploadImage = async () => {
-		if (!imageUri) {
+		if (!selectedImage) {
 			setUploadError("Por favor selecciona una imagen");
 			return;
 		}
-
 		setUploading(true);
 		setUploadError(null);
-
 		try {
-			console.log("[PromotionFormStep2] 📤 Subiendo imagen para promoción:", {
-				fileName,
-				businessId,
-				promotionId,
-			});
-
-			const result = await imageUploadService.uploadImage(imageUri, {
+			const result = await imageUploadService.uploadImage(selectedImage.uri, {
 				assetType: "promotions",
 				businessId,
 				fileName,
 				entityId: promotionId,
 			});
-
 			if (result.success && result.url) {
-				console.log(
-					"[PromotionFormStep2] ✅ Imagen subida exitosamente:",
-					result.url,
-				);
 				onImageUploadSuccess(result.url);
 			} else {
 				setUploadError(result.error || "Error al subir imagen");
-				console.error("[PromotionFormStep2] ❌ Error:", result.error);
 			}
 		} catch (err) {
 			const errorMsg = err instanceof Error ? err.message : "Error desconocido";
 			setUploadError(errorMsg);
-			console.error("[PromotionFormStep2] ⚠️ Error fatal:", err);
 		} finally {
 			setUploading(false);
 		}
@@ -97,74 +72,25 @@ export const PromotionFormStep2: React.FC<PromotionFormStep2Props> = ({
 
 	return (
 		<VStack className="flex-1">
-			<Heading className="text-2xl font-bold mb-2">
-				Subir una foto para tu promoción
-			</Heading>
-			<Text className="text-gray-600 mb-6">
-				Sube una imagen o toma una foto para tu promoción
-			</Text>
-
-			{/* Vista previa de imagen */}
-			<Card className="bg-gray-100 rounded-lg overflow-hidden mb-6 w-full aspect-video justify-center items-center">
-				{displayImage ? (
-					<RNImage
-						source={{ uri: displayImage }}
-						className="w-full h-full"
-						resizeMode="cover"
-						onError={(error) => {
-							console.error(
-								"[PromotionFormStep2] Error cargando imagen:",
-								error,
-							);
-						}}
-					/>
-				) : (
-					<VStack className="w-full h-full justify-center items-center">
-						<Text className="text-gray-400">Selecciona un archivo</Text>
-					</VStack>
-				)}
-			</Card>
+			<ImagePicker
+				selectedImage={selectedImage}
+				onImageSelected={setSelectedImage}
+				title="Selecciona una imagen para tu promoción"
+				helperText="Tamaño máximo: 5MB. Formatos: JPG, PNG, WEBP"
+			/>
 
 			{/* Errores */}
-			{(error || uploadError) && (
+			{uploadError && (
 				<View className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-					<Text className="text-red-600 text-sm">{error || uploadError}</Text>
+					<Text className="text-red-600 text-sm">{uploadError}</Text>
 				</View>
 			)}
-
-			{/* Botones de carga */}
-			<HStack className="gap-3 mb-6">
-				<Button
-					onPress={pickImage}
-					isDisabled={imageLoading || isLoading}
-					className="flex-1"
-					variant="outline"
-				>
-					{imageLoading ? (
-						<ActivityIndicator size="small" color="#374151" />
-					) : (
-						<ButtonText>Seleccionar</ButtonText>
-					)}
-				</Button>
-				<Button
-					onPress={takePhoto}
-					isDisabled={imageLoading || isLoading}
-					className="flex-1"
-					variant="outline"
-				>
-					{imageLoading ? (
-						<ActivityIndicator size="small" color="#374151" />
-					) : (
-						<ButtonText>Tomar foto</ButtonText>
-					)}
-				</Button>
-			</HStack>
 
 			{onSkipImage && (
 				<Button
 					onPress={onSkipImage}
 					isDisabled={isLoading}
-					className="w-full mb-6"
+					className="w-full my-2"
 					variant="outline"
 				>
 					<ButtonText>Saltar cambio de imagen</ButtonText>
@@ -172,7 +98,7 @@ export const PromotionFormStep2: React.FC<PromotionFormStep2Props> = ({
 			)}
 
 			{/* Botones de acción */}
-			<HStack className="gap-3 mt-auto">
+			<HStack className="gap-3">
 				<Button
 					onPress={onBack}
 					isDisabled={isLoading || uploading}
@@ -183,7 +109,7 @@ export const PromotionFormStep2: React.FC<PromotionFormStep2Props> = ({
 				</Button>
 				<Button
 					onPress={handleUploadImage}
-					isDisabled={!imageUri || isLoading || uploading}
+					isDisabled={!selectedImage || isLoading || uploading}
 					className="flex-1"
 					variant="solid"
 					action="primary"

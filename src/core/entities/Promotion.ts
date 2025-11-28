@@ -4,16 +4,16 @@
  * Representa una promoción temporal creada por un negocio.
  */
 export interface Promotion {
-  id: string;
-  businessId: string;
-  title: string;
-  content: string;
-  startDate: string | Date;
-  endDate?: string | Date | null;
-  imageUrl?: string | null; // ✅ Agregado
-  isActive: boolean;
-  createdAt: string | Date;
-  updatedAt: string | Date;
+	id: string;
+	businessId: string;
+	title: string;
+	content: string;
+	startDate: string | Date;
+	endDate?: string | Date | null;
+	imageUrl?: string | null; // ✅ Agregado
+	isActive: boolean;
+	createdAt: string | Date;
+	updatedAt: string | Date;
 }
 
 /**

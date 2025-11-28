@@ -1,5 +1,5 @@
-import { getPromotionById } from "@/src/infrastructure/repositories/promotionRepository";
 import { useQuery } from "@tanstack/react-query";
+import { getPromotionById } from "@/src/infrastructure/repositories/promotionRepository";
 
 /**
  * Hook para obtener el detalle de una promoción por ID

@@ -1,18 +1,21 @@
+import { useRouter } from "expo-router";
+import { AlertCircleIcon, GiftIcon } from "lucide-react-native";
+import React, { useCallback, useState } from "react";
+import {
+	ActivityIndicator,
+	FlatList,
+	RefreshControl,
+	View,
+} from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import type { Promotion } from "@/src/core/entities/Promotion";
-import {
-    FeedbackScreen,
-} from "@/src/presentation/components/common";
+import { FeedbackScreen } from "@/src/presentation/components/common";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { PromotionCard } from "@/src/presentation/components/promotions/PromotionCard";
 import { useLoyalty } from "@/src/presentation/hooks/useLoyalty";
-import { useRouter } from "expo-router";
-import { AlertCircleIcon, GiftIcon } from "lucide-react-native";
-import React, { useCallback, useState } from "react";
-import { ActivityIndicator, FlatList, RefreshControl, View } from "react-native";
 
 interface PromotionWithBusiness extends Promotion {
 	businessName?: string;
@@ -23,11 +26,14 @@ export default function PromotionsScreen() {
 	const router = useRouter();
 
 	// Obtener lista de negocios que sigue el customer
-	const { data: cards, isLoading: loadingCards, error: cardsError } =
-		useLoyalty();
+	const {
+		data: cards,
+		isLoading: loadingCards,
+		error: cardsError,
+	} = useLoyalty();
 
 	const [allPromotions, setAllPromotions] = useState<PromotionWithBusiness[]>(
-		[]
+		[],
 	);
 	const [isLoadingPromotions, setIsLoadingPromotions] = useState(false);
 	const [refreshing, setRefreshing] = useState(false);
@@ -58,34 +64,41 @@ export default function PromotionsScreen() {
 					if (error) {
 						console.error(
 							`[PromotionsScreen] Error loading promotions for business ${card.businessId}:`,
-							error
+							error,
 						);
 						continue;
 					}
 
 					if (promos && promos.length > 0) {
-						const businessPromotions = promos.map((promo: any) => ({
-							id: promo.id,
-							businessId: promo.business_id,
-							businessName: card.businessName,
-							title: promo.title,
-							content: promo.content,
-							startDate: promo.start_date,
-							endDate: promo.end_date,
-							imageUrl: promo.image_url
-								? sanitizeUrl(promo.image_url)
-								: null,
-							isActive: promo.is_active,
-							createdAt: promo.created_at,
-							updatedAt: promo.updated_at,
-						}));
+						const businessPromotions = promos.map(
+							(promo: {
+								id: string;
+								business_id: string;
+								title: string;
+								content: string;
+								start_date: string;
+								end_date: string;
+							}) => ({
+								id: promo.id,
+								businessId: promo.business_id,
+								businessName: card.businessName,
+								title: promo.title,
+								content: promo.content,
+								startDate: promo.start_date,
+								endDate: promo.end_date,
+								imageUrl: promo.image_url ? sanitizeUrl(promo.image_url) : null,
+								isActive: promo.is_active,
+								createdAt: promo.created_at,
+								updatedAt: promo.updated_at,
+							}),
+						);
 
 						promotionsMap.push(...businessPromotions);
 					}
 				} catch (err) {
 					console.error(
 						`[PromotionsScreen] Exception loading promotions for business ${card.businessId}:`,
-						err
+						err,
 					);
 				}
 			}
@@ -93,8 +106,7 @@ export default function PromotionsScreen() {
 			// Ordenar por fecha de creación (más recientes primero)
 			promotionsMap.sort(
 				(a, b) =>
-					new Date(b.createdAt).getTime() -
-					new Date(a.createdAt).getTime()
+					new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
 			);
 
 			setAllPromotions(promotionsMap);
@@ -203,11 +215,7 @@ export default function PromotionsScreen() {
 						Tus negocios aún no han publicado promociones. Vuelve pronto para
 						ver las ofertas exclusivas.
 					</Text>
-					<Button
-						onPress={() => router.back()}
-						variant="outline"
-						size="md"
-					>
+					<Button onPress={() => router.back()} variant="outline" size="md">
 						<ButtonText>Volver atrás</ButtonText>
 					</Button>
 				</VStack>

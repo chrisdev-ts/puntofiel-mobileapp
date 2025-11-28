@@ -1,6 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import type { Promotion } from "@/src/core/entities/Promotion";
 import { supabase } from "@/src/infrastructure/services/supabase";
-import { useQuery } from "@tanstack/react-query";
 
 /**
  * Hook para obtener todas las promociones de un negocio
