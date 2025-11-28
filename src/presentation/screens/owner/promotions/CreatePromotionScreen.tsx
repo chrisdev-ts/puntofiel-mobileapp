@@ -1,6 +1,3 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { PromotionFormStep1 } from "@/src/presentation/components/promotions/PromotionFormStep1";
@@ -8,6 +5,9 @@ import { PromotionFormStep2 } from "@/src/presentation/components/promotions/Pro
 import type { PromotionFormData } from "@/src/presentation/components/promotions/PromotionSchema";
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
 import { useCreatePromotion } from "@/src/presentation/hooks/useCreatePromotion";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { ActivityIndicator, Alert, View } from "react-native";
 
 type Step = "step1" | "step2";
 
@@ -110,7 +110,7 @@ export default function CreatePromotionScreen() {
 			headerVariant="back"
 			headerTitle="Crear promoción"
 			showNavBar={false}
-			scrollable={false}
+			scrollable={true}
 		>
 			{currentStep === "step1" && (
 				<PromotionFormStep1 onNext={handleStep1Next} onBack={handleStep1Back} />

@@ -1,14 +1,14 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import type React from "react";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FormControl } from "@/components/ui/form-control";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { DatePickerModal } from "./DatePickerModal";
 import { type PromotionFormData, promotionFormSchema } from "./PromotionSchema";
 
@@ -65,9 +65,10 @@ export const PromotionFormStep1: React.FC<PromotionFormStep1Props> = ({
 		<ScrollView
 			className="flex-1 bg-white"
 			showsVerticalScrollIndicator={false}
+			contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16 }}
 		>
-			<VStack>
-				<Card className="rounded-lg bg-white border border-gray-200">
+			<VStack className="gap-4">
+				<Card className="rounded-lg bg-white border border-gray-200 p-4">
 					<VStack className="gap-4">
 						<Text className="text-gray-600">
 							Ingresa la información de la promoción para darla de alta en tu
@@ -84,10 +85,13 @@ export const PromotionFormStep1: React.FC<PromotionFormStep1Props> = ({
 								name="title"
 								render={({ field: { onChange, value } }) => (
 									<TextInput
-										className="border border-gray-300 rounded-lg p-3"
+										className="border border-gray-300 rounded-lg p-3 bg-white text-base text-typography-900"
 										placeholder="ej. 2x1 en Pizzas"
+										placeholderTextColor="#9CA3AF"
 										value={value || ""}
 										onChangeText={onChange}
+										editable={true}
+										multiline={false}
 									/>
 								)}
 							/>
@@ -110,12 +114,14 @@ export const PromotionFormStep1: React.FC<PromotionFormStep1Props> = ({
 								name="content"
 								render={({ field: { onChange, value } }) => (
 									<TextInput
-										className="border border-gray-300 rounded-lg p-3"
+										className="border border-gray-300 rounded-lg p-3 bg-white text-base text-typography-900"
 										placeholder="Describe tu promoción..."
+										placeholderTextColor="#9CA3AF"
 										value={value || ""}
 										onChangeText={onChange}
-										multiline
+										multiline={true}
 										numberOfLines={4}
+										textAlignVertical="top"
 									/>
 								)}
 							/>

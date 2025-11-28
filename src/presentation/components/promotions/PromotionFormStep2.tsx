@@ -1,12 +1,12 @@
-import type React from "react";
-import { useState } from "react";
-import { ActivityIndicator, View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { imageUploadService } from "@/src/infrastructure/services/imageUploadService";
 import { ImagePicker } from "@/src/presentation/components/common/ImagePicker";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
 
 interface PromotionFormStep2Props {
 	businessId: string;
@@ -31,15 +31,23 @@ export const PromotionFormStep2: React.FC<PromotionFormStep2Props> = ({
 }) => {
 	const [selectedImage, setSelectedImage] = useState<
 		import("expo-image-picker").ImagePickerAsset | null
-	>(
-		initialImageUrl
-			? ({
-					uri: initialImageUrl,
-					width: 0,
-					height: 0,
-				} as import("expo-image-picker").ImagePickerAsset)
-			: null,
-	);
+	>(null);
+
+	// Cargar imagen inicial
+	useEffect(() => {
+		if (initialImageUrl && !selectedImage) {
+			setSelectedImage({
+				uri: initialImageUrl,
+				width: 0,
+				height: 0,
+				assetId: null,
+				duration: null,
+				type: "image",
+				fileName: fileName,
+			} as import("expo-image-picker").ImagePickerAsset);
+		}
+	}, [initialImageUrl]);
+
 	const [uploading, setUploading] = useState(false);
 	const [uploadError, setUploadError] = useState<string | null>(null);
 
