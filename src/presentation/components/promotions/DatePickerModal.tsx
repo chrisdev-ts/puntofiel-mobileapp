@@ -1,16 +1,15 @@
-import type React from "react";
-import { useState } from "react";
-import { Dimensions, ScrollView, View } from "react-native";
-
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
-	Modal,
-	ModalBackdrop,
-	ModalContent,
-	ModalHeader,
+    Modal,
+    ModalBackdrop,
+    ModalContent,
+    ModalHeader,
 } from "@/components/ui/modal";
 import { Text } from "@/components/ui/text";
+import type React from "react";
+import { useCallback, useState } from "react";
+import { Dimensions, View } from "react-native";
 
 interface DatePickerModalProps {
 	isVisible: boolean;
@@ -64,61 +63,67 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
 	const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 	const emptyDays = Array.from({ length: firstDayOfMonth }, (_, i) => i);
 
-	const handlePrevMonth = () => {
+	const handlePrevMonth = useCallback(() => {
 		setCurrentDate(new Date(year, month - 1, 1));
-	};
+	}, [year, month]);
 
-	const handleNextMonth = () => {
+	const handleNextMonth = useCallback(() => {
 		setCurrentDate(new Date(year, month + 1, 1));
-	};
+	}, [year, month]);
 
-	const handleSelectDay = (day: number) => {
+	const handleSelectDay = useCallback((day: number) => {
 		setSelectedDay(day);
-	};
+	}, []);
 
-	const handleConfirm = () => {
+	const handleConfirm = useCallback(() => {
 		const selectedDate = new Date(year, month, selectedDay);
 		onSelectDate(selectedDate);
 		onClose();
-	};
+	}, [year, month, selectedDay, onSelectDate, onClose]);
 
 	if (!isVisible) return null;
 
 	// Calcular tamaño dinámico basado en el ancho de pantalla
 	const screenWidth = Dimensions.get("window").width;
-	const daySize = Math.floor((screenWidth - 80) / 7);
+	const daySize = Math.floor((screenWidth - 60) / 7);
+	const dayButtonStyle = { width: daySize, height: 56 };
+	const dayHeaderStyle = { width: daySize, height: 48 };
+	const emptyDayStyle = { width: daySize, height: 56 };
 
 	return (
 		<Modal isOpen={isVisible} onClose={onClose} size="full">
-			<ModalBackdrop />
-			<ModalContent className="bg-white rounded-lg h-full m-0 flex flex-col">
-				<ModalHeader className="border-b border-gray-200 p-4">
-					<Heading size="lg" className="text-gray-800">
-						Selecciona una fecha
+			<ModalBackdrop onPress={onClose} />
+			<ModalContent className="bg-white rounded-lg h-auto m-0 flex flex-col">
+				<ModalHeader className="border-b border-gray-200 p-4 flex-row justify-between items-center">
+					<Button
+						onPress={handlePrevMonth}
+						className="px-3 py-2"
+						variant="outline"
+						size="sm"
+					>
+						<ButtonText>◄</ButtonText>
+					</Button>
+					<Heading size="md" className="text-gray-800 flex-1 text-center">
+						{getMonthName(month)} {year}
 					</Heading>
+					<Button
+						onPress={handleNextMonth}
+						className="px-3 py-2"
+						variant="outline"
+						size="sm"
+					>
+						<ButtonText>►</ButtonText>
+					</Button>
 				</ModalHeader>
 
-				<ScrollView className="p-4 flex-1">
-					{/* Controles mes y año */}
-					<View className="flex-row items-center justify-between mb-8 gap-2">
-						<Button onPress={handlePrevMonth} className="p-3" variant="outline">
-							<ButtonText>◄</ButtonText>
-						</Button>
-						<Heading size="md" className="text-gray-800 flex-1 text-center">
-							{getMonthName(month)} {year}
-						</Heading>
-						<Button onPress={handleNextMonth} className="p-3" variant="outline">
-							<ButtonText>►</ButtonText>
-						</Button>
-					</View>
-
+				<View className="p-4">
 					{/* Encabezados de días de la semana */}
 					<View className="flex-row justify-between mb-4 gap-1">
 						{["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => (
 							<View
 								key={day}
-								style={{ width: daySize }}
-								className="h-12 items-center justify-center"
+								style={dayHeaderStyle}
+								className="items-center justify-center"
 							>
 								<Text className="text-gray-600 text-sm font-bold">{day}</Text>
 							</View>
@@ -128,21 +133,21 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
 					{/* Cuadrícula de calendario */}
 					<View className="flex-row flex-wrap justify-between gap-1">
 						{/* Espacios vacíos al inicio */}
-						{emptyDays.map((_) => (
+						{emptyDays.map((_, index) => (
 							<View
-								key={`empty-day-placeholder`}
-								style={{ width: daySize }}
-								className="h-14 mb-1"
+								key={`empty-${index}`}
+								style={emptyDayStyle}
+								className="mb-1"
 							/>
 						))}
 
 						{/* Días del mes */}
 						{days.map((day) => (
 							<Button
-								key={day}
+								key={`day-${day}`}
 								onPress={() => handleSelectDay(day)}
-								style={{ width: daySize }}
-								className={`h-14 rounded-lg items-center justify-center mb-1 ${
+								style={dayButtonStyle}
+								className={`rounded-lg items-center justify-center mb-1 ${
 									selectedDay === day ? "bg-blue-500" : "bg-gray-100"
 								}`}
 							>
@@ -158,7 +163,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
 					</View>
 
 					{/* Información de fecha seleccionada */}
-					<View className="bg-blue-50 rounded-lg p-4 mt-8 mb-6">
+					<View className="bg-blue-50 rounded-lg p-4 mt-6 mb-4">
 						<Text className="text-sm text-gray-600 mb-1">
 							Fecha seleccionada:
 						</Text>
@@ -186,7 +191,7 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
 							<ButtonText>Confirmar</ButtonText>
 						</Button>
 					</View>
-				</ScrollView>
+				</View>
 			</ModalContent>
 		</Modal>
 	);

@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import type { Promotion } from "@/src/core/entities/Promotion";
 import { supabase } from "@/src/infrastructure/services/supabase";
+import { useQuery } from "@tanstack/react-query";
 
 /**
  * Hook para obtener todas las promociones de un negocio
@@ -66,7 +66,7 @@ export const usePromotions = (businessId: string | null) => {
 			return promotions;
 		},
 		enabled: !!businessId,
-		staleTime: 5 * 60 * 1000, // 5 minutos
+		staleTime: 30 * 1000, // 30 segundos - más corto para ver cambios rápidamente
 		retry: 2,
 	});
 };

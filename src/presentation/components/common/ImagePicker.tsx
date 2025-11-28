@@ -1,7 +1,3 @@
-import type { ImagePickerAsset } from "expo-image-picker";
-import * as ExpoImagePicker from "expo-image-picker";
-import { CameraIcon, ImageIcon } from "lucide-react-native";
-import { Pressable } from "react-native";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
 import { HStack } from "@/components/ui/hstack";
@@ -9,12 +5,16 @@ import { Icon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import {
-	Toast,
-	ToastDescription,
-	ToastTitle,
-	useToast,
+    Toast,
+    ToastDescription,
+    ToastTitle,
+    useToast,
 } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
+import type { ImagePickerAsset } from "expo-image-picker";
+import * as ExpoImagePicker from "expo-image-picker";
+import { CameraIcon, ImageIcon } from "lucide-react-native";
+import { Pressable } from "react-native";
 
 interface ImagePickerProps {
 	/** Imagen actualmente seleccionada */
@@ -167,7 +167,6 @@ export function ImagePicker({
 						alt="Imagen seleccionada"
 						className={`w-full ${imageHeight} rounded-lg`}
 						resizeMode="cover"
-						style={{ aspectRatio: 1 }}
 					/>
 					<HStack className="gap-3">
 						<Button
