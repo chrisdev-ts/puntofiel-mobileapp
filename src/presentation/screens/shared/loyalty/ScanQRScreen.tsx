@@ -1,10 +1,3 @@
-import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
-import { Text } from "@/components/ui/text";
-import { VStack } from "@/components/ui/vstack";
-import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
-import { useAuth } from "@/src/presentation/hooks/useAuth";
 import {
 	type BarcodeScanningResult,
 	CameraView,
@@ -13,6 +6,13 @@ import {
 import { router } from "expo-router";
 import { Zap } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
+import { Box } from "@/components/ui/box";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
+import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
+import { useAuth } from "@/src/presentation/hooks/useAuth";
 
 export default function ScanQRScreen() {
 	const [permission, requestPermission] = useCameraPermissions();
@@ -47,7 +47,9 @@ export default function ScanQRScreen() {
 				const params = encodeURIComponent(qrData);
 
 				const baseRoute = user?.role === "owner" ? "/(owner)" : "/(employee)";
-				router.push(`${baseRoute}/rewards/validate-redemption?data=${params}` as never);
+				router.push(
+					`${baseRoute}/rewards/validate-redemption?data=${params}` as never,
+				);
 				return;
 			}
 		} catch (error) {

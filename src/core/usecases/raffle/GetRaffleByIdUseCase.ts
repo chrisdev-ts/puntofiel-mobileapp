@@ -9,15 +9,15 @@ import type { IRaffleRepository } from "@/src/core/repositories/IRaffleRepositor
  * - Si la rifa no existe, retorna null
  */
 export class GetRaffleByIdUseCase {
-    constructor(private readonly raffleRepository: IRaffleRepository) {}
+	constructor(private readonly raffleRepository: IRaffleRepository) {}
 
-    async execute(raffleId: string): Promise<Raffle | null> {
-        // Validación: el ID no puede estar vacío
-        if (!raffleId || raffleId.trim() === "") {
-            throw new Error("El ID de la rifa es requerido");
-        }
+	async execute(raffleId: string): Promise<Raffle | null> {
+		// Validación: el ID no puede estar vacío
+		if (!raffleId || raffleId.trim() === "") {
+			throw new Error("El ID de la rifa es requerido");
+		}
 
-        // Delegar al repositorio
-        return await this.raffleRepository.getRaffleById(raffleId);
-    }
+		// Delegar al repositorio
+		return await this.raffleRepository.getRaffleById(raffleId);
+	}
 }

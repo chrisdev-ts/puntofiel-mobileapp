@@ -4,48 +4,48 @@
  * Representa una rifa anual de la plataforma PuntoFiel.
  */
 export interface Raffle {
-    id: string;
-    businessId: string;
-    name: string;
-    prize: string;
-    description: string;
-    pointsRequired: number;
-    maxTicketsPerUser: number;
-    startDate: Date;
-    endDate: Date;
-    imageUrl?: string;
-    // 👇 Agregados
-    winnerCustomerId?: string | null;
-    winnerName?: string; 
-    isCompleted: boolean; 
-    // 👆
-    isActive: boolean;
-    createdAt: Date;
-    isParticipating: boolean;
+	id: string;
+	businessId: string;
+	name: string;
+	prize: string;
+	description: string;
+	pointsRequired: number;
+	maxTicketsPerUser: number;
+	startDate: Date;
+	endDate: Date;
+	imageUrl?: string;
+	// 👇 Agregados
+	winnerCustomerId?: string | null;
+	winnerName?: string;
+	isCompleted: boolean;
+	// 👆
+	isActive: boolean;
+	createdAt: Date;
+	isParticipating: boolean;
 }
 
 /**
  * DTO para crear una nueva rifa anual
  */
 export interface CreateRaffleDTO {
-    businessId: string;
-    name: string;
-    prize: string;
-    description: string;
-    pointsRequired: number;
-    maxTicketsPerUser: number;
-    startDate: Date;
-    endDate: Date;
+	businessId: string;
+	name: string;
+	prize: string;
+	description: string;
+	pointsRequired: number;
+	maxTicketsPerUser: number;
+	startDate: Date;
+	endDate: Date;
 }
 
 export interface UpdateRaffleDTO {
-    name?: string;
-    prize?: string;
-    description?: string;
-    pointsRequired?: number;
-    maxTicketsPerUser?: number;
-    startDate?: Date;
-    endDate?: Date;
+	name?: string;
+	prize?: string;
+	description?: string;
+	pointsRequired?: number;
+	maxTicketsPerUser?: number;
+	startDate?: Date;
+	endDate?: Date;
 }
 
 /**

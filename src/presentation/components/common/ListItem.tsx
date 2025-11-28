@@ -1,11 +1,11 @@
+import type { ReactNode } from "react";
+import { Pressable } from "react-native";
 import { Box } from "@/components/ui/box";
 import { HStack } from "@/components/ui/hstack";
 import { ArrowRightIcon, Icon } from "@/components/ui/icon";
 import { Image } from "@/components/ui/image";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import type { ReactNode } from "react";
-import { Pressable } from "react-native";
 
 interface ListItemProps {
 	/** ID único del elemento */

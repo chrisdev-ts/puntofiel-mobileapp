@@ -26,7 +26,6 @@ interface EditProfileScreenProps {
  */
 export default function EditProfileScreen({
 	userData,
-	onCancel,
 	onSave,
 	updateProfileAsync,
 }: EditProfileScreenProps) {

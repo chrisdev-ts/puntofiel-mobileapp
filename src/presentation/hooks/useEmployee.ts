@@ -26,7 +26,8 @@ export function useEmployee(businessId: string | undefined) {
 		error: employeesError,
 	} = useQuery({
 		queryKey: ["employees", businessId],
-		queryFn: () => getEmployeeUseCase.execute(businessId!),
+		queryFn: () =>
+			businessId ? getEmployeeUseCase.execute(businessId) : undefined,
 		enabled: !!businessId,
 	});
 

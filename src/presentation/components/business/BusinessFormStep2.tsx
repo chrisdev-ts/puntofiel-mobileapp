@@ -1,10 +1,10 @@
+import type { Control } from "react-hook-form";
+import { Controller } from "react-hook-form";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { BusinessHoursSelector } from "@/src/presentation/components/business/BusinessHoursSelector";
 import type { BusinessFormData } from "@/src/presentation/screens/owner/business/BusinessFormSchema";
-import type { Control } from "react-hook-form";
-import { Controller } from "react-hook-form";
 
 type BusinessFormStep2Props = {
 	control: Control<BusinessFormData>;

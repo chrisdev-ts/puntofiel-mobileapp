@@ -54,14 +54,16 @@ export function ListContainer({
 		return (
 			<Box className="p-1 border border-background-300 rounded-xl">
 				<View className="flex-row flex-wrap">
-					{/* Wrapper para cada item con width 50% y padding */}
-					{/* biome-ignore lint/suspicious/noArrayIndexKey: Los children ya tienen keys únicas */}
 					{Array.isArray(children) ? (
-						children.map((child, index) => (
-							<View key={index} className="w-1/2 p-1.5">
-								{child}
-							</View>
-						))
+						children.map((child) => {
+							// Si el hijo tiene key, úsala
+							const key = (child as React.ReactElement)?.key ?? undefined;
+							return (
+								<View key={key} className="w-1/2 p-1.5">
+									{child}
+								</View>
+							);
+						})
 					) : (
 						<View className="w-1/2 p-1.5">{children}</View>
 					)}

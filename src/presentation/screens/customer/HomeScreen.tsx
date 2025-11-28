@@ -1,3 +1,6 @@
+import { useRouter } from "expo-router";
+import { AlertCircleIcon, QrCodeIcon } from "lucide-react-native";
+import { useEffect } from "react";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -8,9 +11,6 @@ import {
 	ListItem,
 } from "@/src/presentation/components/common";
 import { useLoyalty } from "@/src/presentation/hooks/useLoyalty";
-import { useRouter } from "expo-router";
-import { AlertCircleIcon, QrCodeIcon } from "lucide-react-native";
-import { useEffect } from "react";
 import { AppLayout } from "../../components/layout/AppLayout";
 
 export default function HomeScreen() {

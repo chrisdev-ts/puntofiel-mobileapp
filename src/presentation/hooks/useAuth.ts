@@ -1,3 +1,5 @@
+import { useMutation } from "@tanstack/react-query";
+import { useEffect } from "react";
 import type {
 	CreateUserDTO,
 	LoginUserDTO,
@@ -6,8 +8,6 @@ import type {
 import { LoginUserUseCase } from "@/src/core/usecases/auth/loginUser";
 import { RegisterUserUseCase } from "@/src/core/usecases/auth/registerUser";
 import { UpdateUserUseCase } from "@/src/core/usecases/auth/updateUser";
-import { useMutation } from "@tanstack/react-query";
-import { useEffect } from "react";
 // Importamos la clase sin llaves {} porque es export default
 import SupabaseUserRepository from "@/src/infrastructure/repositories/SupabaseUserRepository";
 import { supabase } from "@/src/infrastructure/services/supabase";

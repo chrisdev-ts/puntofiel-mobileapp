@@ -65,30 +65,34 @@ export default function RedeemRewardScreen() {
 		router.replace("/(customer)/(tabs)/home");
 	};
 
-	if (loadingReward || loadingBusiness)
-		return (
+	let content: React.ReactNode = null;
+	if (loadingReward || loadingBusiness) {
+		content = (
 			<Box className="flex-1 center bg-white">
 				<Spinner size="large" color="#2F4858" />
 			</Box>
 		);
-	if (!reward || !businessDetail) return null;
+	} else if (!reward || !businessDetail) {
+		content = null;
+	}
 
-	const { business, loyaltyCard } = businessDetail;
+	const business = businessDetail?.business;
+	const loyaltyCard = businessDetail?.loyaltyCard;
 	const currentPoints = loyaltyCard?.points || 0;
-
-	// Datos para el QR (Actualizado con Nombres)
 	const qrValue = useMemo(() => {
-		if (!user || !reward) return "";
+		if (!user || !reward || !business) return "";
 		return JSON.stringify({
 			type: "reward_redemption",
 			userId: user.id,
 			rewardId: reward.id,
-			rewardName: reward.name, // 👈 Nuevo: Nombre de la recompensa
-			businessName: business?.name, // 👈 Nuevo: Nombre del negocio
+			rewardName: reward.name,
+			businessName: business.name,
 			pointsCost: reward.pointsRequired,
 			timestamp: new Date().toISOString(),
 		});
-	}, [user?.id, reward?.id, business?.name]);
+	}, [user?.id, reward?.id, business?.name, reward, user, business]);
+
+	if (content !== null) return content;
 
 	return (
 		<AppLayout
@@ -106,7 +110,7 @@ export default function RedeemRewardScreen() {
 					<Box className="border border-gray-200 rounded-xl p-4 mb-6 bg-white shadow-sm">
 						<HStack space="md" className="items-center">
 							<Box className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
-								{reward.imageUrl ? (
+								{reward?.imageUrl ? (
 									<Image
 										source={{ uri: reward.imageUrl }}
 										alt="Reward"
@@ -120,7 +124,7 @@ export default function RedeemRewardScreen() {
 							</Box>
 							<VStack className="flex-1">
 								<Heading size="md" className="text-[#2F4858]" numberOfLines={1}>
-									{reward.name}
+									{reward ? reward.name : ""}
 								</Heading>
 								<Text className="text-gray-500 mb-1">{business?.name}</Text>
 								<Badge
@@ -129,7 +133,7 @@ export default function RedeemRewardScreen() {
 									className="self-start rounded-md bg-[#2F4858]"
 								>
 									<BadgeText className="text-white">
-										{reward.pointsRequired} puntos
+										{reward ? reward.pointsRequired : 0} puntos
 									</BadgeText>
 								</Badge>
 							</VStack>
@@ -161,7 +165,7 @@ export default function RedeemRewardScreen() {
 							</VStack>
 							<Badge className="bg-gray-600 rounded-full px-2">
 								<BadgeText className="text-white text-xs">
-									Se cobrarán: {reward.pointsRequired}
+									Se cobrarán: {reward ? reward.pointsRequired : 0}
 								</BadgeText>
 							</Badge>
 						</HStack>

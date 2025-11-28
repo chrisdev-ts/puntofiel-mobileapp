@@ -4,7 +4,6 @@ import type {
 	CreateUserDTO,
 	LoginUserDTO,
 	User,
-	UserRole,
 } from "@/src/core/entities/User";
 import type { IUserRepository } from "@/src/core/repositories/IUserRepository";
 import { supabase } from "@/src/infrastructure/services/supabase";
@@ -14,7 +13,7 @@ import { supabase } from "@/src/infrastructure/services/supabase";
  * Lectura del teléfono: ÚNICAMENTE desde los metadatos de la sesión.
  */
 const mapToUserEntity = (
-	supabaseProfile: any,
+	supabaseProfile: Record<string, unknown>,
 	authSession: Session | null = null,
 ): User => {
 	const email = authSession?.user.email || supabaseProfile.email;
@@ -23,15 +22,32 @@ const mapToUserEntity = (
 	const phoneFromAuthMetadata = authSession?.user?.user_metadata?.phone;
 
 	return {
-		id: supabaseProfile.id,
-		email: email || "",
-		firstName: supabaseProfile.first_name,
-		lastName: supabaseProfile.last_name,
-		secondLastName: supabaseProfile.second_last_name || undefined,
-		phone: phoneFromAuthMetadata || "", // <-- LECTURA CORRECTA
-		role: supabaseProfile.role as UserRole,
-		createdAt: new Date(supabaseProfile.created_at),
-		updatedAt: new Date(supabaseProfile.updated_at),
+		id: String(supabaseProfile.id ?? ""),
+		email: typeof email === "string" ? email : "",
+		firstName:
+			typeof supabaseProfile.first_name === "string"
+				? supabaseProfile.first_name
+				: "",
+		lastName:
+			typeof supabaseProfile.last_name === "string"
+				? supabaseProfile.last_name
+				: "",
+		secondLastName:
+			typeof supabaseProfile.second_last_name === "string"
+				? supabaseProfile.second_last_name
+				: undefined,
+		phone:
+			typeof phoneFromAuthMetadata === "string" ? phoneFromAuthMetadata : "",
+		role:
+			typeof supabaseProfile.role === "string"
+				? (supabaseProfile.role as "customer" | "employee" | "owner")
+				: "customer",
+		createdAt: supabaseProfile.created_at
+			? new Date(String(supabaseProfile.created_at))
+			: new Date(),
+		updatedAt: supabaseProfile.updated_at
+			? new Date(String(supabaseProfile.updated_at))
+			: new Date(),
 	};
 };
 
@@ -53,7 +69,7 @@ export default class SupabaseUserRepository implements IUserRepository {
 	 */
 	async updateUser(userId: string, data: UpdateUserDTO): Promise<User> {
 		// 1. Preparar la actualización de la tabla 'profiles' (nombre, apellidos)
-		const updateProfilePayload: Record<string, any> = {};
+		const updateProfilePayload: Record<string, unknown> = {};
 		let needsProfileUpdate = false;
 
 		if (data.firstName !== undefined) {
@@ -132,7 +148,9 @@ export default class SupabaseUserRepository implements IUserRepository {
 	/**
 	 * Método auxiliar para obtener el perfil de la DB (excluyendo la lógica de sesión)
 	 */
-	private async getProfileById(userId: string): Promise<any | null> {
+	private async getProfileById(
+		userId: string,
+	): Promise<Record<string, unknown> | null> {
 		const { data: profile, error: profileError } = await supabase
 			.from("profiles")
 			.select("*")

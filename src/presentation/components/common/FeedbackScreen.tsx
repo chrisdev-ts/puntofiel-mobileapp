@@ -1,3 +1,11 @@
+// Utilidad para validar/castear rutas compatibles con Expo Router
+function getValidRoute(path: string): string {
+	// Si la ruta empieza por /, se considera válida
+	if (path.startsWith("/")) return path;
+	// Si no, prepende / para asegurar formato
+	return `/${path}`;
+}
+
 import { usePathname, useRouter } from "expo-router";
 import type { LucideIcon } from "lucide-react-native";
 import type { ReactNode } from "react";
@@ -156,8 +164,11 @@ export function FeedbackScreen({
 								onRetry ||
 								(() => {
 									// Recargar la ruta actual para reintentar
-									// biome-ignore lint/suspicious/noExplicitAny: Expo Router tipo estricto para rutas dinámicas
-									router.replace(pathname as any);
+									router.replace(
+										getValidRoute(
+											pathname,
+										) as import("expo-router").RelativePathString,
+									);
 								})
 							}
 							action="primary"

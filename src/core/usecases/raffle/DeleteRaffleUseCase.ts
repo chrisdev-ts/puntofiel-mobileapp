@@ -5,19 +5,19 @@ import type { IRaffleRepository } from "@/src/core/repositories/IRaffleRepositor
  * Valida que la rifa pertenece al negocio antes de eliminarla.
  */
 export class DeleteRaffleUseCase {
-    constructor(private readonly raffleRepository: IRaffleRepository) {}
+	constructor(private readonly raffleRepository: IRaffleRepository) {}
 
-    async execute(raffleId: string, businessId: string): Promise<void> {
-        // Validaciones de negocio
-        if (!raffleId || raffleId.trim() === "") {
-            throw new Error("El ID de la rifa es requerido");
-        }
+	async execute(raffleId: string, businessId: string): Promise<void> {
+		// Validaciones de negocio
+		if (!raffleId || raffleId.trim() === "") {
+			throw new Error("El ID de la rifa es requerido");
+		}
 
-        if (!businessId || businessId.trim() === "") {
-            throw new Error("El ID del negocio es requerido");
-        }
+		if (!businessId || businessId.trim() === "") {
+			throw new Error("El ID del negocio es requerido");
+		}
 
-        // Delegar al repositorio
-        await this.raffleRepository.deleteRaffle(raffleId, businessId);
-    }
+		// Delegar al repositorio
+		await this.raffleRepository.deleteRaffle(raffleId, businessId);
+	}
 }
