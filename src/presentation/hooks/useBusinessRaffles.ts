@@ -1,6 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { GetRafflesUseCase } from "@/src/core/usecases/raffle/GetRafflesUseCase";
 import { SupabaseRaffleRepository } from "@/src/infrastructure/repositories/SupabaseRaffleRepository";
-import { useQuery } from "@tanstack/react-query";
 
 const raffleRepository = new SupabaseRaffleRepository();
 const getRafflesUseCase = new GetRafflesUseCase(raffleRepository);

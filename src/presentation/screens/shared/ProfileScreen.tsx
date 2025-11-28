@@ -1,3 +1,6 @@
+import { router } from "expo-router";
+import { useState } from "react";
+import { View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import {
@@ -23,9 +26,6 @@ import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { MenuItem, MenuSection } from "@/src/presentation/components/profile";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
 import { useLoyalty } from "@/src/presentation/hooks/useLoyalty";
-import { router } from "expo-router";
-import { useState } from "react";
-import { View } from "react-native";
 import EditProfileScreen from "./EditProfileScreen";
 
 /**

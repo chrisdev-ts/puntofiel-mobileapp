@@ -1,8 +1,8 @@
 import { useRouter } from "expo-router";
-import React from "react";
+import { useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
-
 import { Text } from "@/components/ui/text";
+import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { PromotionFormStep1 } from "@/src/presentation/components/promotions/PromotionFormStep1";
 import { PromotionFormStep2 } from "@/src/presentation/components/promotions/PromotionFormStep2";
 import type { PromotionFormData } from "@/src/presentation/components/promotions/PromotionSchema";
@@ -28,7 +28,7 @@ export default function CreatePromotionScreen() {
 	});
 
 	const handleStep1Next = (data: Partial<PromotionFormData>) => {
-		setFormData((prev) => ({ ...prev, ...data }));
+		setFormData((prev: Partial<PromotionFormData>) => ({ ...prev, ...data }));
 		setCurrentStep("step2");
 	};
 
@@ -79,7 +79,7 @@ export default function CreatePromotionScreen() {
 		return (
 			<AppLayout
 				headerVariant="back"
-				headerTitle="Crear Promoción"
+				headerTitle="Crear promoción"
 				showNavBar={false}
 			>
 				<View className="flex-1 justify-center items-center">
@@ -93,7 +93,7 @@ export default function CreatePromotionScreen() {
 		return (
 			<AppLayout
 				headerVariant="back"
-				headerTitle="Crear Promoción"
+				headerTitle="Crear promoción"
 				showNavBar={false}
 			>
 				<View className="flex-1 justify-center items-center px-6">
@@ -108,7 +108,7 @@ export default function CreatePromotionScreen() {
 	return (
 		<AppLayout
 			headerVariant="back"
-			headerTitle="Crear Promoción"
+			headerTitle="Crear promoción"
 			showNavBar={false}
 			scrollable={false}
 		>

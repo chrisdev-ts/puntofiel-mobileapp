@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from "expo-router";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { Heading } from "@/components/ui/heading";
@@ -9,7 +10,6 @@ import { FeedbackScreen } from "@/src/presentation/components/common";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useBusinessDetail } from "@/src/presentation/hooks/useBusinessDetail";
 import { usePromotionDetail } from "@/src/presentation/hooks/usePromotionDetail";
-import { useLocalSearchParams } from "expo-router";
 
 export default function PromotionDetailScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,15 +24,9 @@ export default function PromotionDetailScreen() {
 
 	if (isLoading) {
 		return (
-			<AppLayout
-				showHeader
-				headerVariant="back"
-				showNavBar={false}
-				scrollable
-				headerTitle="Detalle de promoción"
-			>
-				<Box className="flex-1 items-center justify-center py-10">
-					<Text className="text-typography-500">Cargando promoción...</Text>
+			<AppLayout showHeader showNavBar={false} headerVariant="back">
+				<Box className="flex-1 justify-center items-center bg-white">
+					<FeedbackScreen variant="loading" title="Cargando promoción..." />
 				</Box>
 			</AppLayout>
 		);
@@ -40,17 +34,11 @@ export default function PromotionDetailScreen() {
 
 	if (error || !promotion) {
 		return (
-			<AppLayout
-				showHeader
-				headerVariant="back"
-				showNavBar={false}
-				scrollable
-				headerTitle="Detalle de promoción"
-			>
+			<AppLayout showHeader showNavBar={false} headerVariant="back">
 				<FeedbackScreen
 					variant="error"
-					title="No se pudo cargar la promoción"
-					description="Intenta de nuevo más tarde."
+					title="Error"
+					description="No se encontró la promoción."
 				/>
 			</AppLayout>
 		);
@@ -58,31 +46,51 @@ export default function PromotionDetailScreen() {
 
 	return (
 		<AppLayout
-			showHeader
-			headerVariant="back"
+			showHeader={true}
 			showNavBar={false}
-			scrollable
+			scrollable={true}
+			headerVariant="back"
 			headerTitle="Detalle de promoción"
 		>
-			<VStack space="lg">
-				{/* Imagen */}
-				{promotion.imageUrl || (promotion as any).image_url ? (
-					<Image
-						source={{ uri: promotion.imageUrl || (promotion as any).image_url }}
-						className="w-full h-48 rounded-lg mb-4"
-						resizeMode="cover"
-					/>
-				) : (
-					<Box className="w-full h-48 bg-background-300 items-center justify-center rounded-lg mb-4">
-						<Text className="text-typography-400">Sin imagen</Text>
-					</Box>
+			<VStack space="lg" className="pb-6 px-1">
+				{/* Negocio destacado (cliente) */}
+				{businessDetail?.business?.name && (
+					<HStack space="md" className="items-center justify-between px-2 mb-2">
+						<Heading size="lg" className="text-primary-500 flex-1">
+							{businessDetail.business.name}
+						</Heading>
+						<Badge action="info" variant="solid" size="lg">
+							<BadgeText>Promoción</BadgeText>
+						</Badge>
+					</HStack>
 				)}
 
-				{/* Título y estado */}
-				<HStack space="md" className="items-center justify-between">
-					<Heading size="xl" className="text-primary-500 flex-1">
-						{promotion.title}
-					</Heading>
+				{/* Imagen cuadrada */}
+				<Box className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
+					{promotion.imageUrl ? (
+						<Image
+							source={{ uri: promotion.imageUrl }}
+							alt={promotion.title}
+							className="w-full h-full"
+							resizeMode="cover"
+						/>
+					) : (
+						<Box className="w-full h-full justify-center items-center">
+							<Text className="text-gray-400">Sin imagen</Text>
+						</Box>
+					)}
+				</Box>
+
+				{/* Título */}
+				<Heading size="xl" className="text-[#2F4858]">
+					{promotion.title}
+				</Heading>
+				<Text className="text-gray-700 leading-6">
+					{promotion.content || "Sin descripción disponible"}
+				</Text>
+
+				{/* Estado y fechas */}
+				<HStack space="md" className="items-center">
 					<Badge action="info" variant="solid" size="md">
 						<BadgeText>
 							{(() => {
@@ -97,40 +105,15 @@ export default function PromotionDetailScreen() {
 							})()}
 						</BadgeText>
 					</Badge>
-				</HStack>
-
-				{/* Descripción */}
-				{promotion.content && (
-					<Text className="text-typography-700">{promotion.content}</Text>
-				)}
-
-				{/* Fechas */}
-				<HStack space="md" className="items-center">
 					<Text className="text-xs text-typography-500">
-						Inicio:{" "}
-						{new Date(
-							promotion.startDate || (promotion as any).start_date,
-						).toLocaleDateString()}
+						Inicio: {new Date(promotion.startDate).toLocaleDateString()}
 					</Text>
-					{(promotion.endDate || (promotion as any).end_date) && (
+					{promotion.endDate && (
 						<Text className="text-xs text-typography-500">
-							Fin:{" "}
-							{new Date(
-								promotion.endDate || (promotion as any).end_date,
-							).toLocaleDateString()}
+							Fin: {new Date(promotion.endDate).toLocaleDateString()}
 						</Text>
 					)}
 				</HStack>
-
-				{/* Negocio asociado */}
-				{businessDetail?.business?.name && (
-					<Box>
-						<Text className="text-typography-500 text-xs mb-1">Negocio</Text>
-						<Text className="text-typography-900 font-semibold">
-							{businessDetail.business.name}
-						</Text>
-					</Box>
-				)}
 			</VStack>
 		</AppLayout>
 	);

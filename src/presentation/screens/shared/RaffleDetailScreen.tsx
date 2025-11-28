@@ -1,3 +1,15 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
+import {
+	AlertCircleIcon,
+	CheckSquare,
+	ClockIcon,
+	EditIcon,
+	TrashIcon,
+	Trophy,
+	UserIcon,
+	XSquare,
+} from "lucide-react-native";
+import { useEffect, useState } from "react";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
@@ -21,18 +33,6 @@ import {
 	useToast,
 } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-	AlertCircleIcon,
-	CheckSquare,
-	ClockIcon,
-	EditIcon,
-	TrashIcon,
-	Trophy,
-	UserIcon,
-	XSquare,
-} from "lucide-react-native";
-import { useEffect, useState } from "react";
 
 // Shared Components
 import {

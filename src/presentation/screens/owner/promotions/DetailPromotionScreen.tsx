@@ -1,7 +1,19 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
+import { Alert, View } from "react-native";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { HStack } from "@/components/ui/hstack";
+import { Image } from "@/components/ui/image";
+import {
+	Modal,
+	ModalBackdrop,
+	ModalBody,
+	ModalContent,
+	ModalFooter,
+	ModalHeader,
+} from "@/components/ui/modal";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -10,8 +22,6 @@ import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useDeletePromotion } from "@/src/presentation/hooks/useDeletePromotion";
 import { usePromotion } from "@/src/presentation/hooks/usePromotion";
 import { useUpdatePromotion } from "@/src/presentation/hooks/useUpdatePromotion";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, Image as RNImage, View } from "react-native";
 
 export default function DetailPromotionScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,7 +29,9 @@ export default function DetailPromotionScreen() {
 	// Se evita el non-null assertion, se maneja undefined
 	const { data: promotion, isLoading, refetch } = usePromotion(id ?? "");
 	const { mutate: updatePromotion } = useUpdatePromotion();
-	const { mutate: deletePromotion } = useDeletePromotion();
+	const { mutate: deletePromotion, isPending: isDeleting } =
+		useDeletePromotion();
+	const [showDeleteModal, setShowDeleteModal] = useState(false);
 
 	if (isLoading) {
 		return (
@@ -112,41 +124,43 @@ export default function DetailPromotionScreen() {
 
 	// Manejar eliminación
 	const handleDelete = () => {
-		Alert.alert("Confirmar eliminación", "¿Deseas eliminar esta promoción?", [
-			{ text: "Cancelar", onPress: () => {} },
-			{
-				text: "Eliminar",
-				onPress: () => {
-					deletePromotion(
-						{
-							id: promotionData.id,
-							businessId: promotionData.businessId,
-							imageUrl: promotionData.imageUrl ?? undefined,
-						},
-						{
-							onSuccess: () => {
-								Alert.alert("Éxito", "Promoción eliminada");
-								router.push("/(owner)/promotions");
-							},
-							onError: (error: unknown) => {
-								let message = "Error al eliminar";
-								if (
-									error &&
-									typeof error === "object" &&
-									"message" in error &&
-									typeof (error as Record<string, unknown>).message === "string"
-								) {
-									message = (error as Record<string, unknown>)
-										.message as string;
-								}
-								Alert.alert("Error", message);
-							},
-						},
-					);
+		if (isDeleting) return;
+		setShowDeleteModal(true);
+	};
+
+	const confirmDelete = async () => {
+		if (isDeleting) return;
+		try {
+			await deletePromotion(
+				{
+					id: promotionData.id,
+					businessId: promotionData.businessId,
+					imageUrl: promotionData.imageUrl ?? undefined,
 				},
-				style: "destructive",
-			},
-		]);
+				{
+					onSuccess: () => {
+						setShowDeleteModal(false);
+						router.push("/(owner)/promotions");
+					},
+					onError: (error: unknown) => {
+						let message = "Error al eliminar";
+						if (
+							error &&
+							typeof error === "object" &&
+							"message" in error &&
+							typeof (error as Record<string, unknown>).message === "string"
+						) {
+							message = (error as Record<string, unknown>).message as string;
+						}
+						setShowDeleteModal(false);
+						Alert.alert("Error", message);
+					},
+				},
+			);
+		} catch {
+			setShowDeleteModal(false);
+			Alert.alert("Error", "No se pudo eliminar la promoción");
+		}
 	};
 
 	// Manejar edición
@@ -163,17 +177,24 @@ export default function DetailPromotionScreen() {
 			headerTitle="Detalles de la promoción"
 			showNavBar={false}
 		>
-			{/* Imagen de la promoción */}
-			{promotionData.imageUrl && (
-				<RNImage
-					source={{ uri: promotionData.imageUrl }}
-					className="w-full h-48 rounded-lg mb-4 bg-gray-200"
-					resizeMode="cover"
-				/>
-			)}
+			{/* Imagen de la promoción (igual que recompensas) */}
+			<View className="w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
+				{promotionData.imageUrl ? (
+					<Image
+						source={{ uri: promotionData.imageUrl }}
+						alt={promotionData.title}
+						className="w-full h-full"
+						resizeMode="cover"
+					/>
+				) : (
+					<View className="w-full h-full justify-center items-center">
+						<Text className="text-gray-400">Sin imagen</Text>
+					</View>
+				)}
+			</View>
 
 			{/* Tarjeta de información */}
-			<Card className="p-4 mb-6 bg-gray-50 rounded-lg border border-gray-200">
+			<Card className="p-4 bg-gray-50 rounded-lg border border-gray-200">
 				<VStack className="gap-3">
 					<Text className="text-2xl font-bold text-gray-900">
 						{promotionData.title}
@@ -183,7 +204,7 @@ export default function DetailPromotionScreen() {
 					</Text>
 
 					{/* Badge de estado */}
-					<HStack className="gap-3 mt-2">
+					<HStack className="gap-3">
 						<Badge
 							className={
 								promotionData.isActive
@@ -222,7 +243,7 @@ export default function DetailPromotionScreen() {
 			</Card>
 
 			{/* Botones de acción */}
-			<VStack className="gap-3 mt-auto mb-4">
+			<VStack className="gap-3">
 				{/* Botón de activar/desactivar */}
 				<Button
 					onPress={handleToggleStatus}
@@ -250,12 +271,51 @@ export default function DetailPromotionScreen() {
 				{/* Botón de eliminar */}
 				<Button
 					onPress={handleDelete}
-					className="w-full"
+					className={`w-full ${isDeleting ? "opacity-50" : ""}`}
 					variant="solid"
 					action="error"
+					isDisabled={isDeleting}
 				>
-					<ButtonText>Eliminar promoción</ButtonText>
+					<ButtonText>
+						{isDeleting ? "Eliminando..." : "Eliminar promoción"}
+					</ButtonText>
 				</Button>
+				{/* Modal de confirmación de eliminación */}
+				<Modal
+					isOpen={showDeleteModal}
+					onClose={() => setShowDeleteModal(false)}
+				>
+					<ModalBackdrop />
+					<ModalContent>
+						<ModalHeader>
+							<Text className="text-lg font-bold">¿Eliminar promoción?</Text>
+						</ModalHeader>
+						<ModalBody>
+							<Text>
+								La promoción "{promotionData.title}" dejará de estar visible y
+								no podrá recuperarse.
+							</Text>
+						</ModalBody>
+						<ModalFooter>
+							<Button
+								variant="outline"
+								onPress={() => setShowDeleteModal(false)}
+								className="mr-2"
+							>
+								<ButtonText>Cancelar</ButtonText>
+							</Button>
+							<Button
+								className="bg-red-600"
+								onPress={confirmDelete}
+								isDisabled={isDeleting}
+							>
+								<ButtonText className="text-white">
+									{isDeleting ? "Eliminando..." : "Eliminar"}
+								</ButtonText>
+							</Button>
+						</ModalFooter>
+					</ModalContent>
+				</Modal>
 
 				{/* Botón para volver al Home */}
 				<Button

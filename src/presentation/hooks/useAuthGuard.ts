@@ -1,6 +1,6 @@
-import { useAuthStore } from "@/src/presentation/stores/authStore";
 import { useRootNavigationState, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
+import { useAuthStore } from "@/src/presentation/stores/authStore";
 import { useOwnerBusinessCheck } from "./useOwnerbusinessCheck";
 
 /**

@@ -1,9 +1,9 @@
-import { Button, ButtonText } from "@/components/ui/button";
-import { Text } from "@/components/ui/text";
-import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, View } from "react-native";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 // import { VStack } from '@/components/ui/vstack';
 import { PromotionFormStep1 } from "@/src/presentation/components/promotions/PromotionFormStep1";
 import { PromotionFormStep2 } from "@/src/presentation/components/promotions/PromotionFormStep2";

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Gift, HelpCircle } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Pressable } from "react-native";
 
 // UI Components

@@ -1,15 +1,14 @@
-import { Button, ButtonText } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { FormControl } from "@/components/ui/form-control";
-import { Heading } from "@/components/ui/heading";
-import { HStack } from "@/components/ui/hstack";
-import { Text } from "@/components/ui/text";
-import { VStack } from "@/components/ui/vstack";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Pressable, ScrollView, TextInput, View } from "react-native";
+import { Button, ButtonText } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { FormControl } from "@/components/ui/form-control";
+import { HStack } from "@/components/ui/hstack";
+import { Text } from "@/components/ui/text";
+import { VStack } from "@/components/ui/vstack";
 import { DatePickerModal } from "./DatePickerModal";
 import { type PromotionFormData, promotionFormSchema } from "./PromotionSchema";
 
@@ -70,7 +69,6 @@ export const PromotionFormStep1: React.FC<PromotionFormStep1Props> = ({
 			<VStack>
 				<Card className="rounded-lg bg-white border border-gray-200">
 					<VStack className="gap-4">
-						<Heading className="text-2xl font-bold">Crear promoción</Heading>
 						<Text className="text-gray-600">
 							Ingresa la información de la promoción para darla de alta en tu
 							negocio.
@@ -189,7 +187,7 @@ export const PromotionFormStep1: React.FC<PromotionFormStep1Props> = ({
 						</FormControl>
 
 						{/* Botones de acción */}
-						<HStack className="gap-3 mt-6">
+						<HStack className="gap-3">
 							<Button onPress={onBack} className="flex-1" variant="outline">
 								<ButtonText>Atrás</ButtonText>
 							</Button>

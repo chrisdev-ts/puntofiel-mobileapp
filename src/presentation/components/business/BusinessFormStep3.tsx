@@ -1,7 +1,7 @@
+import type { ImagePickerAsset } from "expo-image-picker";
 import { Button, ButtonText } from "@/components/ui/button";
 import { VStack } from "@/components/ui/vstack";
 import { ImagePicker } from "@/src/presentation/components/common";
-import type { ImagePickerAsset } from "expo-image-picker";
 
 type BusinessFormStep3Props = {
 	logoImage: ImagePickerAsset | null;

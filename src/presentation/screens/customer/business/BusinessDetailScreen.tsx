@@ -1,3 +1,6 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { CheckSquare, ClockIcon, GiftIcon } from "lucide-react-native";
+import { View } from "react-native";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonText } from "@/components/ui/button";
@@ -16,9 +19,6 @@ import { useBusinessDetail } from "@/src/presentation/hooks/useBusinessDetail";
 import { useBusinessRaffles } from "@/src/presentation/hooks/useBusinessRaffles";
 import { usePromotions } from "@/src/presentation/hooks/usePromotions";
 import { useReward } from "@/src/presentation/hooks/useReward";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { CheckSquare, ClockIcon, GiftIcon } from "lucide-react-native";
-import { View } from "react-native";
 
 export default function BusinessDetailScreen() {
 	const router = useRouter();

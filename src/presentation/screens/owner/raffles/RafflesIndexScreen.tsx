@@ -1,3 +1,7 @@
+import { useRouter } from "expo-router";
+import { AlertCircleIcon, HelpCircle, MedalIcon } from "lucide-react-native";
+import { useState } from "react";
+import { Pressable } from "react-native";
 import { Badge, BadgeText } from "@/components/ui/badge";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -20,10 +24,6 @@ import {
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { useBusinessId } from "@/src/presentation/hooks/useBusinessId";
 import { useRaffle } from "@/src/presentation/hooks/useRaffle";
-import { useRouter } from "expo-router";
-import { AlertCircleIcon, HelpCircle, MedalIcon } from "lucide-react-native";
-import React, { useState } from "react";
-import { Pressable } from "react-native";
 
 export default function RafflesIndexScreen() {
 	const router = useRouter();

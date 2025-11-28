@@ -1,12 +1,11 @@
+import { useRouter } from "expo-router";
+import { Wrench } from "lucide-react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
-import { useRouter } from "expo-router";
-import { Wrench } from "lucide-react-native";
-import React from "react";
 
 type Props = {
 	onClose?: () => void;
@@ -22,7 +21,7 @@ export default function UnderConstruction({ onClose, title }: Props) {
 
 	return (
 		<AppLayout headerVariant="back" headerTitle={title ?? "En construcción"}>
-			<VStack className="flex-1 items-center justify-center px-6">
+			<VStack className="flex-1 min-h-screen flex-col justify-center items-center">
 				<Icon as={Wrench} size="6xl" className="text-yellow-500 mb-4" />
 				<Heading size="lg" className="text-center mb-2">
 					{title ?? "En construcción"}

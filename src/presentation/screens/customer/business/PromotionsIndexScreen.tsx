@@ -1,3 +1,7 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { AlertCircleIcon } from "lucide-react-native";
+import { useCallback, useState } from "react";
+import { FlatList, RefreshControl, View } from "react-native";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Text } from "@/components/ui/text";
@@ -5,10 +9,6 @@ import { FeedbackScreen } from "@/src/presentation/components/common";
 import { AppLayout } from "@/src/presentation/components/layout/AppLayout";
 import { PromotionCard } from "@/src/presentation/components/promotions/PromotionCard";
 import { usePromotions } from "@/src/presentation/hooks/usePromotions";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { AlertCircleIcon } from "lucide-react-native";
-import { useCallback, useState } from "react";
-import { FlatList, RefreshControl, View } from "react-native";
 
 export default function PromotionsIndexScreen() {
 	const { id: businessId } = useLocalSearchParams<{ id: string }>();
